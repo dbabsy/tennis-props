@@ -1,0 +1,70 @@
+name: Build and deploy
+
+on:
+  workflow_dispatch:
+  schedule:
+    # A backstop only. GitHub's scheduler has been unreliable on these repos --
+    # see the sibling mlb-wind notes -- so treat dispatch as the real trigger.
+    - cron: "20 5,11,17 * * *"
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build pages
+        run: |
+          python3 build.py --out public
+
+      - name: Freeze predictions and score finished matches
+        run: |
+          python3 ledger.py --all --out public/accuracy.html
+
+      - name: Commit ledger
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add ledger/picks.json
+          git diff --staged --quiet && exit 0
+          # [skip ci] or this commit triggers another build, forever.
+          git commit -m "ledger: record and score [skip ci]"
+          # The build takes minutes and races with any other push. Take the
+          # newer main and re-derive on top; record and score are idempotent.
+          for i in 1 2 3; do
+            git push && exit 0
+            git fetch origin main
+            git reset --hard origin/main
+            python3 ledger.py --all >/dev/null
+            git add ledger/picks.json
+            git diff --staged --quiet && exit 0
+            git commit -m "ledger: record and score [skip ci]"
+          done
+          # Never fail the build for this -- the pages must still deploy.
+          echo "ledger push failed after retries" >&2
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -140,8 +140,14 @@ makes every label a 1, which leaves log loss valid but calibration meaningless.
 - Whether the archive mirror will keep updating. If it stops, serve statistics
   end permanently and the ace model decays. The Match Charting Project is the
   fallback but covers far fewer matches.
-- The model sits ~0.036 of log loss behind the closing line (ATP 2025,
-  n=1,781). That gap is the hurdle a price has to clear before it is an edge.
-  Whether it narrows on WTA, where the market is thinner, is untested.
+- The gap to the closing line is strikingly stable: +0.033, +0.033, +0.032,
+  +0.028 across ATP and WTA in 2024 and 2025 (n=1,700-1,930 each). That
+  consistency is reassuring but it also means no configuration tried so far
+  moves it. Closing it needs information the point model does not have --
+  injuries, retirements, travel, motivation in dead rubbers.
+- WTA is the softer market: the model's raw accuracy is within a point of the
+  market's there (65.5% vs 66.2%) versus three points behind on ATP. If there
+  is an edge anywhere it is likelier on WTA, but the log-loss gap says the
+  market is still better calibrated.
 - Live in-match probability is not built. ESPN linescores update during play
   but not per point, so it would be game-level, not point-level.

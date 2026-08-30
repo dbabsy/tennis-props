@@ -10,10 +10,21 @@ distribution, and serve volume for the ace and double-fault props.
 **Pages:** [conditions](index.html) · [matches](matches.html) ·
 [props](props.html) · [fair prices](edges.html) · [accuracy](accuracy.html)
 
-Measured against the closing line on ATP 2025 (n=1,781 matches with odds):
-model log loss 0.636 vs market 0.600. The model is behind the market, as it
-should be — that 0.036 gap is the hurdle a price must clear before it is an
-edge, and the accuracy page tracks whether live picks hold up.
+Measured by walk-forward backtest against Pinnacle/Bet365 closing lines,
+ratings refit weekly on data strictly before each match:
+
+| | matches | model | market | gap | games MAE | games bias |
+|---|---|---|---|---|---|---|
+| ATP 2024 | 1,930 | 0.626 | 0.593 | +0.033 | 5.56 | +0.75 |
+| ATP 2025 | 1,781 | 0.633 | 0.600 | +0.033 | 5.58 | +0.64 |
+| WTA 2024 | 1,702 | 0.631 | 0.599 | +0.032 | 5.09 | +0.84 |
+| WTA 2025 | 1,697 | 0.639 | 0.612 | +0.028 | 4.99 | +0.82 |
+
+Log loss; lower is better. The model sits behind the closing line, as it
+should — a public model that beat the close would be suspicious. That ~0.03 gap
+is the hurdle a price has to clear before it is an edge. On WTA the model's
+raw accuracy (65.5%) is within a point of the market's (66.2%), consistent
+with a thinner market.
 
 Python 3, standard library only. No API keys. See `CLAUDE.md` for the data
 sources and the decisions that took measurement to reach.

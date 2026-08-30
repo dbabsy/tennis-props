@@ -87,7 +87,7 @@ def page_matches(rows, theme=None, event=None):
                 f'{k[0]}-{k[1]}&nbsp;{100*v:.0f}%'
                 for k, v in sorted(r["sets"].items(), key=lambda x: -x[1])[:3])
             trs.append([
-                f'<span class="dim">{V.esc(m["start"].strftime("%H:%M") if m["start"] else "")}</span>',
+                f'<span class="dim">{V.clock(m["start"])}</span>',
                 f'<span class="name">{V.esc(a)}</span><br><span class="dim">{V.esc(b)}</span>',
                 f'{V.pct(r["p_a"])}<br><span class="dim">{V.pct(r["p_b"])}</span>',
                 f'{_price(r["p_a"])}<br><span class="dim">{_price(r["p_b"])}</span>',
@@ -101,7 +101,8 @@ def page_matches(rows, theme=None, event=None):
             ])
         body.append(f"<h2>{label} — {len(rs)} matches</h2>")
         body.append(V.table(
-            ["Time", "Match", "Win %", "Fair", "Favourite", "Games",
+            ['Time <span class="tz">CT</span>', "Match", "Win %", "Fair",
+             "Favourite", "Games",
              "Total", "Straight", "Likeliest sets", "Context"],
             trs,
             ["", "name", "num", "num", "", "num", "num", "num", "", ""]))

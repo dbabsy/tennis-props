@@ -346,7 +346,11 @@
    "p_over": 0.5082091528736955,
    "p_p1": 0.6060141560812157,
    "recorded": "2026-08-30T14:34:10.036944+00:00",
-   "result": null,
+   "result": {
+    "games": 38.0,
+    "p1_won": false,
+    "score": "7.0-6.0 2.0-6.0 2.0-6.0 3.0-6.0"
+   },
    "round": "Round 1",
    "start": "2026-08-30T16:30:00+00:00",
    "surface": "Hard",
@@ -1010,6 +1014,25 @@
    "surface": "Hard",
    "total_line": 38.5,
    "tour": "atp",
+   "tourney": "US Open"
+  },
+  "wta:182561": {
+   "best_of": 3,
+   "exp_aces_p1": 2.5015176765579885,
+   "exp_aces_p2": 1.4642834623149397,
+   "exp_games": 22.699109668958155,
+   "id": "182561",
+   "p1": "Lucrezia Stefanini",
+   "p2": "Jasmine Paolini",
+   "p_over": 0.4404813476892735,
+   "p_p1": 0.36512620754989733,
+   "recorded": "2026-08-30T21:20:19.211013+00:00",
+   "result": null,
+   "round": "Round 2",
+   "start": "2026-09-02T04:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 22.5,
+   "tour": "wta",
    "tourney": "US Open"
   },
   "wta:182590": {
@@ -1712,7 +1735,11 @@
    "p_over": 0.4588001106751015,
    "p_p1": 0.49450746743388063,
    "recorded": "2026-08-30T14:34:10.036944+00:00",
-   "result": null,
+   "result": {
+    "games": 26.0,
+    "p1_won": false,
+    "score": "3.0-6.0 6.0-4.0 1.0-6.0"
+   },
    "round": "Round 1",
    "start": "2026-08-30T17:00:00+00:00",
    "surface": "Hard",

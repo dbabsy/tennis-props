@@ -8,6 +8,8 @@ overridden for dark, so the pages follow the reader's system theme.
 import html
 from datetime import datetime, timezone
 
+import themes
+
 NAV = [
     ("index.html", "Conditions"),
     ("matches.html", "Matches"),
@@ -18,13 +20,16 @@ NAV = [
 
 CSS = """
 :root{--bg:#fbfbfa;--fg:#1a1a18;--dim:#6b6b66;--line:#e3e3df;--card:#fff;
---good:#1a7f4b;--bad:#b3261e;--warn:#96690c;--accent:#2f5fd0;--chip:#f0f0ec}
+--good:#1a7f4b;--bad:#b3261e;--warn:#96690c;--accent:#2f5fd0;--chip:#f0f0ec;--glow:none}
 @media(prefers-color-scheme:dark){:root{--bg:#141414;--fg:#e8e8e4;--dim:#9a9a94;
 --line:#2c2c2a;--card:#1c1c1b;--good:#4ec27f;--bad:#f2695f;--warn:#d9a640;
 --accent:#7aa2f7;--chip:#242422}}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--fg);
+body{margin:0;background:var(--bg);color:var(--fg);min-height:100vh;
 font:15px/1.5 ui-sans-serif,-apple-system,"Segoe UI",Roboto,sans-serif}
+/* The tournament wash sits behind the content, never over it. */
+body::before{content:"";position:fixed;inset:0;z-index:-1;
+background:var(--glow,none);pointer-events:none}
 .wrap{max-width:1180px;margin:0 auto;padding:20px 18px 60px}
 h1{font-size:22px;margin:0 0 4px;letter-spacing:-.01em}
 h2{font-size:16px;margin:28px 0 10px;letter-spacing:-.01em}
@@ -40,7 +45,7 @@ table{border-collapse:collapse;width:100%;font-size:13px;min-width:640px}
 th{text-align:left;font-weight:600;color:var(--dim);font-size:11px;
 text-transform:uppercase;letter-spacing:.04em;padding:8px 10px;
 border-bottom:1px solid var(--line);white-space:nowrap;position:sticky;top:0;
-background:var(--bg)}
+background:var(--bg);backdrop-filter:blur(6px)}
 td{padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
 tr:hover td{background:var(--chip)}
 .num{font-variant-numeric:tabular-nums;text-align:right}
@@ -58,6 +63,8 @@ padding:14px 16px;margin:0 0 14px}
 min-width:52px}
 .bar>i{display:block;height:100%;background:var(--accent)}
 .note{font-size:12px;color:var(--dim);margin:8px 0 0;max-width:70ch;line-height:1.6}
+.event{display:inline-block;font-size:11px;letter-spacing:.09em;
+text-transform:uppercase;color:var(--accent);font-weight:650;margin:0 0 6px}
 footer{margin-top:36px;padding-top:14px;border-top:1px solid var(--line);
 font-size:12px;color:var(--dim)}
 """
@@ -80,18 +87,20 @@ def bar(p, width=52):
     return f'<span class="bar" style="width:{width}px"><i style="width:{100*p:.0f}%"></i></span>'
 
 
-def page(title, subtitle, body, active="", note=""):
+def page(title, subtitle, body, active="", note="", theme=None, event=None):
     nav = "".join(
         f'<a href="{h}" class="{"on" if h == active else ""}">{esc(t)}</a>'
         for h, t in NAV)
     built = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    skin = f"<style>{themes.css(theme)}</style>" if theme else ""
+    badge = f'<div class="event">{esc(event)}</div>' if event else ""
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{esc(title)}</title><style>{CSS}</style></head>
+<title>{esc(title)}</title><style>{CSS}</style>{skin}</head>
 <body><div class="wrap">
 <nav>{nav}</nav>
-<h1>{esc(title)}</h1>
+{badge}<h1>{esc(title)}</h1>
 <p class="sub">{esc(subtitle)}</p>
 {body}
 <footer>Built {built}. Model and data notes in the repository README.

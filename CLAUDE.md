@@ -104,6 +104,19 @@ a set serves the first game of the next. Getting this wrong is invisible in win
 probability and visible in set scores — it is why 6-3 is more likely than 6-4
 for a set's first server (6-3 ends on their own serve; 6-4 needs a break).
 
+**The site is themed after whatever is actually being played.** `themes.py`
+maps the slate's busiest tournament to a palette — the four slams have their
+own, everything else falls back to its surface, and roofed events get the
+indoor palette. Colours come from the courts, not from tournament branding,
+which keeps this well clear of anyone's trade marks. Every palette defines both
+a light and a dark set and all sixteen combinations were checked to meet
+WCAG AA (body text ≥14.8:1, accents ≥4.5:1); a palette that only works in one
+mode is a bug. Text colour is deliberately not themed — contrast against a
+tinted background is the one thing that must not vary by event.
+
+`build.py` writes the chosen theme to `data/theme.json` so `ledger.py` can
+match it. Without that the accuracy page would look like a different site.
+
 **Players below 300 tour-level serve points are refused, not guessed.** About
 20% of a slam's first round is qualifiers and wildcards the model has never
 seen. Pricing them anyway is worse than skipping them.

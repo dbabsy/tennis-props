@@ -11,6 +11,7 @@ to demand before backing anything here.
 """
 
 import argparse
+import json
 import math
 from collections import defaultdict
 from datetime import date, datetime, timezone
@@ -21,9 +22,38 @@ import model
 import project as P
 import ratings as R
 import render as V
+import themes
+import venues
 
 OUT = Path(__file__).resolve().parent / "public"
 TOTAL_LINES = {3: (20.5, 21.5, 22.5, 23.5), 5: (36.5, 38.5, 40.5)}
+
+
+def slate_theme(rows):
+    """Colour the whole site after whatever is actually being played.
+
+    During a slam that is unambiguous. An ordinary week runs several events at
+    once, so the busiest one wins and the rest are named alongside it -- a page
+    tinted like clay while listing a grass final would be worse than no theme.
+    """
+    if not rows:
+        return "hard", None
+    by_event = defaultdict(list)
+    for r in rows:
+        by_event[r["match"]["tourney"]].append(r)
+    main = max(by_event, key=lambda k: len(by_event[k]))
+    surface = by_event[main][0]["surface"]
+    v = venues.find(main)
+    key = themes.pick(main, surface, indoor=bool(v and v["indoor"]))
+
+    others = sorted((e for e in by_event if e != main),
+                    key=lambda e: -len(by_event[e]))
+    label = main
+    if others:
+        label += " · " + " · ".join(others[:2])
+        if len(others) > 2:
+            label += f" +{len(others)-2}"
+    return key, label
 
 
 def _price(p):
@@ -37,7 +67,7 @@ def _sides(pr):
 
 # ---------------------------------------------------------------------------
 
-def page_matches(rows):
+def page_matches(rows, theme=None, event=None):
     body = []
     for tour, label in (("atp", "ATP"), ("wta", "WTA")):
         rs = [r for r in rows if r["match"]["tour"] == tour]
@@ -84,7 +114,7 @@ def page_matches(rows):
         'closing line, before there is an edge.</p>')
     return V.page("Match projections",
                   "Win probability, total games and set scores for today's slate",
-                  "\n".join(body), "matches.html")
+                  "\n".join(body), "matches.html", theme=theme, event=event)
 
 
 def _straight_b(r):
@@ -93,7 +123,7 @@ def _straight_b(r):
     return r["sets"].get((0, need), 0.0)
 
 
-def page_props(rows):
+def page_props(rows, theme=None, event=None):
     body = []
     for tour, label in (("atp", "ATP"), ("wta", "WTA")):
         rs = [r for r in rows if r["match"]["tour"] == tour]
@@ -140,10 +170,10 @@ def page_props(rows):
         'over.</p>')
     return V.page("Player props",
                   "Ace and double-fault projections, with the serve volume behind them",
-                  "\n".join(body), "props.html")
+                  "\n".join(body), "props.html", theme=theme, event=event)
 
 
-def page_edges(rows):
+def page_edges(rows, theme=None, event=None):
     """Fair prices across every market the point model supports."""
     body = ['<p class="note">No keyless source of live odds exists, so this '
             'page prices the markets rather than claiming an edge. Compare each '
@@ -176,10 +206,10 @@ def page_edges(rows):
         trs, ["name", "num", "", "num", "num"]))
     return V.page("Fair prices",
                   "Break-even decimal odds for every market the model supports",
-                  "\n".join(body), "edges.html")
+                  "\n".join(body), "edges.html", theme=theme, event=event)
 
 
-def page_conditions(rows, fit=None):
+def page_conditions(rows, theme=None, event=None):
     cards = []
     seen = {}
     for r in rows:
@@ -222,7 +252,7 @@ conditioned and does not move with the weather, which makes them the control
 group for the whole exercise.</p>""")
     return V.page("Conditions",
                   "How the air at each venue moves serve outcomes",
-                  "\n".join(body), "index.html")
+                  "\n".join(body), "index.html", theme=theme, event=event)
 
 
 # ---------------------------------------------------------------------------
@@ -246,12 +276,20 @@ def main():
         print(f"  {tour}: {len(rs)} matches projected")
         rows += rs
 
+    theme, event = slate_theme(rows)
+    print(f"  theme: {theme} ({themes.label(theme)}) — {event}")
+
     for name, fn in (("index.html", page_conditions),
                      ("matches.html", page_matches),
                      ("props.html", page_props),
                      ("edges.html", page_edges)):
-        (out / name).write_text(fn(rows), encoding="utf-8")
+        (out / name).write_text(fn(rows, theme, event), encoding="utf-8")
         print(f"  wrote {name}")
+
+    # The accuracy page is built by ledger.py but must not look like a
+    # different site, so the chosen theme is handed over on disk.
+    (Path(__file__).resolve().parent / "data" / "theme.json").write_text(
+        json.dumps({"theme": theme, "event": event}))
 
 
 if __name__ == "__main__":

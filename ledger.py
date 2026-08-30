@@ -132,7 +132,17 @@ def _brier(rows):
     return sum((r["p"] - r["y"]) ** 2 for r in rows) / len(rows)
 
 
+def _theme():
+    """Match whatever build.py themed the rest of the site as."""
+    f = ROOT / "data" / "theme.json"
+    if f.exists():
+        d = json.loads(f.read_text())
+        return d.get("theme"), d.get("event")
+    return None, None
+
+
 def report():
+    theme, event = _theme()
     db = _load()
     done = [p for p in db["picks"].values() if p.get("result")]
     if not done:
@@ -140,7 +150,8 @@ def report():
                       '<p class="note">The ledger records each projection '
                       'before the match starts and fills in the result '
                       'afterwards. It is empty until the first frozen slate '
-                      'completes.</p>', "accuracy.html")
+                      'completes.</p>', "accuracy.html",
+                      theme=theme, event=event)
 
     wl = [{"p": p["p_p1"], "y": 1 if p["result"]["p1_won"] else 0} for p in done]
     n = len(wl)
@@ -202,7 +213,7 @@ def report():
             V.table(["Match", "Model", "", "Score", "Games exp/act"],
                     rtrs, ["name", "num", "", "", "num"])]
     return V.page("Accuracy", f"{n} matches scored since the ledger opened",
-                  "\n".join(body), "accuracy.html")
+                  "\n".join(body), "accuracy.html", theme=theme, event=event)
 
 
 if __name__ == "__main__":

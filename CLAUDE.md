@@ -148,6 +148,18 @@ disagree with the last one.
 **Backtest orientation must be randomised.** Always putting the winner first
 makes every label a 1, which leaves log loss valid but calibration meaningless.
 
+## Scheduling
+
+The build is triggered every two hours from cron-job.org on
+`America/Chicago`; `data/SCHEDULING.md` has the endpoint, the token scope and
+the measured costs. The `schedule:` block in `build.yml` is a UTC-only
+backstop and deliberately does not track Central.
+
+Cadence is chosen for one reason: the ledger refuses to record a match that has
+already started, so anything scheduled and started between two runs loses its
+frozen prediction permanently. Shortening the gap only adds coverage. This is
+the number that decides how fast the accuracy page becomes readable.
+
 ## Open questions
 
 - Whether the archive mirror will keep updating. If it stops, serve statistics

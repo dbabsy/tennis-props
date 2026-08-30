@@ -5,7 +5,12 @@ on:
   schedule:
     # A backstop only. GitHub's scheduler has been unreliable on these repos --
     # see the sibling mlb-wind notes -- so treat dispatch as the real trigger.
-    - cron: "20 5,11,17 * * *"
+    #
+    # GitHub cron is UTC and has no timezone option, so this cannot track
+    # Central across DST the way the real cron-job.org trigger does. It does
+    # not need to: at a two-hour cadence an hour of seasonal drift changes
+    # nothing, and this only ever fires when the external trigger has failed.
+    - cron: "20 */2 * * *"
 
 permissions:
   contents: write

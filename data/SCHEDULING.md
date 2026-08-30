@@ -40,14 +40,33 @@ existing token is fine and avoids managing two.
 
 ## When to run it
 
-Tennis has no daily slate boundary the way baseball does — tournaments run in
-overlapping timezones and matches start from roughly 01:00 to 23:00 UTC. Three
-runs a day keeps the slate fresh without much waste:
+**Every two hours, timezone `America/Chicago`, at minute 20.**
 
-- **05:20 UTC** — catches the Australian and Asian swing before play
-- **11:20 UTC** — European day session
-- **17:20 UTC** — American evening session, and the US Open night matches
+Tennis has no daily slate boundary the way baseball does. Tournaments run in
+overlapping timezones and matches start at essentially every hour of the day,
+so there is no clever set of three times that covers the tour — the honest
+answer is to run often and let the ledger sort it out.
 
-The ledger only ever freezes matches that have not started, so a run that
-happens mid-session simply records fewer picks. Missing a run costs those
-picks permanently; they cannot be re-recorded once play begins.
+The reason the cadence matters is one-directional. The ledger refuses to record
+a match that has already started, so any match scheduled *and* started inside a
+gap between runs never gets a frozen prediction, and it cannot be recovered
+afterwards. A two-hour cadence caps that loss at two hours. Running more often
+only ever adds coverage; running less often silently discards picks.
+
+Central rather than UTC is a deliberate, harmless choice. cron-job.org handles
+the DST transition for `America/Chicago` itself, and at a two-hour cadence the
+one-hour seasonal shift is not worth reasoning about. The `schedule:` block in
+`build.yml` is UTC-only and cannot follow it, which is fine for a backstop.
+
+Costs, measured rather than assumed, at a two-hour cadence (12 runs/day):
+
+| | per run | per day | limit |
+|---|---|---|---|
+| Actions runtime | ~30 s | ~6 min | unlimited on a public repo |
+| Downloads | 14.8 MB | ~178 MB | no hard cap; 10 requests/hour |
+| Open-Meteo calls | 2–4 | ~40 | 10,000/day free |
+| Pages deploys | 1 | 12 | 10/hour soft limit |
+
+The ledger file grows about 510 bytes per pick, or ~2.9 MB a year across both
+tours. Expect several ledger commits a day during a slam and almost none in
+December — the build only commits when `picks.json` actually changes.

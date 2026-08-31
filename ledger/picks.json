@@ -1078,6 +1078,25 @@
    "tour": "atp",
    "tourney": "US Open"
   },
+  "wta:182531": {
+   "best_of": 3,
+   "exp_aces_p1": 4.396793802241385,
+   "exp_aces_p2": 3.0543450582784777,
+   "exp_games": 23.041022506237553,
+   "id": "182531",
+   "p1": "Karolina Muchova",
+   "p2": "Katie Boulter",
+   "p_over": 0.4538097526526143,
+   "p_p1": 0.657857758119516,
+   "recorded": "2026-08-31T16:25:07.031049+00:00",
+   "result": null,
+   "round": "Round 2",
+   "start": "2026-09-02T04:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 22.5,
+   "tour": "wta",
+   "tourney": "US Open"
+  },
   "wta:182550": {
    "best_of": 3,
    "exp_aces_p1": 2.6215338997734134,
@@ -1687,7 +1706,11 @@
    "p_over": 0.42828588128587447,
    "p_p1": 0.7183686064133499,
    "recorded": "2026-08-30T14:34:10.036944+00:00",
-   "result": null,
+   "result": {
+    "games": 15.0,
+    "p1_won": true,
+    "score": "6.0-3.0 6.0-0.0"
+   },
    "round": "Round 1",
    "start": "2026-08-31T15:00:00+00:00",
    "surface": "Hard",

@@ -1313,6 +1313,25 @@
    "tour": "atp",
    "tourney": "US Open"
   },
+  "wta:182528": {
+   "best_of": 3,
+   "exp_aces_p1": 2.1514575270139646,
+   "exp_aces_p2": 2.3563373776266046,
+   "exp_games": 19.792525782100597,
+   "id": "182528",
+   "p1": "Nadia Podoroska",
+   "p2": "Iga Swiatek",
+   "p_over": 0.24176161904836294,
+   "p_p1": 0.08648448666892657,
+   "recorded": "2026-09-01T01:20:18.873409+00:00",
+   "result": null,
+   "round": "Round 2",
+   "start": "2026-09-02T04:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 22.5,
+   "tour": "wta",
+   "tourney": "US Open"
+  },
   "wta:182531": {
    "best_of": 3,
    "exp_aces_p1": 4.396793802241385,

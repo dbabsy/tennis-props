@@ -570,6 +570,25 @@
    "tour": "atp",
    "tourney": "US Open"
   },
+  "atp:182698": {
+   "best_of": 5,
+   "exp_aces_p1": 9.796370114343231,
+   "exp_aces_p2": 16.27709510799767,
+   "exp_games": 40.64362066272455,
+   "id": "182698",
+   "p1": "Karen Khachanov",
+   "p2": "Felix Auger-Aliassime",
+   "p_over": 0.5549032349200878,
+   "p_p1": 0.4207078461529624,
+   "recorded": "2026-09-01T04:27:52.939444+00:00",
+   "result": null,
+   "round": "Round 2",
+   "start": "2026-09-02T04:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 38.5,
+   "tour": "atp",
+   "tourney": "US Open"
+  },
   "atp:182701": {
    "best_of": 5,
    "exp_aces_p1": 5.504330162244494,
@@ -581,7 +600,11 @@
    "p_over": 0.37577286153808964,
    "p_p1": 0.16632616894972288,
    "recorded": "2026-08-30T14:34:10.036944+00:00",
-   "result": null,
+   "result": {
+    "games": 43.0,
+    "p1_won": false,
+    "score": "5.0-7.0 6.0-4.0 3.0-6.0 5.0-7.0"
+   },
    "round": "Round 1",
    "start": "2026-08-31T21:00:00+00:00",
    "surface": "Hard",

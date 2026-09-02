@@ -13,6 +13,7 @@ idempotent, because CI reruns them and races with pushes.
 import argparse
 import json
 import math
+import re
 from collections import defaultdict
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
@@ -102,9 +103,18 @@ def score(day=None):
                 if m["completed"]:
                     results[f'{m["tour"]}:{m["id"]}'] = m
 
-    filled = 0
+    filled = backfilled = 0
     for key, p in db["picks"].items():
         if p.get("result"):
+            # Rows frozen before the ledger tracked how a match ended get the
+            # annotation filled in from the score already on file -- it is the
+            # same test, and it does not need the event to still be on ESPN's
+            # scoreboard. Only the annotation is written; a scored row's
+            # outcome is never recomputed.
+            if "clean" not in p["result"]:
+                a, b = _sets_from_score(p["result"].get("score", ""))
+                p["result"]["clean"] = _clean(a, b, p["best_of"])
+                backfilled += 1
             continue
         m = results.get(key)
         if not m:
@@ -113,19 +123,85 @@ def score(day=None):
         s2 = [x for x in m["p2"]["sets"] if x is not None]
         if not s1 or not s2:
             continue
-        games = sum(s1) + sum(s2)
-        # ESPN orders competitors independently of how the pick was stored.
-        p1_is_first = m["p1"]["name"] == p["p1"]
-        won = m["p1"]["won"] if p1_is_first else m["p2"]["won"]
+        # ESPN orders competitors independently of how the pick was stored, so
+        # the orientation has to be read off the names -- and confirmed. A
+        # single unmatched name used to fall through to "must be the other
+        # one", which silently inverts the result rather than skipping it.
+        if m["p1"]["name"] == p["p1"] and m["p2"]["name"] == p["p2"]:
+            won = m["p1"]["won"]
+        elif m["p2"]["name"] == p["p1"] and m["p1"]["name"] == p["p2"]:
+            won = m["p2"]["won"]
+        else:
+            continue
         p["result"] = {
-            "p1_won": bool(won), "games": games,
+            "p1_won": bool(won),
+            "games": sum(s1) + sum(s2),
             "score": " ".join(f"{a}-{b}" for a, b in zip(s1, s2)),
+            "detail": m.get("detail", ""),
+            "clean": _clean(s1, s2, p["best_of"], m.get("detail", "")),
         }
         filled += 1
 
     _save(db)
-    print(f"scored {filled}")
+    print(f"scored {filled}" + (f"; annotated {backfilled} older rows"
+                                if backfilled else ""))
     return filled
+
+
+# A match that ends early has a winner but not a game count: the sets played
+# are real, the ones that were not are not a short match. Scoring those games
+# against a full-match projection is a straight subtraction from the model,
+# which is why the games and totals columns take only clean finishes.
+_UNFINISHED = ("retire", "ret.", "w/o", "walkover", "default",
+               "abandon", "withdraw")
+
+
+def _clean(sets_a, sets_b, best_of, detail=""):
+    """Did the match play out, or did somebody stop?
+
+    The set scores decide it rather than ESPN's wording: a completed match ends
+    the moment one side holds the sets it needs, so anything short of that was
+    abandoned however the status string happens to be phrased. The wording is
+    still consulted, because a retirement can land on the very point that would
+    have finished the set.
+    """
+    if any(k in (detail or "").lower() for k in _UNFINISHED):
+        return False
+    need = (best_of or 3) // 2 + 1
+    won_a = sum(1 for a, b in zip(sets_a, sets_b) if _set_over(a, b) and a > b)
+    won_b = sum(1 for a, b in zip(sets_a, sets_b) if _set_over(a, b) and b > a)
+    return max(won_a, won_b) >= need
+
+
+def _sets_from_score(score):
+    """'6-3 2-1' -> ([6, 2], [3, 1]).
+
+    The ledger writes games as the floats ESPN hands over, and a tiebreak
+    margin can be appended in brackets, so both are tolerated -- a set dropped
+    for a parse failure would look like an abandoned match to _clean.
+    """
+    a, b = [], []
+    for chunk in (score or "").split():
+        mm = re.match(r"^(\d+(?:\.\d+)?)-(\d+(?:\.\d+)?)", chunk)
+        if mm:
+            a.append(int(float(mm.group(1))))
+            b.append(int(float(mm.group(2))))
+    return a, b
+
+
+def _set_over(a, b):
+    """A set that was abandoned part way through still appears in the
+    linescore, so leading it is not the same as having won it."""
+    hi, lo = max(a, b), min(a, b)
+    return hi >= 6 and (hi - lo >= 2 or hi == 7)
+
+
+def _stat(rows, fn):
+    """Format an aggregate, or an em dash when there is nothing to aggregate."""
+    if not rows:
+        return "—"
+    v = fn(rows)
+    return v if isinstance(v, str) else f"{v:.2f}"
 
 
 def _brier(rows):
@@ -159,10 +235,15 @@ def report():
     base = _brier([{"p": sum(x["y"] for x in wl) / n, "y": x["y"]} for x in wl])
     skill = 1 - brier / base if base else 0
     hits = sum(1 for x in wl if (x["p"] > .5) == bool(x["y"]))
-    gerr = [p["exp_games"] - p["result"]["games"] for p in done]
-    ov = [p for p in done if p.get("p_over") is not None]
+
+    # A retirement has a winner but not a games total, so it counts towards the
+    # win columns and is kept out of the two that measure length.
+    finished = [p for p in done if p["result"].get("clean", True)]
+    gerr = [p["exp_games"] - p["result"]["games"] for p in finished]
+    ov = [p for p in finished if p.get("p_over") is not None]
     ov_hit = sum(1 for p in ov
                  if (p["p_over"] > .5) == (p["result"]["games"] > p["total_line"]))
+    retired = len(done) - len(finished)
 
     cards = f"""<div class="grid">
 <div class="card"><div class="lab">Matches scored</div><div class="stat">{n}</div></div>
@@ -170,12 +251,17 @@ def report():
 <div class="card"><div class="lab">Brier</div><div class="stat">{brier:.4f}</div>
 <p class="note">skill vs base rate {skill:+.3f}</p></div>
 <div class="card"><div class="lab">Games error</div>
-<div class="stat">{sum(abs(g) for g in gerr)/len(gerr):.2f}</div>
-<p class="note">bias {sum(gerr)/len(gerr):+.2f} games</p></div>
+<div class="stat">{_stat(gerr, lambda g: sum(abs(x) for x in g)/len(g))}</div>
+<p class="note">bias {_stat(gerr, lambda g: f"{sum(g)/len(g):+.2f}")} games ·
+n={len(gerr)}</p></div>
 <div class="card"><div class="lab">Totals hit rate</div>
-<div class="stat">{100*ov_hit/len(ov):.1f}%</div>
+<div class="stat">{_stat(ov, lambda v: f"{100*ov_hit/len(v):.1f}%")}</div>
 <p class="note">n={len(ov)}</p></div>
-</div>"""
+</div>
+<p class="note">{retired} match{"es" if retired != 1 else ""} ended in a
+retirement or walkover. Those count towards the win columns, which still have a
+winner, and are held out of the games and totals columns, which do not: a match
+abandoned in the second set did not play a short match.</p>"""
 
     buckets = defaultdict(list)
     for x in wl:

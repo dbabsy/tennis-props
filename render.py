@@ -127,7 +127,7 @@ def page(title, subtitle, body, active="", note="", theme=None, event=None):
 {badge}<h1>{esc(title)}</h1>
 <p class="sub">{esc(subtitle)}</p>
 {body}
-<footer>Built <time datetime="{built_iso}">{built}</time>.
+<footer>Built <time datetime="{built_iso}" data-fmt="datetime">{built}</time>.
 Model and data notes in the repository README.
 Projections are estimates, not advice.{(" " + note) if note else ""}</footer>
 </div>
@@ -139,9 +139,15 @@ Projections are estimates, not advice.{(" " + note) if note else ""}</footer>
   try {{
     var tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
     var fmt = new Intl.DateTimeFormat([], {{hour: "2-digit", minute: "2-digit"}});
+    // The build stamp is a date as well as a time; a start time is not. Using
+    // the clock-only formatter on both is how the footer lost its date.
+    var stamp = new Intl.DateTimeFormat([], {{year: "numeric", month: "short",
+      day: "numeric", hour: "2-digit", minute: "2-digit"}});
     document.querySelectorAll("time[datetime]").forEach(function (el) {{
       var d = new Date(el.getAttribute("datetime"));
-      if (!isNaN(d)) el.textContent = fmt.format(d);
+      if (isNaN(d)) return;
+      el.textContent = (el.getAttribute("data-fmt") === "datetime"
+        ? stamp : fmt).format(d);
     }});
     var abbr = new Intl.DateTimeFormat([], {{timeZoneName: "short"}})
       .formatToParts(new Date())

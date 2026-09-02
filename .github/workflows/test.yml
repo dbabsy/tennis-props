@@ -1,0 +1,23 @@
+name: Self-test
+
+# build.yml is dispatch- and schedule-only, because it deploys Pages and
+# commits the ledger -- neither of which belongs on a pull request. So the
+# offline checks get their own workflow, or the gate added to build.yml would
+# only ever fire after a merge, which is the wrong side of the review.
+# Pull requests only. A `push` trigger alongside this one fires a second,
+# identical run for every commit on a branch that has a PR open, and main is
+# already covered by the build itself twice an hour.
+on:
+  pull_request:
+
+jobs:
+  selftest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # No network, no cache, standard library only: this is the whole point
+      # of keeping it offline.
+      - run: python3 selftest.py

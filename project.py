@@ -25,13 +25,21 @@ import venues
 ACE_RHO_SLOPE = -0.0418      # per kg/m3, t = -8.4
 SPW_RHO_SLOPE = -0.0665      # per kg/m3, t = -7.4
 
-# Ace and double-fault counts are wider than a binomial. Measured on the 2025
-# season against the fitted rates: the standard deviation of the z-score is the
+# Ace and double-fault counts are wider than a binomial. Measured against the
+# fitted rates over 2023-2025: the standard deviation of the z-score is the
 # factor by which a binomial understates the spread. Serving is streaky and the
 # men's game is streakier, which is why ATP aces need the widest allowance.
+#
+# These came down a little when the rate model learned about surfaces. That is
+# the expected direction and worth stating plainly: overdispersion measured
+# against a model is partly the model's own error, so a rate that is right more
+# often leaves less of it. It is not zero -- a server still has hot and cold
+# days -- but it is no longer inflated by charging clay matches a hard-court
+# ace rate. Re-measure this whenever the rate model changes; sweep3.py prints
+# it straight off the same walk-forward pass the accuracy numbers come from.
 DISPERSION = {
-    "atp": {"ace": 1.43, "df": 1.19},     # n=4,908 player-matches
-    "wta": {"ace": 1.31, "df": 1.16},     # n=4,475
+    "atp": {"ace": 1.37, "df": 1.14},     # n=14,086 player-matches
+    "wta": {"ace": 1.26, "df": 1.15},     # n=12,424
 }
 
 # Day-to-day variation in serve percentage, integrated over rather than
@@ -48,6 +56,15 @@ SURFACE_BY_TOURNEY = {
     "australian open": "Hard",
 }
 
+# The four slams, which are the events that play a ten-point tiebreak to
+# decide a 6-6 final set. Everything else uses the ordinary seven.
+SLAMS = tuple(SURFACE_BY_TOURNEY) + ("french open",)
+
+
+def _slam(tourney, best_of):
+    n = (tourney or "").lower()
+    return best_of == 5 or any(k in n for k in SLAMS)
+
 
 def _norm(s):
     s = unicodedata.normalize("NFKD", s or "")
@@ -60,8 +77,12 @@ class Resolver:
 
     ESPN and the archive mostly agree on spelling, so a normalised full-name
     match carries the load; the surname-plus-initial fallback catches the
-    reorderings and the dropped middle names. Ambiguous fallbacks are refused
-    rather than guessed -- a wrong id silently projects the wrong player.
+    reorderings and the dropped middle names. When that fallback is ambiguous
+    -- two players sharing a surname and an initial -- the one with the most
+    tour-level serve points wins, because the collision is almost always a
+    tour regular against somebody with a handful of qualifying matches. A name
+    that matches nothing at all returns None and the match is skipped: a wrong
+    id would silently project the wrong player, which is worse than no row.
     """
 
     def __init__(self, obs):
@@ -150,27 +171,32 @@ def project(rt, resolver, m, surface=None, cond=None):
         return None
 
     surface = surface or surface_for(m.get("tourney"))
-    pa, pb = rt.matchup(aid, bid, surface)
+    bo = m.get("best_of") or 3
+    pa, pb = rt.matchup(aid, bid, surface, best_of=bo)
 
     spw_adj = _rho_shift(cond, SPW_RHO_SLOPE)
     pa, pb = pa + spw_adj, pb + spw_adj
 
-    bo = m.get("best_of") or 3
+    # A slam decides a 6-6 final set over ten points, not seven.
+    tb = {"final_set_tb_target": 10} if _slam(m.get("tourney"), bo) else {}
     d = model.match_dist_form(pa, pb, best_of=bo,
-                              sigma=FORM_SIGMA, nodes=FORM_NODES)
-    vol = model.serve_volume(pa, pb, best_of=bo)
+                              sigma=FORM_SIGMA, nodes=FORM_NODES, **tb)
+    # Same form variation as the match distribution: a projection that widened
+    # the match but not the serve volume would price the two off different
+    # models of the same afternoon.
+    vol = model.serve_volume_form(pa, pb, best_of=bo,
+                                  sigma=FORM_SIGMA, nodes=FORM_NODES)
 
-    ace_mult = 1.0
-    if cond:
-        ace_mult = 1.0 + _rho_shift(cond, ACE_RHO_SLOPE) / max(rt.lg_ace, 1e-6)
-        ace_mult = max(0.75, min(1.30, ace_mult))
+    # The density slope was measured in ace-rate points, so it is applied as
+    # one -- as an absolute shift, not a percentage of a surface's own rate.
+    ace_shift = _rho_shift(cond, ACE_RHO_SLOPE)
 
     disp = DISPERSION.get(rt.tour, DISPERSION["atp"])
     props = {}
     for tag, pid, opp, svpt in (("a", aid, bid, vol["sv_points_a"]),
                                 ("b", bid, aid, vol["sv_points_b"])):
-        ar = rt.ace_rate(pid, opp, cond_mult=ace_mult)
-        dr = rt.df_rate(pid)
+        ar = rt.ace_rate(pid, opp, surface=surface, cond_shift=ace_shift)
+        dr = rt.df_rate(pid, surface=surface)
         props[tag] = {
             "sv_points": svpt,
             "ace_rate": ar,

@@ -46,7 +46,7 @@ def record(day=None, now=None):
 
     for tour in ("atp", "wta"):
         try:
-            _, _, rows = P.build(tour, day=day)
+            _, _, rows, _skipped = P.build(tour, day=day)
         except Exception as e:
             print(f"  {tour}: {type(e).__name__}: {e}")
             continue

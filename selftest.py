@@ -19,6 +19,7 @@ Run:  python3 selftest.py
 """
 
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -249,6 +250,64 @@ def test_ratings():
           < rt3.matchup("A", "X", "Hard", best_of=3)[0])
 
 
+def _obs_row(pid, name, svpt):
+    return {"pid": pid, "oid": "z", "name": name, "date": date(2025, 6, 1),
+            "surface": "Hard", "tour": "wta", "svpt": svpt, "spw": 0.62,
+            "ace": 0.04, "df": 0.05, "best_of": 3, "level": "A"}
+
+
+def test_resolver():
+    """Names, which is where a live page quietly goes wrong.
+
+    A missing match is visible. A match resolved to the wrong player is not:
+    it is still priced, still shown, and every number on the row belongs to
+    somebody else.
+    """
+    print("resolver")
+    import project as P
+
+    obs = [_obs_row("A", "Xin Yu Wang", 13707),
+           _obs_row("B", "Xiyu Wang", 8812),
+           _obs_row("C", "Anna Kalinskaya", 12385)]
+    r = P.Resolver(obs)
+    # The archive writes her with a space, ESPN without one. Ignoring spaces
+    # is still an exact match on the letters, so it is tried before anything
+    # that guesses -- and before this it returned the other Wang outright.
+    check("a name that differs only in spacing finds the right player",
+          r.find("Xinyu Wang") == "A", r.find("Xinyu Wang") or "None")
+    check("the other Wang is still herself", r.find("Xiyu Wang") == "B")
+    check("surname-first ordering resolves too", r.find("Wang Xin Yu") == "A")
+    check("an ordinary name is unaffected",
+          r.find("Anna Kalinskaya") == "C")
+
+    # Two established players sharing a surname and an initial: nothing to
+    # choose between them, so choose neither.
+    tie = P.Resolver([_obs_row("D", "Alex Silva", 5000),
+                      _obs_row("E", "Ana Silva", 4000)])
+    check("an ambiguous surname is refused, not guessed",
+          tie.find("Alejandro Silva") is None, tie.find("Alejandro Silva"))
+
+    # The usual collision is a tour regular against a qualifier, and that one
+    # is safe to call.
+    lop = P.Resolver([_obs_row("F", "Alex Silva", 20000),
+                      _obs_row("G", "Ana Silva", 300)])
+    check("a dominant candidate still wins an ambiguous surname",
+          lop.find("Alejandro Silva") == "F")
+
+    # And every skip has to be able to say why.
+    class _Rt:
+        def seen(self, pid):
+            return {"A": 5000, "B": 5000, "C": 5000}.get(pid, 0)
+
+    m = {"p1": {"name": "Xinyu Wang"}, "p2": {"name": "Anna Kalinskaya"}}
+    check("a priceable match reports no reason",
+          P.why_not(_Rt(), r, m) is None)
+    m2 = {"p1": {"name": "Nobody At All"}, "p2": {"name": "Anna Kalinskaya"}}
+    check("an unmatched name says so",
+          (P.why_not(_Rt(), r, m2) or "").startswith("unresolved"),
+          P.why_not(_Rt(), r, m2))
+
+
 def test_ledger():
     print("ledger")
     # The rule the whole page rests on: a match that has started is never
@@ -268,7 +327,7 @@ def test_ledger():
             "surface": "Hard", "best_of": 3, "p_a": 0.6, "exp_games": 22.0,
             "dist": model.match_dist(0.65, 0.62),
             "props": {"a": {"exp_aces": 5.0}, "b": {"exp_aces": 4.0}},
-        }])
+        }], [])
         n = ledger.record(now=started + timedelta(minutes=1))
         check("record refuses a match that has already started", n == 0)
         n = ledger.record(now=started - timedelta(hours=1))
@@ -358,10 +417,13 @@ HARNESS = """
 globalThis.window = globalThis;
 window.__LIVE__ = PAYLOAD;
 const PAINTED = {};
-function cell() { return {textContent: "", className: "", style: {}}; }
+function cell() {
+  return {textContent: "", innerHTML: "", className: "", style: {}};
+}
+const CHROME = {};
 globalThis.document = {
   getElementById(id) {
-    if (id === "live-note") return cell();
+    if (id.indexOf("live-") === 0) return CHROME[id] || (CHROME[id] = cell());
     const row = PAINTED[id] || (PAINTED[id] = {});
     return {querySelector(sel) { return row[sel] || (row[sel] = cell()); }};
   }
@@ -373,21 +435,26 @@ globalThis.fetch = function (url) {
 };
 LIVE_JS
 setTimeout(function () {
-  const out = {};
+  const out = {rows: {}, pill: "", clock: ""};
   for (const id of Object.keys(PAINTED)) {
-    out[id] = {p: PAINTED[id][".js-p"] ? PAINTED[id][".js-p"].textContent : null,
-               score: PAINTED[id][".js-score"]
-                 ? PAINTED[id][".js-score"].textContent : null};
+    out.rows[id] = {
+      p: PAINTED[id][".js-p"] ? PAINTED[id][".js-p"].textContent : null,
+      sb: PAINTED[id][".js-sb"] ? PAINTED[id][".js-sb"].innerHTML : null
+    };
   }
+  out.pill = CHROME["live-pill"] ? CHROME["live-pill"].innerHTML : "";
+  out.clock = CHROME["live-clock"] ? CHROME["live-clock"].textContent : "";
   console.log(JSON.stringify(out));
 }, 20);
 """
 
 
-def _espn_stub(mid, names, linescores, serving_id=None):
+def _espn_stub(mid, names, linescores, serving_id=None, tiebreaks=None):
+    tiebreaks = tiebreaks or [[None] * len(ls) for ls in linescores]
     comps = [{"id": f"c{i}", "athlete": {"displayName": n, "id": f"a{i}"},
-              "linescores": [{"value": v} for v in ls]}
-             for i, (n, ls) in enumerate(zip(names, linescores))]
+              "linescores": [{"value": v, "tiebreak": t}
+                             for v, t in zip(ls, tb)]}
+             for i, (n, ls, tb) in enumerate(zip(names, linescores, tiebreaks))]
     comp = {"id": mid, "competitors": comps}
     if serving_id is not None:
         comp["situation"] = {"possession": f"c{serving_id}"}
@@ -426,11 +493,11 @@ def test_live_js():
                 "p1": {"name": "A", "won": False, "sets": [], "tb": []},
                 "p2": {"name": "B", "won": False, "sets": [], "tb": []}}
 
-    rows = [P.project(rt, res, match("m1", 5, "Wimbledon")),
-            P.project(rt, res, match("m2", 3, "Cincinnati")),
-            P.project(rt, res, match("m3", 3, "Cincinnati")),
-            P.project(rt, res, match("m4", 3, "Cincinnati"))]
-    live = [P.live_view(r) for r in rows]
+    rows_ = [P.project(rt, res, match("m1", 5, "Wimbledon")),
+             P.project(rt, res, match("m2", 3, "Cincinnati")),
+             P.project(rt, res, match("m3", 3, "Cincinnati")),
+             P.project(rt, res, match("m4", 3, "Cincinnati"))]
+    live = [P.live_view(r) for r in rows_]
 
     board = {"events": [{"groupings": [{"competitions": [
         # A up a set and a break, A serving.
@@ -440,12 +507,14 @@ def test_live_js():
         _espn_stub("m2", ["B", "A"], [[1, 3], [6, 4]], serving_id=1),
         # Nobody says who is serving.
         _espn_stub("m3", ["A", "B"], [[5], [4]]),
-        # Over.
-        _espn_stub("m4", ["A", "B"], [[6, 6], [4, 3]]),
+        # Over, and the first set went to a tiebreak.
+        _espn_stub("m4", ["A", "B"], [[7, 6], [6, 3]],
+                   tiebreaks=[[5, None], [7, None]]),
     ]}]}]}
 
     src = (HARNESS.replace("PAYLOAD", json.dumps({
-        "built": "", "games": [f"{a}-{b}" for a, b in model.game_states()],
+        "built": "2026-06-01T12:00:00+00:00",
+        "games": [f"{a}-{b}" for a, b in model.game_states()],
         "sets": {str(bo): [f"{a}-{b}" for a, b in model.set_states(bo)]
                  for bo in (3, 5)},
         "matches": live}))
@@ -462,6 +531,7 @@ def test_live_js():
               proc.stderr.strip().splitlines()[-1] if proc.stderr else "")
         return
     got = json.loads(proc.stdout)
+    rows = got["rows"]
 
     def want(row, sa, sb, ga, gb, serving):
         # The same call live_view makes, form integration included -- the
@@ -477,19 +547,54 @@ def test_live_js():
         return f"{100 * x:.0f}%"
 
     check("a set and a break up, server known",
-          got["m-m1"]["p"] == pct(want(rows[0], 1, 0, 3, 1, True)),
-          f'js {got["m-m1"]["p"]} vs model {pct(want(rows[0], 1, 0, 3, 1, True))}')
+          rows["m-m1"]["p"] == pct(want(rows_[0], 1, 0, 3, 1, True)),
+          f'js {rows["m-m1"]["p"]} vs model {pct(want(rows_[0], 1, 0, 3, 1, True))}')
     check("orientation is read off the names, not ESPN's ordering",
-          got["m-m2"]["p"] == pct(want(rows[1], 1, 0, 3, 1, True)),
-          f'js {got["m-m2"]["p"]} vs model {pct(want(rows[1], 1, 0, 3, 1, True))}')
-    mix = (want(rows[2], 0, 0, 5, 4, True) + want(rows[2], 0, 0, 5, 4, False)) / 2
+          rows["m-m2"]["p"] == pct(want(rows_[1], 1, 0, 3, 1, True)),
+          f'js {rows["m-m2"]["p"]} vs model {pct(want(rows_[1], 1, 0, 3, 1, True))}')
+    mix = (want(rows_[2], 0, 0, 5, 4, True)
+           + want(rows_[2], 0, 0, 5, 4, False)) / 2
     check("an unknown server averages the two rather than guessing",
-          got["m-m3"]["p"] == pct(mix),
-          f'js {got["m-m3"]["p"]} vs model {pct(mix)}')
+          rows["m-m3"]["p"] == pct(mix),
+          f'js {rows["m-m3"]["p"]} vs model {pct(mix)}')
     check("a finished match reads 100%, not a probability",
-          got["m-m4"]["p"] == "100%", got["m-m4"]["p"])
-    check("the score is rendered from the scoreboard",
-          got["m-m1"]["score"] == "6-4 3-1", got["m-m1"]["score"])
+          rows["m-m4"]["p"] == "100%", rows["m-m4"]["p"])
+
+    # -- the scorebug -----------------------------------------------------
+    def boxes(html):
+        return re.findall(r'<span class="(sb-g[^"]*)">(\d*)', html or "")
+
+    def servers(html):
+        return re.findall(r'<span class="sb-sv">([^<]*)</span>', html or "")
+
+    check("the scorebug draws a box per set per player, in order",
+          [v for _, v in boxes(rows["m-m1"]["sb"])] == ["6", "3", "4", "1"],
+          str(boxes(rows["m-m1"]["sb"])))
+    check("a completed set marks its winner and leaves the loser plain",
+          [c for c, _ in boxes(rows["m-m1"]["sb"])][0] == "sb-g w"
+          and [c for c, _ in boxes(rows["m-m1"]["sb"])][2] == "sb-g")
+    check("the set being played is marked as current, not as won",
+          all("cur" in [c for c, _ in boxes(rows["m-m1"]["sb"])][i]
+              for i in (1, 3)))
+    check("the server is marked on their own row and nobody else's",
+          servers(rows["m-m1"]["sb"]) == ["●", ""],
+          str(servers(rows["m-m1"]["sb"])))
+    check("an unknown server marks neither row",
+          servers(rows["m-m3"]["sb"]) == ["", ""])
+    check("a tiebreak margin is raised beside the set it belongs to",
+          '<span class="sb-tb">5</span>' in rows["m-m4"]["sb"]
+          and '<span class="sb-tb">7</span>' in rows["m-m4"]["sb"])
+    check("the player ahead is marked ahead",
+          rows["m-m1"]["sb"].count('class="sb-r up"') == 1)
+    check("names from the scoreboard are escaped, not injected",
+          "<img" not in build.LIVE_JS.replace("esc(", "SAFE(")
+          and 'replace(/[&<>"\']/g' in build.LIVE_JS)
+
+    # -- how fresh the numbers are ----------------------------------------
+    check("a successful pull reports the page as live",
+          "live" in got["pill"] and "stale" not in got["pill"], got["pill"])
+    check("a successful pull timestamps itself",
+          "updated" in got["clock"], got["clock"])
 
 
 def test_render():
@@ -513,8 +618,8 @@ def test_render():
 
 if __name__ == "__main__":
     for fn in (test_distributions, test_serve_rotation, test_live,
-               test_monotonicity, test_ratings, test_ledger, test_pipeline,
-               test_live_js, test_render):
+               test_monotonicity, test_ratings, test_resolver, test_ledger,
+               test_pipeline, test_live_js, test_render):
         fn()
     print()
     if FAILURES:

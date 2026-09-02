@@ -76,17 +76,33 @@ class Resolver:
     """Map a display name to an archive player id.
 
     ESPN and the archive mostly agree on spelling, so a normalised full-name
-    match carries the load; the surname-plus-initial fallback catches the
-    reorderings and the dropped middle names. When that fallback is ambiguous
-    -- two players sharing a surname and an initial -- the one with the most
-    tour-level serve points wins, because the collision is almost always a
-    tour regular against somebody with a handful of qualifying matches. A name
-    that matches nothing at all returns None and the match is skipped: a wrong
-    id would silently project the wrong player, which is worse than no row.
+    match carries the load. Where they differ it is usually about spaces:
+    the archive has "Xin Yu Wang", ESPN has "Xinyu Wang". So the full name is
+    also indexed with the spaces removed, and that comparison is tried before
+    anything that guesses.
+
+    It has to be, because the surname-plus-initial fallback assumes the first
+    token is the given name and the rest is the surname -- which for "Xin Yu
+    Wang" makes the surname "yuwang". She then never appears in the ("wang",
+    "x") bucket at all, that bucket holds only Xiyu Wang, and a lookup of
+    "Xinyu Wang" used to return Xiyu Wang as an unambiguous hit. A wrong id is
+    worse than a missing row: the match is still priced, just for somebody
+    else, and nothing downstream can tell.
+
+    Where the fallback is genuinely ambiguous the most-played candidate wins
+    only if it dominates the rest -- the collision is nearly always a tour
+    regular against somebody with a handful of qualifying matches, and that is
+    safe to call. Two established players who collide are refused instead,
+    because there is nothing to choose between them.
     """
+
+    # How many times more tour-level serve points the leading candidate needs
+    # before an ambiguous surname is called rather than refused.
+    DOMINANCE = 5.0
 
     def __init__(self, obs):
         self.full = {}
+        self.squash = defaultdict(set)
         self.short = defaultdict(set)
         self.seen = defaultdict(float)
         for o in obs:
@@ -94,8 +110,12 @@ class Resolver:
             if not t:
                 continue
             self.full.setdefault(" ".join(t), o["pid"])
+            self.squash["".join(t)].add(o["pid"])
             if len(t) >= 2:
                 self.short[("".join(t[1:]), t[0][:1])].add(o["pid"])
+                # ...and the other way round, for the sources that put the
+                # surname first.
+                self.short[("".join(t[:-1]), t[-1][:1])].add(o["pid"])
             self.seen[o["pid"]] += o["svpt"]
 
     def find(self, name):
@@ -105,14 +125,28 @@ class Resolver:
         hit = self.full.get(" ".join(t))
         if hit:
             return hit
+        # Spaces are the usual disagreement, and ignoring them is still an
+        # exact match on the letters -- not a guess.
+        hit = self._pick(self.squash.get("".join(t)))
+        if hit:
+            return hit
         if len(t) >= 2:
             for key in (("".join(t[1:]), t[0][:1]), ("".join(t[:-1]), t[-1][:1])):
-                cands = self.short.get(key)
-                if cands and len(cands) == 1:
-                    return next(iter(cands))
-                if cands:
-                    # prefer the player with the most tour-level serve points
-                    return max(cands, key=lambda p: self.seen[p])
+                hit = self._pick(self.short.get(key))
+                if hit:
+                    return hit
+        return None
+
+    def _pick(self, cands):
+        """One candidate, or the one that dwarfs the others, or nothing."""
+        if not cands:
+            return None
+        ranked = sorted(cands, key=lambda p: -self.seen[p])
+        if len(ranked) == 1:
+            return ranked[0]
+        runner = self.seen[ranked[1]]
+        if runner <= 0 or self.seen[ranked[0]] >= self.DOMINANCE * runner:
+            return ranked[0]
         return None
 
 
@@ -156,6 +190,26 @@ def _rho_shift(cond, slope):
     return slope * (cond["rho"] - C.RHO_REF)
 
 
+MIN_SEEN = 300      # tour-level serve points before a player can be priced
+
+
+def why_not(rt, resolver, m):
+    """Why this match cannot be priced, or None if it can.
+
+    Every skip used to be silent, which made "are we showing everything?" an
+    unanswerable question -- a match missing because nobody could be matched to
+    it looked exactly like a match that was never on the scoreboard.
+    """
+    for side in ("p1", "p2"):
+        name = m[side]["name"]
+        pid = resolver.find(name)
+        if not pid:
+            return f"unresolved: {name}"
+        if rt.seen(pid) < MIN_SEEN:
+            return f"too little history: {name} ({rt.seen(pid):.0f} pts)"
+    return None
+
+
 def project(rt, resolver, m, surface=None, cond=None):
     """One match -> every market the point model supports.
 
@@ -167,7 +221,7 @@ def project(rt, resolver, m, surface=None, cond=None):
     bid = resolver.find(m["p2"]["name"])
     if not aid or not bid:
         return None
-    if rt.seen(aid) < 300 or rt.seen(bid) < 300:
+    if rt.seen(aid) < MIN_SEEN or rt.seen(bid) < MIN_SEEN:
         return None
 
     surface = surface or surface_for(m.get("tourney"))
@@ -252,6 +306,7 @@ def live_view(r):
         "table": model.encode_table(table),
         "state": m.get("state", ""),
         "sets": [m["p1"]["sets"], m["p2"]["sets"]],
+        "tb": [m["p1"]["tb"], m["p2"]["tb"]],
         "serving": m.get("serving"),
     }
 
@@ -286,6 +341,11 @@ def build(tour, day=None, seasons=5, asof=None, states=("pre",)):
     `states` selects which ESPN match states to keep. The ledger asks for
     "pre" only, because it is not allowed to record anything else; the site
     also asks for "in", to price what is on court right now.
+
+    Returns the fitted ratings, the resolver, the projected rows, and the
+    matches that were on the scoreboard but could not be priced, with the
+    reason for each. The last of those is not decoration: a silently dropped
+    match is indistinguishable from a match that was never there.
     """
     asof = asof or date.today()
     obs = R.load(tour, asof.year - seasons + 1, asof.year)
@@ -296,7 +356,7 @@ def build(tour, day=None, seasons=5, asof=None, states=("pre",)):
              if m["tour"] == tour and m["state"] in states]
 
     cond_cache = {}
-    out = []
+    out, skipped = [], []
     for m in slate:
         key = m["tourney"]
         if key not in cond_cache:
@@ -304,4 +364,11 @@ def build(tour, day=None, seasons=5, asof=None, states=("pre",)):
         p = project(rt, res, m, cond=cond_cache[key])
         if p:
             out.append(p)
-    return rt, res, out
+        else:
+            skipped.append({
+                "id": m["id"], "tourney": m["tourney"],
+                "p1": m["p1"]["name"], "p2": m["p2"]["name"],
+                "state": m.get("state", ""),
+                "reason": why_not(rt, res, m) or "unknown",
+            })
+    return rt, res, out, skipped

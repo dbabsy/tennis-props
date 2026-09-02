@@ -217,6 +217,206 @@ def page_edges(rows, theme=None, event=None):
                   "\n".join(body), "edges.html", theme=theme, event=event)
 
 
+LIVE_JS = """
+// The page ships every answer the model has; this only decides which one to
+// read. Nothing here re-derives a probability -- that is model.py's job, and
+// a second implementation in JavaScript would be a second thing to keep
+// correct.
+(function () {
+  var D = window.__LIVE__;
+  if (!D || !D.matches.length) return;
+  var NG = D.games.length, gi = {}, si = {};
+  D.games.forEach(function (g, i) { gi[g] = i; });
+  Object.keys(D.sets).forEach(function (bo) {
+    si[bo] = {};
+    D.sets[bo].forEach(function (s, i) { si[bo][s] = i; });
+  });
+
+  function dec(tbl, i) {                       // two base-36 chars -> 0..1
+    return parseInt(tbl.substr(i * 2, 2), 36) / 1295;
+  }
+  // The twin of ledger._set_over: a set that was abandoned or is still being
+  // played is not a set somebody has won.
+  function setOver(a, b) {
+    var hi = Math.max(a, b), lo = Math.min(a, b);
+    return hi >= 6 && (hi - lo >= 2 || hi === 7);
+  }
+  function derive(s1, s2, bestOf) {
+    var sa = 0, sb = 0, ga = 0, gb = 0;
+    for (var i = 0; i < Math.max(s1.length, s2.length); i++) {
+      var a = s1[i], b = s2[i];
+      if (a == null || b == null) continue;
+      if (setOver(a, b)) { if (a > b) sa++; else sb++; }
+      else { ga = a; gb = b; }
+    }
+    var need = (bestOf >> 1) + 1;
+    return {sa: sa, sb: sb, ga: ga, gb: gb, done: sa >= need || sb >= need};
+  }
+  function lookup(m, st, servingIsA) {
+    var sIdx = si[m.best_of] && si[m.best_of][st.sa + "-" + st.sb];
+    var gIdx = gi[st.ga + "-" + st.gb];
+    if (sIdx == null || gIdx == null) return null;
+    var base = (sIdx * NG + gIdx) * 2;
+    if (servingIsA === null) return (dec(m.table, base) + dec(m.table, base + 1)) / 2;
+    return dec(m.table, base + (servingIsA ? 0 : 1));
+  }
+
+  function paint(m, p, st, live) {
+    var row = document.getElementById("m-" + m.id);
+    if (!row) return;
+    row.querySelector(".js-score").textContent = st ? st.text : "—";
+    row.querySelector(".js-p").textContent = p == null ? "—"
+      : (100 * p).toFixed(0) + "%";
+    row.querySelector(".js-p2").textContent = p == null ? "—"
+      : (100 * (1 - p)).toFixed(0) + "%";
+    var bar = row.querySelector(".js-bar > i");
+    if (bar && p != null) bar.style.width = (100 * p).toFixed(0) + "%";
+    var mv = row.querySelector(".js-move");
+    if (mv && p != null) {
+      var d = p - m.p_pre;
+      mv.textContent = (d >= 0 ? "+" : "") + (100 * d).toFixed(0);
+      mv.className = "js-move num " + (Math.abs(d) < 5 ? "dim"
+        : (d > 0 ? "good" : "bad"));
+    }
+    row.querySelector(".js-state").textContent = live ? "live" : "";
+  }
+
+  function apply(events) {
+    var byId = {};
+    events.forEach(function (ev) {
+      (ev.groupings || []).forEach(function (g) {
+        (g.competitions || []).forEach(function (c) { byId[c.id] = c; });
+      });
+    });
+    var seen = 0;
+    D.matches.forEach(function (m) {
+      var c = byId[m.id];
+      if (!c || !c.competitors || c.competitors.length !== 2) return;
+      // ESPN orders the two competitors independently of how this page stored
+      // them, so the orientation is read off the names, not the position.
+      var nm = c.competitors.map(function (x) {
+        return (x.athlete && x.athlete.displayName) || x.name || "";
+      });
+      var ai = nm.indexOf(m.p1), bi = nm.indexOf(m.p2);
+      if (ai < 0 || bi < 0 || ai === bi) return;
+      var ls = c.competitors.map(function (x) {
+        return (x.linescores || []).map(function (s) { return s.value; });
+      });
+      var st = derive(ls[ai], ls[bi], m.best_of);
+      st.text = ls[ai].map(function (v, i) {
+        return v + "-" + ls[bi][i];
+      }).join(" ") || "0-0";
+      var servingIsA = null;
+      if (c.situation && c.situation.possession != null) {
+        servingIsA = String(c.situation.possession) ===
+          String(c.competitors[ai].id);
+      }
+      var p = st.done ? (st.sa > st.sb ? 1 : 0) : lookup(m, st, servingIsA);
+      paint(m, p, st, true);
+      seen++;
+    });
+    return seen;
+  }
+
+  function refresh() {
+    var tours = ["atp", "wta"];
+    Promise.all(tours.map(function (t) {
+      return fetch("https://site.api.espn.com/apis/site/v2/sports/tennis/"
+        + t + "/scoreboard").then(function (r) { return r.json(); });
+    })).then(function (docs) {
+      var evs = [];
+      docs.forEach(function (d) { evs = evs.concat(d.events || []); });
+      var n = apply(evs);
+      var note = document.getElementById("live-note");
+      if (note) note.textContent = n
+        ? "Updating from the scoreboard every 30 seconds."
+        : "No match on this page is currently on court.";
+    }).catch(function () {
+      // The scoreboard is not reachable from the browser -- most likely it
+      // does not send the header that would allow it. The page keeps the
+      // scores it was built with and says so rather than going stale in
+      // silence.
+      var note = document.getElementById("live-note");
+      if (note) note.textContent = "Live refresh unavailable from the browser."
+        + " Scores below are from the last build; the probabilities beside"
+        + " them are still the model's answer for those scores.";
+    });
+  }
+  refresh();
+  setInterval(refresh, 30000);
+})();
+"""
+
+
+def page_live(live, theme=None, event=None):
+    """Matches on court now, priced from where they stand.
+
+    The model is a forward walk from the first point, so a live number is not
+    a different model -- it is the same walk started at the current score.
+    That is the whole reason this page can exist without a second engine
+    disagreeing with the first one about the same match.
+    """
+    if not live:
+        body = ['<p class="note">Nothing is on court from the draws this '
+                'build could see. This page fills in when a match is under '
+                'way, or within three hours of starting.</p>']
+        return V.page("Live", "In-match win probability, from the same model",
+                      "\n".join(body), "live.html", theme=theme, event=event)
+
+    trs = []
+    for m in sorted(live, key=lambda x: (x["tour"], x["tourney"])):
+        st = _score_text(m)
+        trs.append([
+            f'<span class="chip">{V.esc(m["tour"].upper())}</span> '
+            f'<span class="name">{V.esc(m["p1"])}</span>'
+            f'<br><span class="dim">{V.esc(m["p2"])}</span>',
+            f'<span class="js-score">{V.esc(st)}</span>'
+            f' <span class="js-state chip"></span>',
+            f'<span class="js-p num">{V.pct(m["p_pre"], 0)}</span>'
+            f'<br><span class="js-p2 dim num">{V.pct(1 - m["p_pre"], 0)}</span>',
+            f'<span class="bar js-bar" style="width:52px">'
+            f'<i style="width:{100*m["p_pre"]:.0f}%"></i></span>',
+            V.pct(m["p_pre"], 0),
+            '<span class="js-move num dim">—</span>',
+            f'<span class="chip">{V.esc(m["surface"])}</span> '
+            f'<span class="dim">{V.esc(m["round"])}</span>',
+        ])
+
+    payload = {
+        "built": datetime.now(timezone.utc).isoformat(),
+        "games": [f"{a}-{b}" for a, b in model.game_states()],
+        "sets": {str(bo): [f"{a}-{b}" for a, b in model.set_states(bo)]
+                 for bo in (3, 5)},
+        "matches": live,
+    }
+    body = [
+        V.table(["Match", "Score", "Win %", "", "Pre-match", "Move",
+                 "Context"], trs,
+                ["name", "", "num", "", "num", "num", ""]),
+        '<p class="note" id="live-note">Loading the scoreboard…</p>',
+        '<p class="note">A live probability here is the same propagation that '
+        'produces the pre-match number, entered at the current score instead '
+        'of at the first point — at 0-0 it returns exactly the figure on the '
+        'matches page. The resolution is a game, not a point: the scoreboard '
+        'moves when a game ends, so that is as fine as the state can honestly '
+        'be. Who is serving matters more than it looks — at 5-4 in a deciding '
+        'set the same scoreline is a 93% win for the server and 66% for the '
+        'receiver — so when the scoreboard does not say, the two are averaged '
+        'and the number is correspondingly blunter.</p>',
+        '<script>window.__LIVE__=' + json.dumps(payload, separators=(",", ":"))
+        + ';</script>',
+        f"<script>{LIVE_JS}</script>",
+    ]
+    return V.page("Live", f"{len(live)} matches on court or about to be",
+                  "\n".join(body), "live.html", theme=theme, event=event)
+
+
+def _score_text(m):
+    a, b = m.get("sets") or ([], [])
+    pairs = [f"{x}-{y}" for x, y in zip(a, b) if x is not None and y is not None]
+    return " ".join(pairs) if pairs else "not started"
+
+
 def page_conditions(rows, theme=None, event=None):
     cards = []
     seen = {}
@@ -275,15 +475,23 @@ def main():
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
 
-    rows = []
+    rows, live = [], []
     for tour in ("atp", "wta"):
         try:
-            _, _, rs = P.build(tour, day=day)
+            # "in" as well as "pre": the live page prices what is on court,
+            # and one ratings fit serves both.
+            _, _, rs = P.build(tour, day=day, states=("pre", "in"))
         except Exception as e:
             print(f"  {tour}: {type(e).__name__}: {e}")
             continue
+        for r in rs:
+            if P.wants_live(r["match"]):
+                live.append(P.live_view(r))
+        # Every other page is about matches that have not started.
+        rs = [r for r in rs if r["match"]["state"] == "pre"]
         print(f"  {tour}: {len(rs)} matches projected")
         rows += rs
+    print(f"  live tables: {len(live)}")
 
     theme, event = slate_theme(rows)
     print(f"  theme: {theme} ({themes.label(theme)}) — {event}")
@@ -294,6 +502,19 @@ def main():
                      ("edges.html", page_edges)):
         (out / name).write_text(fn(rows, theme, event), encoding="utf-8")
         print(f"  wrote {name}")
+    (out / "live.html").write_text(page_live(live, theme, event),
+                                   encoding="utf-8")
+    print("  wrote live.html")
+
+    # Deployed alongside the site so the CORS question can be answered from
+    # the origin that actually matters. Opening it from disk sends
+    # "Origin: null", which some hosts refuse even when a real origin passes.
+    # Not in the nav: it is a diagnostic, not a page.
+    check = Path(__file__).resolve().parent / "livecheck.html"
+    if check.exists():
+        (out / "livecheck.html").write_text(check.read_text(encoding="utf-8"),
+                                            encoding="utf-8")
+        print("  wrote livecheck.html")
 
     # The accuracy page is built by ledger.py but must not look like a
     # different site, so the chosen theme is handed over on disk.

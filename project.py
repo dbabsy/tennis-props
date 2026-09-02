@@ -10,7 +10,7 @@ import math
 import re
 import unicodedata
 from collections import defaultdict
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 
 import conditions as C
 import fetch
@@ -217,6 +217,45 @@ def project(rt, resolver, m, surface=None, cond=None):
     }
 
 
+def wants_live(m, now=None):
+    """Is this match on court, or close enough to it to be worth a table?"""
+    if m.get("state") == "in":
+        return True
+    start = m.get("start")
+    if m.get("state") != "pre" or not start:
+        return False
+    now = now or datetime.now(timezone.utc)
+    return timedelta(0) <= (start - now) <= timedelta(hours=LIVE_HORIZON_HOURS)
+
+
+def live_view(r):
+    """The lookup table a live match needs, and where it currently stands.
+
+    Built here rather than in the browser on purpose. The alternative -- a
+    second implementation of the propagation in JavaScript -- would be a
+    second thing to keep correct, and this one took a lot of measuring to get
+    right. Precomputing every state it can reach costs about a kilobyte and
+    leaves the page with nothing to do but look the answer up.
+    """
+    m = r["match"]
+    tb = 10 if _slam(m.get("tourney"), r["best_of"]) else 7
+    table = model.live_table(round(r["pa"], 4), round(r["pb"], 4),
+                             best_of=r["best_of"], final_set_tb_target=tb,
+                             sigma=FORM_SIGMA, nodes=FORM_NODES)
+    return {
+        "id": m["id"], "tour": m["tour"], "best_of": r["best_of"],
+        "p1": m["p1"]["name"], "p2": m["p2"]["name"],
+        "tourney": m["tourney"], "round": m["round"],
+        "surface": r["surface"],
+        "p_pre": r["p_a"],
+        "exp_games": r["exp_games"],
+        "table": model.encode_table(table),
+        "state": m.get("state", ""),
+        "sets": [m["p1"]["sets"], m["p2"]["sets"]],
+        "serving": m.get("serving"),
+    }
+
+
 def total_line(d, line):
     return {"over": model.total_over(d["dist"], line),
             "under": 1 - model.total_over(d["dist"], line)}
@@ -233,15 +272,28 @@ def edge(p_model, decimal_odds):
     return p_model * decimal_odds - 1.0
 
 
-def build(tour, day=None, seasons=5, asof=None):
-    """Load ratings and project every unplayed singles match on the slate."""
+# How far ahead a match has to start before the live table stops being worth
+# building for it. The build runs every two hours, so anything starting inside
+# that window can be under way before the next one; the slack covers a slate
+# running late. Everything else on the draw is skipped, which is what keeps a
+# slam day from costing a hundred tables it will never use.
+LIVE_HORIZON_HOURS = 3
+
+
+def build(tour, day=None, seasons=5, asof=None, states=("pre",)):
+    """Load ratings and project the singles matches on the slate.
+
+    `states` selects which ESPN match states to keep. The ledger asks for
+    "pre" only, because it is not allowed to record anything else; the site
+    also asks for "in", to price what is on court right now.
+    """
     asof = asof or date.today()
     obs = R.load(tour, asof.year - seasons + 1, asof.year)
     rt = R.Ratings(tour, obs, asof)
     res = Resolver(obs)
 
     slate = [m for m in fetch.espn_draw(day, tour=tour)
-             if m["tour"] == tour and m["state"] == "pre"]
+             if m["tour"] == tour and m["state"] in states]
 
     cond_cache = {}
     out = []

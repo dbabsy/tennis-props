@@ -13,6 +13,7 @@ import themes
 
 NAV = [
     ("index.html", "Conditions"),
+    ("live.html", "Live"),
     ("matches.html", "Matches"),
     ("props.html", "Props"),
     ("edges.html", "Edges"),

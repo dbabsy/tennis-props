@@ -4,11 +4,11 @@ name: Self-test
 # commits the ledger -- neither of which belongs on a pull request. So the
 # offline checks get their own workflow, or the gate added to build.yml would
 # only ever fire after a merge, which is the wrong side of the review.
+# Pull requests only. A `push` trigger alongside this one fires a second,
+# identical run for every commit on a branch that has a PR open, and main is
+# already covered by the build itself twice an hour.
 on:
   pull_request:
-  push:
-    branches-ignore:
-      - main        # main is covered by the build itself, twice an hour
 
 jobs:
   selftest:

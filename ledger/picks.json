@@ -499,6 +499,25 @@
    "tour": "atp",
    "tourney": "US Open"
   },
+  "atp:182684": {
+   "best_of": 5,
+   "exp_aces_p1": 12.537036944416784,
+   "exp_aces_p2": 9.678328061208443,
+   "exp_games": 39.00139745369168,
+   "id": "182684",
+   "p1": "Arthur Gea",
+   "p2": "Zachary Svajda",
+   "p_over": 0.5017594619116439,
+   "p_p1": 0.6378465101077484,
+   "recorded": "2026-09-02T21:36:11.134661+00:00",
+   "result": null,
+   "round": "Round 2",
+   "start": "2026-09-03T04:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 38.5,
+   "tour": "atp",
+   "tourney": "US Open"
+  },
   "atp:182685": {
    "best_of": 5,
    "exp_aces_p1": 6.992025110056516,
@@ -837,7 +856,13 @@
    "p_over": 0.5276100460020694,
    "p_p1": 0.44915356964672537,
    "recorded": "2026-08-30T14:34:10.036944+00:00",
-   "result": null,
+   "result": {
+    "clean": true,
+    "detail": "Final",
+    "games": 37.0,
+    "p1_won": false,
+    "score": "3.0-6.0 1.0-6.0 7.0-6.0 2.0-6.0"
+   },
    "round": "Round 1",
    "start": "2026-09-01T04:00:00+00:00",
    "surface": "Hard",

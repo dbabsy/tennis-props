@@ -217,11 +217,44 @@ def page_edges(rows, theme=None, event=None):
                   "\n".join(body), "edges.html", theme=theme, event=event)
 
 
-LIVE_JS = """
+# A television scorebug rather than a line of numbers: one row per player,
+# a column per set, the server marked, tiebreak margins raised. Only the live
+# page ever draws one, so it is not in the shared stylesheet.
+LIVE_CSS = """
+.sb{display:flex;flex-direction:column;gap:4px;min-width:250px}
+.sb-r{display:flex;align-items:center;gap:3px}
+.sb-n{flex:1;min-width:0;white-space:nowrap;overflow:hidden;
+text-overflow:ellipsis;max-width:180px}
+.sb-r.up .sb-n{font-weight:650}
+.sb-sv{width:10px;text-align:center;color:var(--accent);font-size:10px;
+line-height:1}
+.sb-g{position:relative;width:21px;height:21px;line-height:21px;flex:none;
+text-align:center;border-radius:5px;background:var(--chip);color:var(--dim);
+font-variant-numeric:tabular-nums;font-size:12.5px}
+.sb-g.w{color:var(--fg);font-weight:650}
+.sb-g.cur{outline:1.5px solid var(--accent);outline-offset:-1.5px;
+color:var(--fg)}
+.sb-tb{position:absolute;top:-3px;right:-3px;font-size:8.5px;line-height:1;
+color:var(--dim);font-weight:500}
+.livebar{display:flex;align-items:center;gap:9px;margin:0 0 14px;
+font-size:12px;color:var(--dim);flex-wrap:wrap}
+.pill{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;
+border-radius:999px;font-size:10.5px;letter-spacing:.07em;font-weight:650;
+text-transform:uppercase;background:var(--chip);color:var(--dim)}
+.pill.on{color:var(--good)}
+.pill.warn{color:var(--warn)}
+.pill.off{color:var(--bad)}
+.dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.pill.on .dot{animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+@media(prefers-reduced-motion:reduce){.pill.on .dot{animation:none}}
+"""
+
+LIVE_JS = r"""
 // The page ships every answer the model has; this only decides which one to
-// read. Nothing here re-derives a probability -- that is model.py's job, and
-// a second implementation in JavaScript would be a second thing to keep
-// correct.
+// read and how to draw it. Nothing here re-derives a probability -- that is
+// model.py's job, and a second implementation in JavaScript would be a second
+// thing to keep correct.
 (function () {
   var D = window.__LIVE__;
   if (!D || !D.matches.length) return;
@@ -231,12 +264,21 @@ LIVE_JS = """
     si[bo] = {};
     D.sets[bo].forEach(function (s, i) { si[bo][s] = i; });
   });
+  var lastOk = null, failing = false;
 
+  // Names arrive from ESPN and are written into innerHTML, so they are
+  // escaped rather than trusted.
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return {"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;",
+              "'": "&#39;"}[c];
+    });
+  }
   function dec(tbl, i) {                       // two base-36 chars -> 0..1
     return parseInt(tbl.substr(i * 2, 2), 36) / 1295;
   }
-  // The twin of ledger._set_over: a set that was abandoned or is still being
-  // played is not a set somebody has won.
+  // The twin of ledger._set_over: a set still being played, or abandoned, is
+  // not a set somebody has won.
   function setOver(a, b) {
     var hi = Math.max(a, b), lo = Math.min(a, b);
     return hi >= 6 && (hi - lo >= 2 || hi === 7);
@@ -252,33 +294,76 @@ LIVE_JS = """
     var need = (bestOf >> 1) + 1;
     return {sa: sa, sb: sb, ga: ga, gb: gb, done: sa >= need || sb >= need};
   }
+
+  function scorebug(names, ls, tbs, servingRow, st) {
+    var n = Math.max(ls[0].length, ls[1].length), html = "";
+    for (var r = 0; r < 2; r++) {
+      var cells = "";
+      for (var i = 0; i < n; i++) {
+        var a = ls[r][i], b = ls[1 - r][i];
+        if (a == null) { cells += '<span class="sb-g"></span>'; continue; }
+        var over = b != null && setOver(a, b);
+        var cls = "sb-g" + (over ? (a > b ? " w" : "") : " cur");
+        var tb = tbs && tbs[r] ? tbs[r][i] : null;
+        cells += '<span class="' + cls + '">' + a
+          + (over && tb != null && tb !== "" ? '<span class="sb-tb">'
+             + esc(tb) + "</span>" : "")
+          + "</span>";
+      }
+      var ahead = st && (r === 0 ? st.sa > st.sb : st.sb > st.sa);
+      html += '<div class="sb-r' + (ahead ? " up" : "") + '">'
+        + '<span class="sb-n">' + esc(names[r]) + "</span>"
+        + '<span class="sb-sv">' + (servingRow === r ? "●" : "") + "</span>"
+        + cells + "</div>";
+    }
+    return html;
+  }
+
   function lookup(m, st, servingIsA) {
     var sIdx = si[m.best_of] && si[m.best_of][st.sa + "-" + st.sb];
     var gIdx = gi[st.ga + "-" + st.gb];
     if (sIdx == null || gIdx == null) return null;
     var base = (sIdx * NG + gIdx) * 2;
-    if (servingIsA === null) return (dec(m.table, base) + dec(m.table, base + 1)) / 2;
+    if (servingIsA === null) {
+      return (dec(m.table, base) + dec(m.table, base + 1)) / 2;
+    }
     return dec(m.table, base + (servingIsA ? 0 : 1));
   }
 
-  function paint(m, p, st, live) {
+  function paint(m, p, bug) {
     var row = document.getElementById("m-" + m.id);
     if (!row) return;
-    row.querySelector(".js-score").textContent = st ? st.text : "—";
-    row.querySelector(".js-p").textContent = p == null ? "—"
-      : (100 * p).toFixed(0) + "%";
-    row.querySelector(".js-p2").textContent = p == null ? "—"
+    if (bug != null) row.querySelector(".js-sb").innerHTML = bug;
+    var q = function (s) { return row.querySelector(s); };
+    q(".js-p").textContent = p == null ? "—" : (100 * p).toFixed(0) + "%";
+    q(".js-p2").textContent = p == null ? "—"
       : (100 * (1 - p)).toFixed(0) + "%";
-    var bar = row.querySelector(".js-bar > i");
+    var bar = q(".js-bar > i");
     if (bar && p != null) bar.style.width = (100 * p).toFixed(0) + "%";
-    var mv = row.querySelector(".js-move");
+    var mv = q(".js-move");
     if (mv && p != null) {
       var d = p - m.p_pre;
       mv.textContent = (d >= 0 ? "+" : "") + (100 * d).toFixed(0);
-      mv.className = "js-move num " + (Math.abs(d) < 5 ? "dim"
-        : (d > 0 ? "good" : "bad"));
+      mv.className = "js-move num "
+        + (Math.abs(d) < 0.05 ? "dim" : (d > 0 ? "good" : "bad"));
     }
-    row.querySelector(".js-state").textContent = live ? "live" : "";
+  }
+
+  // The first paint comes from the scores the page was built with, so the
+  // scorebug is drawn once here and again on every refresh -- one function,
+  // not a server-rendered version and a client-rendered version that could
+  // disagree about the same match.
+  function initial() {
+    D.matches.forEach(function (m) {
+      var ls = [(m.sets && m.sets[0]) || [], (m.sets && m.sets[1]) || []];
+      var st = derive(ls[0], ls[1], m.best_of);
+      var serving = m.serving == null ? null : m.serving;
+      var p = ls[0].length
+        ? (st.done ? (st.sa > st.sb ? 1 : 0)
+           : lookup(m, st, serving == null ? null : serving === 0))
+        : m.p_pre;
+      paint(m, p, scorebug([m.p1, m.p2], ls, m.tb, serving, st));
+    });
   }
 
   function apply(events) {
@@ -299,23 +384,58 @@ LIVE_JS = """
       });
       var ai = nm.indexOf(m.p1), bi = nm.indexOf(m.p2);
       if (ai < 0 || bi < 0 || ai === bi) return;
-      var ls = c.competitors.map(function (x) {
-        return (x.linescores || []).map(function (s) { return s.value; });
+      var ls = [ai, bi].map(function (k) {
+        return (c.competitors[k].linescores || []).map(function (s) {
+          return s.value;
+        });
       });
-      var st = derive(ls[ai], ls[bi], m.best_of);
-      st.text = ls[ai].map(function (v, i) {
-        return v + "-" + ls[bi][i];
-      }).join(" ") || "0-0";
+      var tbs = [ai, bi].map(function (k) {
+        return (c.competitors[k].linescores || []).map(function (s) {
+          return s.tiebreak;
+        });
+      });
+      var st = derive(ls[0], ls[1], m.best_of);
       var servingIsA = null;
       if (c.situation && c.situation.possession != null) {
-        servingIsA = String(c.situation.possession) ===
-          String(c.competitors[ai].id);
+        servingIsA = String(c.situation.possession)
+          === String(c.competitors[ai].id);
       }
       var p = st.done ? (st.sa > st.sb ? 1 : 0) : lookup(m, st, servingIsA);
-      paint(m, p, st, true);
+      paint(m, p, scorebug([m.p1, m.p2], ls, tbs,
+                           servingIsA === null ? null : (servingIsA ? 0 : 1),
+                           st));
       seen++;
     });
     return seen;
+  }
+
+  // How old the numbers on screen are. A live page that has quietly stopped
+  // refreshing looks exactly like one that is up to date, which is the whole
+  // reason to say so out loud.
+  function ago(ms) {
+    var s = Math.round(ms / 1000);
+    if (s < 5) return "just now";
+    if (s < 60) return s + "s ago";
+    var mi = Math.round(s / 60);
+    return mi < 60 ? mi + " min ago" : Math.round(mi / 60) + "h ago";
+  }
+  function clock() {
+    var pill = document.getElementById("live-pill");
+    var txt = document.getElementById("live-clock");
+    if (!pill || !txt) return;
+    if (lastOk === null) {
+      pill.className = "pill warn";
+      pill.innerHTML = '<span class="dot"></span>not live';
+      txt.textContent = "showing the scores this page was built with"
+        + (D.built ? ", " + new Date(D.built).toLocaleTimeString() : "");
+      return;
+    }
+    var age = Date.now() - lastOk;
+    var stale = failing || age > 120000;
+    pill.className = "pill " + (stale ? "off" : "on");
+    pill.innerHTML = '<span class="dot"></span>' + (stale ? "stale" : "live");
+    txt.textContent = (stale ? "last successful update " : "updated ")
+      + ago(age) + " · " + new Date(lastOk).toLocaleTimeString();
   }
 
   function refresh() {
@@ -326,24 +446,23 @@ LIVE_JS = """
     })).then(function (docs) {
       var evs = [];
       docs.forEach(function (d) { evs = evs.concat(d.events || []); });
-      var n = apply(evs);
-      var note = document.getElementById("live-note");
-      if (note) note.textContent = n
-        ? "Updating from the scoreboard every 30 seconds."
-        : "No match on this page is currently on court.";
+      apply(evs);
+      lastOk = Date.now();
+      failing = false;
+      clock();
     }).catch(function () {
-      // The scoreboard is not reachable from the browser -- most likely it
-      // does not send the header that would allow it. The page keeps the
-      // scores it was built with and says so rather than going stale in
-      // silence.
-      var note = document.getElementById("live-note");
-      if (note) note.textContent = "Live refresh unavailable from the browser."
-        + " Scores below are from the last build; the probabilities beside"
-        + " them are still the model's answer for those scores.";
+      // The scoreboard is not reachable from the browser. The page keeps what
+      // it has and says how old it is rather than going stale in silence.
+      failing = true;
+      clock();
     });
   }
+
+  initial();
+  clock();
   refresh();
   setInterval(refresh, 30000);
+  setInterval(clock, 1000);
 })();
 """
 
@@ -363,24 +482,20 @@ def page_live(live, theme=None, event=None):
         return V.page("Live", "In-match win probability, from the same model",
                       "\n".join(body), "live.html", theme=theme, event=event)
 
-    trs = []
+    rows = []
     for m in sorted(live, key=lambda x: (x["tour"], x["tourney"])):
-        st = _score_text(m)
-        trs.append([
-            f'<span class="chip">{V.esc(m["tour"].upper())}</span> '
-            f'<span class="name">{V.esc(m["p1"])}</span>'
-            f'<br><span class="dim">{V.esc(m["p2"])}</span>',
-            f'<span class="js-score">{V.esc(st)}</span>'
-            f' <span class="js-state chip"></span>',
-            f'<span class="js-p num">{V.pct(m["p_pre"], 0)}</span>'
-            f'<br><span class="js-p2 dim num">{V.pct(1 - m["p_pre"], 0)}</span>',
-            f'<span class="bar js-bar" style="width:52px">'
-            f'<i style="width:{100*m["p_pre"]:.0f}%"></i></span>',
-            V.pct(m["p_pre"], 0),
-            '<span class="js-move num dim">—</span>',
-            f'<span class="chip">{V.esc(m["surface"])}</span> '
-            f'<span class="dim">{V.esc(m["round"])}</span>',
-        ])
+        rows.append(f"""<tr id="m-{V.esc(m["id"])}">
+<td><div class="js-sb sb"><div class="sb-r"><span class="sb-n">{V.esc(m["p1"])}</span></div>
+<div class="sb-r"><span class="sb-n">{V.esc(m["p2"])}</span>
+<span class="dim">&nbsp;{V.esc(_score_text(m))}</span></div></div></td>
+<td class="num"><span class="js-p">{V.pct(m["p_pre"], 0)}</span><br>
+<span class="js-p2 dim">{V.pct(1 - m["p_pre"], 0)}</span></td>
+<td><span class="bar js-bar" style="width:52px"><i style="width:{100*m["p_pre"]:.0f}%"></i></span></td>
+<td class="num">{V.pct(m["p_pre"], 0)}</td>
+<td class="num"><span class="js-move num dim">&mdash;</span></td>
+<td><span class="chip">{V.esc(m["tour"].upper())}</span>
+<span class="chip">{V.esc(m["surface"])}</span>
+<span class="dim">{V.esc(m["round"])}</span></td></tr>""")
 
     payload = {
         "built": datetime.now(timezone.utc).isoformat(),
@@ -390,30 +505,38 @@ def page_live(live, theme=None, event=None):
         "matches": live,
     }
     body = [
-        V.table(["Match", "Score", "Win %", "", "Pre-match", "Move",
-                 "Context"], trs,
-                ["name", "", "num", "", "num", "num", ""]),
-        '<p class="note" id="live-note">Loading the scoreboard…</p>',
+        '<div class="livebar"><span class="pill" id="live-pill">'
+        '<span class="dot"></span>connecting</span>'
+        '<span id="live-clock">checking the scoreboard…</span></div>',
+        '<div class="scroll"><table><thead><tr>'
+        '<th>Match</th><th class="num">Win %</th><th></th>'
+        '<th class="num">Pre-match</th><th class="num">Move</th>'
+        '<th>Context</th></tr></thead><tbody>'
+        + "".join(rows) + "</tbody></table></div>",
         '<p class="note">A live probability here is the same propagation that '
         'produces the pre-match number, entered at the current score instead '
-        'of at the first point — at 0-0 it returns exactly the figure on the '
-        'matches page. The resolution is a game, not a point: the scoreboard '
-        'moves when a game ends, so that is as fine as the state can honestly '
-        'be. Who is serving matters more than it looks — at 5-4 in a deciding '
-        'set the same scoreline is a 93% win for the server and 66% for the '
-        'receiver — so when the scoreboard does not say, the two are averaged '
-        'and the number is correspondingly blunter.</p>',
+        'of at the first point — at 0-0 it returns exactly the figure on '
+        'the matches page. The resolution is a game, not a point: the '
+        'scoreboard moves when a game ends, so that is as fine as the state '
+        'can honestly be. Who is serving matters more than it looks — at '
+        '5-4 in a deciding set the same scoreline is a 93% win for the server '
+        'and 66% for the receiver — so when the scoreboard does not say, '
+        'the two are averaged and the number is correspondingly blunter.</p>',
         '<script>window.__LIVE__=' + json.dumps(payload, separators=(",", ":"))
         + ';</script>',
         f"<script>{LIVE_JS}</script>",
     ]
     return V.page("Live", f"{len(live)} matches on court or about to be",
-                  "\n".join(body), "live.html", theme=theme, event=event)
+                  "\n".join(body), "live.html", theme=theme, event=event,
+                  extra_css=LIVE_CSS)
 
 
 def _score_text(m):
+    """The plain fallback for a reader without JavaScript, who never sees the
+    scorebug because the scorebug is drawn by the script."""
     a, b = m.get("sets") or ([], [])
-    pairs = [f"{x}-{y}" for x, y in zip(a, b) if x is not None and y is not None]
+    pairs = [f"{x}-{y}" for x, y in zip(a or [], b or [])
+             if x is not None and y is not None]
     return " ".join(pairs) if pairs else "not started"
 
 
@@ -466,6 +589,27 @@ group for the whole exercise.</p>""")
 
 # ---------------------------------------------------------------------------
 
+def _report_skipped(skipped, show=8):
+    """Say which matches were dropped and why.
+
+    Without this the answer to "why is that match not on the page?" is a
+    silence that looks identical whether the model refused the players, the
+    names failed to match the archive, or the match was never on the
+    scoreboard at all.
+    """
+    if not skipped:
+        return
+    by_reason = defaultdict(list)
+    for s in skipped:
+        by_reason[s["reason"].split(":")[0]].append(s)
+    for kind, group in sorted(by_reason.items(), key=lambda kv: -len(kv[1])):
+        print(f"      {len(group)} {kind}")
+        for s in group[:show]:
+            print(f"        {s['p1']} v {s['p2']}  ({s['reason']})")
+        if len(group) > show:
+            print(f"        ... and {len(group) - show} more")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--date")
@@ -480,7 +624,8 @@ def main():
         try:
             # "in" as well as "pre": the live page prices what is on court,
             # and one ratings fit serves both.
-            _, _, rs = P.build(tour, day=day, states=("pre", "in"))
+            _, _, rs, skipped = P.build(tour, day=day,
+                                        states=("pre", "in"))
         except Exception as e:
             print(f"  {tour}: {type(e).__name__}: {e}")
             continue
@@ -489,7 +634,8 @@ def main():
                 live.append(P.live_view(r))
         # Every other page is about matches that have not started.
         rs = [r for r in rs if r["match"]["state"] == "pre"]
-        print(f"  {tour}: {len(rs)} matches projected")
+        print(f"  {tour}: {len(rs)} projected, {len(skipped)} skipped")
+        _report_skipped(skipped)
         rows += rs
     print(f"  live tables: {len(live)}")
 

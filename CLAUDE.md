@@ -269,6 +269,28 @@ honestly: the page renders the scores it was built with, and the note under
 the table says the refresh is unavailable rather than letting a stale number
 look live. Confirm it in a real browser before trusting the word "live".
 
+**A name that differs only in spacing is the same player, and used to be a
+different one.** The archive writes "Xin Yu Wang", ESPN writes "Xinyu Wang".
+The surname-plus-initial fallback assumes the first token is the given name
+and the rest is the surname, so the archive spelling filed her under
+`("yuwang", "x")` and she never appeared in the `("wang", "x")` bucket at all
+-- which held only Xiyu Wang, who was therefore returned as an unambiguous
+hit. `Resolver` now indexes the full name with the spaces removed and tries
+that before anything that guesses. A wrong id is worse than a missing row:
+the match is still priced, just for somebody else, and nothing downstream can
+tell.
+
+**An ambiguous surname is refused unless one candidate dwarfs the rest.** The
+usual collision is a tour regular against somebody with a handful of
+qualifying matches, which is safe to call; two established players who
+collide are not, so they are skipped instead.
+
+**Every dropped match now says why it was dropped.** `project.build` returns
+the matches it could not price alongside the ones it could, and `build.py`
+prints them grouped by reason. A silently skipped match looks exactly like a
+match that was never on the scoreboard, which makes "are we showing
+everything?" unanswerable.
+
 **Half a slam's draw is `TBD`.** Of 127 unplayed men's singles matches at a
 slam, 63 have an undetermined side. That is not a resolver bug.
 

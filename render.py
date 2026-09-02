@@ -110,7 +110,10 @@ def bar(p, width=52):
     return f'<span class="bar" style="width:{width}px"><i style="width:{100*p:.0f}%"></i></span>'
 
 
-def page(title, subtitle, body, active="", note="", theme=None, event=None):
+def page(title, subtitle, body, active="", note="", theme=None, event=None,
+         extra_css=""):
+    """extra_css carries styles only one page needs -- the live scorebug is
+    a fair amount of CSS to put on four pages that will never draw one."""
     nav = "".join(
         f'<a href="{h}" class="{"on" if h == active else ""}">{esc(t)}</a>'
         for h, t in NAV)
@@ -122,7 +125,7 @@ def page(title, subtitle, body, active="", note="", theme=None, event=None):
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{esc(title)}</title><style>{CSS}</style>{skin}</head>
+<title>{esc(title)}</title><style>{CSS}</style>{skin}{f"<style>{extra_css}</style>" if extra_css else ""}</head>
 <body><div class="wrap">
 <nav>{nav}</nav>
 {badge}<h1>{esc(title)}</h1>

@@ -248,6 +248,21 @@ def spread_cover(pa, pb, best_of, handicap):
     return cover
 
 
+def spread_cover_form(pa, pb, best_of, handicap, sigma=0.0, nodes=3):
+    """spread_cover under the same form variation as everything else.
+
+    The games handicap is the one market on the site that was still priced off
+    a fixed pair of serve percentages while the totals beside it came from the
+    integrated distribution -- and the handicap is precisely the market that
+    lives on how lopsided a match can get, which is what the integration is
+    for. Two prices on one row should not come from two models.
+    """
+    if sigma <= 0:
+        return spread_cover(pa, pb, best_of, handicap)
+    return sum(w * spread_cover(qa, qb, best_of, handicap)
+               for qa, qb, w in _form_pairs(pa, pb, sigma, nodes))
+
+
 def serve_volume(pa, pb, best_of=3):
     """Expected service games and service points for each player.
 
@@ -347,6 +362,39 @@ _GH = {
 }
 
 
+def _form_pairs(pa, pb, sigma, nodes):
+    """The (pa, pb, weight) grid both form integrations run over. Rounded so
+    the dynamic programming caches hit across matches."""
+    grid = _GH[nodes]
+    for za, wa in grid:
+        for zb, wb in grid:
+            yield (round(min(max(pa + za * sigma, 0.30), 0.85), 4),
+                   round(min(max(pb + zb * sigma, 0.30), 0.85), 4),
+                   wa * wb)
+
+
+def serve_volume_form(pa, pb, best_of=3, sigma=0.0, nodes=3):
+    """serve_volume, integrated over the same day-to-day form variation the
+    match distribution is already integrated over.
+
+    Leaving it out was an inconsistency with a measurable cost. Expected points
+    in a service game peak when the two players are level, so assuming both
+    bring exactly their average serve credits every match with more service
+    points than it will have -- and every counting prop is that number times a
+    rate. Measured over 2024-2025 the fixed-form version expected about six
+    service points per player per match too many, four percent on every ace and
+    double-fault line and all in the same direction.
+    """
+    if sigma <= 0:
+        return serve_volume(pa, pb, best_of=best_of)
+    out = defaultdict(float)
+    for qa, qb, w in _form_pairs(pa, pb, sigma, nodes):
+        v = serve_volume(qa, qb, best_of=best_of)
+        for k, x in v.items():
+            out[k] += w * x
+    return dict(out)
+
+
 def match_dist_form(pa, pb, best_of=3, sigma=0.0, nodes=3, **kw):
     """match_dist, integrated over day-to-day variation in serve percentage.
 
@@ -362,23 +410,18 @@ def match_dist_form(pa, pb, best_of=3, sigma=0.0, nodes=3, **kw):
     if sigma <= 0:
         return match_dist(pa, pb, best_of=best_of, **kw)
 
-    grid = _GH[nodes]
     acc_win = 0.0
     totals = defaultdict(float)
     sets = defaultdict(float)
     straight = 0.0
-    for za, wa in grid:
-        for zb, wb in grid:
-            w = wa * wb
-            qa = min(max(pa + za * sigma, 0.30), 0.85)
-            qb = min(max(pb + zb * sigma, 0.30), 0.85)
-            d = match_dist(round(qa, 4), round(qb, 4), best_of=best_of, **kw)
-            acc_win += w * d["p_win"]
-            straight += w * d["p_straight"]
-            for g, p in d["totals"].items():
-                totals[g] += w * p
-            for s, p in d["sets"].items():
-                sets[s] += w * p
+    for qa, qb, w in _form_pairs(pa, pb, sigma, nodes):
+        d = match_dist(qa, qb, best_of=best_of, **kw)
+        acc_win += w * d["p_win"]
+        straight += w * d["p_straight"]
+        for g, p in d["totals"].items():
+            totals[g] += w * p
+        for s, p in d["sets"].items():
+            sets[s] += w * p
     return {
         "p_win": acc_win, "totals": dict(totals), "sets": dict(sets),
         "p_straight": straight,

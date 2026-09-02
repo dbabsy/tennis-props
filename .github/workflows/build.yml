@@ -30,6 +30,12 @@ jobs:
         with:
           python-version: "3.12"
 
+      # Cheap, offline, and it fails the build before a broken model can be
+      # published. The ledger's "never record a started match" rule is in here.
+      - name: Self-test
+        run: |
+          python3 selftest.py
+
       - name: Build pages
         run: |
           python3 build.py --out public

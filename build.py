@@ -17,6 +17,7 @@ from collections import defaultdict
 from datetime import date, datetime, timezone
 from pathlib import Path
 
+import conditions as C
 import fetch
 import model
 import project as P
@@ -165,10 +166,15 @@ def page_props(rows, theme=None, event=None):
         'the opportunity is the part most projections get wrong: a player who '
         'is about to be beaten in straight sets does not serve enough to reach '
         'a big ace line. Serve points here come from the same match model that '
-        'produces the win probabilities. Counts are drawn from a beta-binomial '
-        'rather than a binomial, because measured ace counts are about 35% '
-        'wider than binomial — treating them as binomial understates every '
-        'over.</p>')
+        'produces the win probabilities, carrying the same day-to-day '
+        'variation in form — an even match runs longer, and a projection that '
+        'widened the match but not the serve count would quietly inflate every '
+        'over. The rate is a property of the surface as much as the server: '
+        'the same arm hits about two thirds as many aces on clay as on hard, '
+        'so the rate is fitted per surface rather than blended across them. '
+        'Counts are drawn from a beta-binomial rather than a binomial, because '
+        'measured ace counts run about a third wider than binomial — treating '
+        'them as binomial understates every over.</p>')
     return V.page("Player props",
                   "Ace and double-fault projections, with the serve volume behind them",
                   "\n".join(body), "props.html", theme=theme, event=event)
@@ -191,7 +197,8 @@ def page_edges(rows, theme=None, event=None):
             ov = model.total_over(r["dist"], ln)
             cells.append(f'{ln}: <span class="dim">o</span>{_price(ov)}'
                          f' <span class="dim">u</span>{_price(1-ov)}')
-        cover = model.spread_cover(r["pa"], r["pb"], r["best_of"], -3.5)
+        cover = model.spread_cover_form(r["pa"], r["pb"], r["best_of"], -3.5,
+                                        sigma=P.FORM_SIGMA, nodes=P.FORM_NODES)
         trs.append([
             f'<span class="chip">{V.esc(r["match"]["tour"].upper())}</span> '
             f'<span class="name">{V.esc(a)}</span>'
@@ -218,14 +225,15 @@ def page_conditions(rows, theme=None, event=None):
         if c and c["venue"] not in seen:
             seen[c["venue"]] = c
     for key, c in sorted(seen.items()):
-        ace_mult = 1.0 + P.ACE_RHO_SLOPE * (c["rho"] - 1.195) / 0.08
+        # In ace-rate points, which is the unit the slope was measured in.
+        ace_shift = P.ACE_RHO_SLOPE * (c["rho"] - C.RHO_REF)
         cards.append(f"""<div class="card">
 <div class="lab">{V.esc(key)}</div>
 <div class="stat">{c['rho']:.3f} <span class="lab">kg/m³</span></div>
 <p class="note">{c['temp_c']:.0f}°C · {c['rh']:.0f}% RH ·
 {c['wind_kmh']:.0f} km/h wind · {c['elevation_m']:.0f} m ·
 rain {c['precip_pct']:.0f}%<br>
-ace rate ×{ace_mult:.3f} versus still, sea-level air</p></div>""")
+ace rate {100*ace_shift:+.2f} points versus ordinary sea-level air</p></div>""")
 
     body = [f'<div class="grid">{"".join(cards)}</div>' if cards else
             '<p class="note">No outdoor venue on today\'s slate resolved to a '

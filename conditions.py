@@ -141,8 +141,9 @@ def measure(tagged, ratings=None):
             spw = ((m.get(f"{me}_1stWon") or 0)
                    + (m.get(f"{me}_2ndWon") or 0)) / svpt
             if ratings is not None:
-                exp_ace = ratings.ace_rate(pid, oid)
-                exp_spw = ratings.matchup(pid, oid, m["surface"])[0]
+                exp_ace = ratings.ace_rate(pid, oid, surface=m["surface"])
+                exp_spw = ratings.matchup(pid, oid, m["surface"],
+                                          best_of=m.get("best_of") or 3)[0]
                 ace, spw = ace - exp_ace, spw - exp_spw
             rows.append({"rho": m["rho"], "ace": ace, "spw": spw,
                          "elev": m["elevation_m"], "temp": m["temp_c"],

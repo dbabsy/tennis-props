@@ -10,23 +10,33 @@ distribution, and serve volume for the ace and double-fault props.
 **Pages:** [conditions](index.html) · [matches](matches.html) ·
 [props](props.html) · [fair prices](edges.html) · [accuracy](accuracy.html)
 
-Measured by walk-forward backtest against Pinnacle/Bet365 closing lines,
-ratings refit weekly on data strictly before each match:
+Measured by walk-forward backtest, ratings refit weekly on data strictly
+before each match. Log loss and MAE; lower is better.
 
-| | matches | model | market | gap | games MAE | games bias |
+| | matches | log loss | games MAE | games bias | ace MAE | ace bias |
 |---|---|---|---|---|---|---|
-| ATP 2024 | 1,930 | 0.626 | 0.593 | +0.033 | 5.56 | +0.75 |
-| ATP 2025 | 1,781 | 0.633 | 0.600 | +0.033 | 5.58 | +0.64 |
-| WTA 2024 | 1,702 | 0.631 | 0.599 | +0.032 | 5.09 | +0.84 |
-| WTA 2025 | 1,697 | 0.639 | 0.612 | +0.028 | 4.99 | +0.82 |
+| ATP 2024 | 2,487 | 0.6193 | 5.53 | +0.61 | 2.79 | −0.27 |
+| ATP 2025 | 2,201 | 0.6230 | 5.54 | +0.48 | 2.83 | −0.17 |
+| WTA 2024 | 2,131 | 0.6228 | 5.06 | +0.75 | 1.63 | +0.01 |
+| WTA 2025 | 2,027 | 0.6324 | 4.96 | +0.72 | 1.78 | +0.01 |
 
-Log loss; lower is better. The model sits behind the closing line, as it
-should — a public model that beat the close would be suspicious. That ~0.03 gap
-is the hurdle a price has to clear before it is an edge. On WTA the model's
-raw accuracy (65.5%) is within a point of the market's (66.2%), consistent
-with a thinner market.
+Ace numbers are per player-match. The same walk-forward pass, before the
+current round of fixes, gave 0.6217 / 0.6239 / 0.6259 / 0.6337 on log loss and
+3.04 / 3.06 / 1.73 / 1.84 on ace MAE — the props moved much further than the
+match odds did, because the rate model had no idea what surface it was on.
 
-Python 3, standard library only. No API keys. See `CLAUDE.md` for the data
-sources and the decisions that took measurement to reach.
+**Against the closing line:** the last measurement with odds access put the
+model 0.028–0.033 of log loss behind Pinnacle/Bet365 across both tours in 2024
+and 2025 (n=1,700–1,930 per cell), which is the hurdle a price has to clear
+before it is an edge. That comparison has *not* been re-run since the current
+changes, because tennis-data.co.uk was unreachable when they were made. The
+model sits behind the closing line, as it should — a public model that beat the
+close would be suspicious. On WTA the model's raw accuracy (65.5%) is within a
+point of the market's (66.2%), consistent with a thinner market.
+
+Python 3, standard library only. No API keys. `python3 selftest.py` runs the
+offline checks; `python3 backtest.py --tour atp --year 2025` runs the
+walk-forward evaluation. See `CLAUDE.md` for the data sources and the decisions
+that took measurement to reach.
 
 Projections are estimates, not advice.

@@ -506,6 +506,16 @@ def main():
                                    encoding="utf-8")
     print("  wrote live.html")
 
+    # Deployed alongside the site so the CORS question can be answered from
+    # the origin that actually matters. Opening it from disk sends
+    # "Origin: null", which some hosts refuse even when a real origin passes.
+    # Not in the nav: it is a diagnostic, not a page.
+    check = Path(__file__).resolve().parent / "livecheck.html"
+    if check.exists():
+        (out / "livecheck.html").write_text(check.read_text(encoding="utf-8"),
+                                            encoding="utf-8")
+        print("  wrote livecheck.html")
+
     # The accuracy page is built by ledger.py but must not look like a
     # different site, so the chosen theme is handed over on disk.
     (Path(__file__).resolve().parent / "data" / "theme.json").write_text(

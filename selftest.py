@@ -503,6 +503,13 @@ def test_render():
     check("cell contents are escaped",
           "&lt;script&gt;" in V.table(["a"], [[V.esc("<script>")]]))
 
+    probe = Path(__file__).resolve().parent / "livecheck.html"
+    check("the live feed check ships with the site", probe.exists())
+    if probe.exists():
+        text = probe.read_text(encoding="utf-8")
+        check("the live feed check is self-contained",
+              "src=" not in text and text.count("<script") == 1)
+
 
 if __name__ == "__main__":
     for fn in (test_distributions, test_serve_rotation, test_live,

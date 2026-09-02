@@ -292,7 +292,11 @@ match that was never on the scoreboard, which makes "are we showing
 everything?" unanswerable.
 
 **Half a slam's draw is `TBD`.** Of 127 unplayed men's singles matches at a
-slam, 63 have an undetermined side. That is not a resolver bug.
+slam, 63 have an undetermined side. That is not a resolver bug, and the skip
+report counts it separately for that reason: on a US Open day 32 of the 33
+"unresolved" ATP matches were placeholders, and the one real name miss was
+invisible among them. Groups print smallest first, because the short ones are
+the ones somebody can act on.
 
 **`hash()` is salted per process.** `backtest.py` orients matches with
 `zlib.crc32` so runs are reproducible. Using `hash()` makes every backtest

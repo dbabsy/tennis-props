@@ -306,6 +306,12 @@ def test_resolver():
     check("an unmatched name says so",
           (P.why_not(_Rt(), r, m2) or "").startswith("unresolved"),
           P.why_not(_Rt(), r, m2))
+    # A draw position waiting on an earlier round is not a failure to match a
+    # name, and counting it as one hides the failures that are.
+    m3 = {"p1": {"name": "TBD"}, "p2": {"name": "Anna Kalinskaya"}}
+    check("an undetermined opponent is not called a name-matching failure",
+          (P.why_not(_Rt(), r, m3) or "").startswith("undetermined"),
+          P.why_not(_Rt(), r, m3))
 
 
 def test_ledger():

@@ -602,8 +602,14 @@ def _report_skipped(skipped, show=8):
     by_reason = defaultdict(list)
     for s in skipped:
         by_reason[s["reason"].split(":")[0]].append(s)
-    for kind, group in sorted(by_reason.items(), key=lambda kv: -len(kv[1])):
+    for kind, group in sorted(by_reason.items(), key=lambda kv: len(kv[1])):
         print(f"      {len(group)} {kind}")
+        # A draw position waiting on an earlier round has no name to print and
+        # nothing to fix, so only the count is worth the line. The groups are
+        # ordered smallest first for the same reason: the short ones are the
+        # ones somebody can act on.
+        if kind == "undetermined":
+            continue
         for s in group[:show]:
             print(f"        {s['p1']} v {s['p2']}  ({s['reason']})")
         if len(group) > show:

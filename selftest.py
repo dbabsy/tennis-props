@@ -18,8 +18,13 @@ either gone wrong or would go wrong undetectably:
 Run:  python3 selftest.py
 """
 
+import json
+import shutil
+import subprocess
 import sys
+import tempfile
 from datetime import date, datetime, timedelta, timezone
+from pathlib import Path
 
 import ledger
 import model
@@ -112,6 +117,65 @@ def test_serve_rotation():
     check("serve_volume_form with no sigma is serve_volume",
           close(model.serve_volume_form(0.65, 0.62, sigma=0.0)["sv_points_a"],
                 fixed["sv_points_a"]))
+
+
+def test_live():
+    """The live number has to BE the pre-match number, restarted.
+
+    That is the whole claim the live page makes, and it is the one thing that
+    could break silently: a live figure that quietly disagreed with the match
+    page about the same match would look plausible from either side.
+    """
+    print("live")
+    for bo in (3, 5):
+        live = model.live_dist(0.65, 0.62, 0, 0, 0, 0, True, best_of=bo)
+        pre = model.match_dist(0.65, 0.62, best_of=bo)
+        check(f"bo{bo} live at 0-0 is the pre-match win probability",
+              close(live["p_win"], pre["p_win"], 1e-12))
+        check(f"bo{bo} live at 0-0 is the pre-match games total",
+              close(live["exp_remaining"], pre["exp_games"], 1e-9))
+
+    check("set_from at 0-0 is set_dist",
+          all(close(v, model.set_dist(0.65, 0.62).get(k, 0.0), 1e-12)
+              for k, v in model.set_from(0.65, 0.62, 0, 0, True).items()))
+
+    done = model.live_dist(0.65, 0.62, 2, 0, 0, 0, True, best_of=3)
+    check("a finished match is not still a probability", done["p_win"] == 1.0
+          and done["exp_remaining"] == 0.0)
+
+    up = model.live_dist(0.65, 0.62, 1, 0, 3, 1, True, best_of=3)["p_win"]
+    level = model.live_dist(0.65, 0.62, 0, 0, 0, 0, True, best_of=3)["p_win"]
+    down = model.live_dist(0.65, 0.62, 0, 1, 1, 3, True, best_of=3)["p_win"]
+    check("a set and a break up beats level beats a set and a break down",
+          down < level < up, f"{down:.3f} < {level:.3f} < {up:.3f}")
+
+    serve = model.live_dist(0.65, 0.62, 1, 1, 5, 4, True, best_of=3)["p_win"]
+    recv = model.live_dist(0.65, 0.62, 1, 1, 5, 4, False, best_of=3)["p_win"]
+    check("serving for the match beats receiving at the same score",
+          serve > recv + 0.15, f"{serve:.3f} vs {recv:.3f}")
+
+    # The index arithmetic the browser does, done here against the table it
+    # will be given. If these two ever disagree the page reads the wrong row
+    # for the right score and nothing looks wrong.
+    for bo in (3, 5):
+        tbl = model.live_table(0.65, 0.62, best_of=bo)
+        games, sets = model.game_states(), model.set_states(bo)
+        check(f"bo{bo} table covers every state exactly once",
+              len(tbl) == len(sets) * len(games) * 2)
+        enc = model.encode_table(tbl)
+        check(f"bo{bo} table encodes to two characters a state",
+              len(enc) == 2 * len(tbl))
+        worst = 0.0
+        for si, (sa, sb) in enumerate(sets):
+            for gi, (ga, gb) in enumerate(games):
+                for k, serving in enumerate((True, False)):
+                    i = (si * len(games) + gi) * 2 + k
+                    want = model.live_dist(0.65, 0.62, sa, sb, ga, gb, serving,
+                                           best_of=bo)["p_win"]
+                    got = int(enc[2 * i:2 * i + 2], 36) / 1295
+                    worst = max(worst, abs(got - want))
+        check(f"bo{bo} every encoded entry matches its own state",
+              worst < 0.001, f"worst {worst:.5f}")
 
 
 def test_monotonicity():
@@ -269,13 +333,163 @@ def test_pipeline():
                                  best_of=r["best_of"])["sv_points_a"]
               for r in rows))
 
+    live = [P.live_view(r) for r in rows]
+    check("a live view carries a table for every state",
+          all(len(v["table"]) == 2 * len(model.set_states(v["best_of"]))
+              * len(model.game_states()) * 2 for v in live))
+    check("the live table agrees with the pre-match number it ships beside",
+          all(abs(int(v["table"][0:2], 36) / 1295 - v["p_pre"]) < 0.002
+              for v in live))
+
     theme, event = build.slate_theme(rows)
+    check("live.html renders with matches",
+          build.page_live(live, "usopen", "US Open").strip().endswith("</html>"))
+    check("live.html renders with nothing on court",
+          "fills in when a match is under way" in build.page_live([]))
     for name, fn in (("index.html", build.page_conditions),
                      ("matches.html", build.page_matches),
                      ("props.html", build.page_props),
                      ("edges.html", build.page_edges)):
         html = fn(rows, theme, event)
         check(f"{name} renders", html.strip().endswith("</html>") and len(html) > 800)
+
+
+HARNESS = """
+globalThis.window = globalThis;
+window.__LIVE__ = PAYLOAD;
+const PAINTED = {};
+function cell() { return {textContent: "", className: "", style: {}}; }
+globalThis.document = {
+  getElementById(id) {
+    if (id === "live-note") return cell();
+    const row = PAINTED[id] || (PAINTED[id] = {});
+    return {querySelector(sel) { return row[sel] || (row[sel] = cell()); }};
+  }
+};
+globalThis.setInterval = function () {};
+globalThis.fetch = function (url) {
+  const doc = url.indexOf("/atp/") >= 0 ? SCOREBOARD : {events: []};
+  return Promise.resolve({json: () => Promise.resolve(doc)});
+};
+LIVE_JS
+setTimeout(function () {
+  const out = {};
+  for (const id of Object.keys(PAINTED)) {
+    out[id] = {p: PAINTED[id][".js-p"] ? PAINTED[id][".js-p"].textContent : null,
+               score: PAINTED[id][".js-score"]
+                 ? PAINTED[id][".js-score"].textContent : null};
+  }
+  console.log(JSON.stringify(out));
+}, 20);
+"""
+
+
+def _espn_stub(mid, names, linescores, serving_id=None):
+    comps = [{"id": f"c{i}", "athlete": {"displayName": n, "id": f"a{i}"},
+              "linescores": [{"value": v} for v in ls]}
+             for i, (n, ls) in enumerate(zip(names, linescores))]
+    comp = {"id": mid, "competitors": comps}
+    if serving_id is not None:
+        comp["situation"] = {"possession": f"c{serving_id}"}
+    return comp
+
+
+def test_live_js():
+    """Run the JavaScript the page actually ships, against the table it
+    actually ships, and check it reads the same answer model.py would.
+
+    The index arithmetic in the browser and the enumeration in model.py are
+    two halves of one agreement. If they drift, the page shows a real
+    probability for the wrong scoreline and nothing anywhere looks broken --
+    which is the sort of bug that survives for a season.
+    """
+    print("live javascript")
+    node = shutil.which("node")
+    if not node:
+        check("node is available to exercise the live page", True,
+              "skipped: no node on this machine")
+        return
+
+    import build
+    import project as P
+
+    obs = _synthetic_obs()
+    rt = R.Ratings("atp", obs, date(2026, 1, 1), k_serve=50, k_return=50)
+    res = P.Resolver(obs)
+
+    def match(mid, bo, tourney):
+        return {"id": mid, "event_id": "e", "tourney": tourney, "sex": "m",
+                "tour": "atp", "round": "R2", "best_of": bo, "state": "in",
+                "completed": False, "detail": "", "court": "", "site": "",
+                "start": datetime(2026, 6, 1, 12, 0, tzinfo=timezone.utc),
+                "serving": None,
+                "p1": {"name": "A", "won": False, "sets": [], "tb": []},
+                "p2": {"name": "B", "won": False, "sets": [], "tb": []}}
+
+    rows = [P.project(rt, res, match("m1", 5, "Wimbledon")),
+            P.project(rt, res, match("m2", 3, "Cincinnati")),
+            P.project(rt, res, match("m3", 3, "Cincinnati")),
+            P.project(rt, res, match("m4", 3, "Cincinnati"))]
+    live = [P.live_view(r) for r in rows]
+
+    board = {"events": [{"groupings": [{"competitions": [
+        # A up a set and a break, A serving.
+        _espn_stub("m1", ["A", "B"], [[6, 3], [4, 1]], serving_id=0),
+        # ESPN lists the two the other way round -- the page has to read the
+        # orientation off the names, not the position.
+        _espn_stub("m2", ["B", "A"], [[1, 3], [6, 4]], serving_id=1),
+        # Nobody says who is serving.
+        _espn_stub("m3", ["A", "B"], [[5], [4]]),
+        # Over.
+        _espn_stub("m4", ["A", "B"], [[6, 6], [4, 3]]),
+    ]}]}]}
+
+    src = (HARNESS.replace("PAYLOAD", json.dumps({
+        "built": "", "games": [f"{a}-{b}" for a, b in model.game_states()],
+        "sets": {str(bo): [f"{a}-{b}" for a, b in model.set_states(bo)]
+                 for bo in (3, 5)},
+        "matches": live}))
+        .replace("SCOREBOARD", json.dumps(board))
+        .replace("LIVE_JS", build.LIVE_JS))
+
+    with tempfile.TemporaryDirectory() as d:
+        f = Path(d) / "harness.js"
+        f.write_text(src, encoding="utf-8")
+        proc = subprocess.run([node, str(f)], capture_output=True, text=True,
+                              timeout=60)
+    if proc.returncode != 0:
+        check("the live page's javascript runs", False,
+              proc.stderr.strip().splitlines()[-1] if proc.stderr else "")
+        return
+    got = json.loads(proc.stdout)
+
+    def want(row, sa, sb, ga, gb, serving):
+        # The same call live_view makes, form integration included -- the
+        # page is compared against the model, not against a simpler model.
+        return model.live_prob(round(row["pa"], 4), round(row["pb"], 4),
+                               sa, sb, ga, gb, serving,
+                               best_of=row["best_of"],
+                               final_set_tb_target=(10 if row["best_of"] == 5
+                                                    else 7),
+                               sigma=P.FORM_SIGMA, nodes=P.FORM_NODES)
+
+    def pct(x):
+        return f"{100 * x:.0f}%"
+
+    check("a set and a break up, server known",
+          got["m-m1"]["p"] == pct(want(rows[0], 1, 0, 3, 1, True)),
+          f'js {got["m-m1"]["p"]} vs model {pct(want(rows[0], 1, 0, 3, 1, True))}')
+    check("orientation is read off the names, not ESPN's ordering",
+          got["m-m2"]["p"] == pct(want(rows[1], 1, 0, 3, 1, True)),
+          f'js {got["m-m2"]["p"]} vs model {pct(want(rows[1], 1, 0, 3, 1, True))}')
+    mix = (want(rows[2], 0, 0, 5, 4, True) + want(rows[2], 0, 0, 5, 4, False)) / 2
+    check("an unknown server averages the two rather than guessing",
+          got["m-m3"]["p"] == pct(mix),
+          f'js {got["m-m3"]["p"]} vs model {pct(mix)}')
+    check("a finished match reads 100%, not a probability",
+          got["m-m4"]["p"] == "100%", got["m-m4"]["p"])
+    check("the score is rendered from the scoreboard",
+          got["m-m1"]["score"] == "6-4 3-1", got["m-m1"]["score"])
 
 
 def test_render():
@@ -291,8 +505,9 @@ def test_render():
 
 
 if __name__ == "__main__":
-    for fn in (test_distributions, test_serve_rotation, test_monotonicity,
-               test_ratings, test_ledger, test_pipeline, test_render):
+    for fn in (test_distributions, test_serve_rotation, test_live,
+               test_monotonicity, test_ratings, test_ledger, test_pipeline,
+               test_live_js, test_render):
         fn()
     print()
     if FAILURES:

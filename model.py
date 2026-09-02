@@ -427,3 +427,174 @@ def match_dist_form(pa, pb, best_of=3, sigma=0.0, nodes=3, **kw):
         "p_straight": straight,
         "exp_games": sum(g * p for g, p in totals.items()),
     }
+
+
+# ---------------------------------------------------------------------------
+# In-match: the same distribution, entered part way through
+# ---------------------------------------------------------------------------
+#
+# match_dist walks forward from 0-0, so conditioning on a live score is not a
+# different model -- it is the same walk started somewhere else. That matters
+# more than the convenience: a live number computed by a second, simpler model
+# would disagree with the pre-match one on the same match, and there would be
+# no way to tell which was wrong.
+#
+# The resolution is a game, not a point. ESPN's linescores move when a game
+# ends, so that is as fine as the state can honestly be.
+
+@lru_cache(maxsize=None)
+def set_from(pa, pb, games_a, games_b, a_serving, tb_at=6, tb_target=7):
+    """Distribution over a set's FINAL score, from a partial one.
+
+    set_dist decides the server by parity from 0-0. Part way through a set
+    that is not available -- the score alone does not say who serves next --
+    so the server is carried explicitly instead.
+
+    Cached, because building a whole match's table walks the same continuation
+    from 0-0 once per state it can be reached from. Without it a best-of-five
+    table takes thirteen seconds and the build takes a quarter of an hour.
+    """
+    out = defaultdict(float)
+    states = {(games_a, games_b, a_serving): 1.0}
+    while states:
+        nxt = defaultdict(float)
+        for (a, b, serving), pr in states.items():
+            hold = game_prob(pa) if serving else game_prob(pb)
+            for server_won, p in ((True, hold), (False, 1.0 - hold)):
+                na, nb = (a + 1, b) if server_won == serving else (a, b + 1)
+                w = pr * p
+                if w <= 1e-13:
+                    continue
+                serves_next = not serving
+                if na == tb_at and nb == tb_at:
+                    t = (tiebreak_prob(pa, pb, tb_target) if serves_next
+                         else 1.0 - tiebreak_prob(pb, pa, tb_target))
+                    out[(na + 1, nb)] += w * t
+                    out[(na, nb + 1)] += w * (1.0 - t)
+                elif ((na >= tb_at and na - nb >= 2)
+                      or (nb >= tb_at and nb - na >= 2)):
+                    out[(na, nb)] += w
+                else:
+                    nxt[(na, nb, serves_next)] += w
+        states = {k: v for k, v in nxt.items() if v > 1e-13}
+    return dict(out)
+
+
+def live_dist(pa, pb, sets_a, sets_b, games_a, games_b, a_serving,
+              best_of=3, final_set_tb_target=7):
+    """Where the match stands -> how it finishes.
+
+    `sets_a`/`sets_b` are sets already won, `games_a`/`games_b` the score in
+    the set being played, `a_serving` whether A serves the next game. Totals
+    are games still to come, not games in the match: what is already on the
+    scoreboard is not a prediction any more.
+    """
+    need = best_of // 2 + 1
+    if sets_a >= need or sets_b >= need:
+        return {"p_win": 1.0 if sets_a >= need else 0.0,
+                "remaining": {0: 1.0}, "sets": {(sets_a, sets_b): 1.0},
+                "exp_remaining": 0.0}
+
+    states = {(sets_a, sets_b, games_a, games_b, a_serving, 0): 1.0}
+    win_a = 0.0
+    remaining = defaultdict(float)
+    setline = defaultdict(float)
+
+    # One layer per set still to be played, plus the one under way.
+    for _ in range(best_of + 1):
+        nxt = defaultdict(float)
+        for (sa, sb, ga, gb, serving, played), pr in states.items():
+            decider = (sa == need - 1 and sb == need - 1)
+            d = set_from(pa, pb, ga, gb, serving,
+                         tb_target=final_set_tb_target if decider else 7)
+            for (fa, fb), q in d.items():
+                w = pr * q
+                if w <= 1e-13:
+                    continue
+                nsa, nsb = (sa + 1, sb) if fa > fb else (sa, sb + 1)
+                total = played + (fa - ga) + (fb - gb)
+                if nsa == need or nsb == need:
+                    if nsa == need:
+                        win_a += w
+                    remaining[total] += w
+                    setline[(nsa, nsb)] += w
+                else:
+                    # Serve alternates across the set boundary, exactly as it
+                    # does in match_dist.
+                    nxt[(nsa, nsb, 0, 0,
+                         ((fa + fb) % 2 == 1) != serving, total)] += w
+        if not nxt:
+            break
+        states = nxt
+
+    return {"p_win": win_a, "remaining": dict(remaining),
+            "sets": dict(setline),
+            "exp_remaining": sum(g * p for g, p in remaining.items())}
+
+
+# The state space a live match can be in, enumerated once so that the table
+# built here and the lookup done in the browser cannot disagree about the
+# order. Both are small: 39 game scores, and at most 9 set scores.
+
+def game_states():
+    """Every (games_a, games_b) a set can be at without being over."""
+    out = []
+    for a in range(8):
+        for b in range(8):
+            hi, lo = max(a, b), min(a, b)
+            if hi > 7 or (hi >= 6 and (hi - lo >= 2 or hi == 7)):
+                continue
+            out.append((a, b))
+    return out
+
+
+def set_states(best_of):
+    """Every (sets_a, sets_b) with the match still alive."""
+    need = best_of // 2 + 1
+    return [(a, b) for a in range(need) for b in range(need)]
+
+
+def live_prob(pa, pb, sets_a, sets_b, games_a, games_b, a_serving,
+              best_of=3, final_set_tb_target=7, sigma=0.0, nodes=3):
+    """P(A wins) from one live state, integrated over form like everything
+    else. One definition, so the table, the page and the tests cannot each
+    have their own idea of what a live probability is."""
+    grid = (list(_form_pairs(pa, pb, sigma, nodes)) if sigma > 0
+            else [(pa, pb, 1.0)])
+    return sum(w * live_dist(qa, qb, sets_a, sets_b, games_a, games_b,
+                             a_serving, best_of=best_of,
+                             final_set_tb_target=final_set_tb_target)["p_win"]
+               for qa, qb, w in grid)
+
+
+def live_table(pa, pb, best_of=3, final_set_tb_target=7, sigma=0.0, nodes=3):
+    """P(A wins) for every state the match can reach, in index order.
+
+    Precomputed at build time so the live page needs no model of its own: the
+    browser learns the score and looks the answer up. Keeping the arithmetic
+    on this side is the point -- a second implementation in JavaScript would
+    be a second thing to keep correct, and this one took measuring.
+    """
+    return [live_prob(pa, pb, sa, sb, ga, gb, serving, best_of=best_of,
+                      final_set_tb_target=final_set_tb_target,
+                      sigma=sigma, nodes=nodes)
+            for (sa, sb) in set_states(best_of)
+            for (ga, gb) in game_states()
+            for serving in (True, False)]
+
+
+def encode_table(probs, digits=2, base=36):
+    """Pack probabilities into a fixed-width string, two base-36 characters
+    each: 1/1295 resolution on a number the model cannot claim three decimals
+    of anyway, and about a kilobyte for a best-of-three match."""
+    top = base ** digits - 1
+    chars = "0123456789abcdefghijklmnopqrstuvwxyz"[:base]
+    buf = []
+    for p in probs:
+        v = min(max(int(round(p * top)), 0), top)
+        s = ""
+        for _ in range(digits):
+            s = chars[v % base] + s
+            v //= base
+        buf.append(s)
+    return "".join(buf)

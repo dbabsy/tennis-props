@@ -202,6 +202,22 @@ def _espn_match(c, tname, sex, ev):
         })
 
     st = c.get("status", {}).get("type", {})
+    # Who is serving, when ESPN says. It is worth knowing: at 5-4 in a
+    # deciding set the same scoreline is a 0.93 win for the server and 0.66
+    # for the receiver, so a live number that guesses is badly blurred. ESPN
+    # has moved this field around, so several spellings are tried and the
+    # answer is None rather than a guess when none of them is there.
+    serving = None
+    sit = c.get("situation") or {}
+    holder = sit.get("possession") or sit.get("server")
+    if isinstance(holder, dict):
+        holder = holder.get("id") or holder.get("athleteId")
+    for i, x in enumerate(comps):
+        if x.get("possession") or x.get("serving") or x.get("hasPossession"):
+            serving = i
+        elif holder and str(holder) in (str(x.get("id")),
+                                        str((x.get("athlete") or {}).get("id"))):
+            serving = i
     venue = c.get("venue") or {}
     try:
         start = datetime.strptime(c["date"], "%Y-%m-%dT%H:%MZ").replace(
@@ -218,6 +234,7 @@ def _espn_match(c, tname, sex, ev):
         "round": (c.get("round") or {}).get("displayName", ""),
         "best_of": (c.get("format") or {}).get("regulation", {}).get("periods", 3),
         "state": st.get("state", ""),          # pre | in | post
+        "serving": serving,                    # 0, 1, or None when unknown
         "completed": bool(st.get("completed")),
         "detail": st.get("detail", ""),
         "court": venue.get("court", ""),

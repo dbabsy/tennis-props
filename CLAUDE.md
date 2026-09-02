@@ -6,6 +6,7 @@ on a schedule.
 | Script | Page | What it answers |
 |---|---|---|
 | `build.py` | `index.html` | How the air at each venue moves serve outcomes |
+| `build.py` | `live.html` | Win probability for matches on court right now |
 | `build.py` | `matches.html` | Win probability, total games, set scores |
 | `build.py` | `props.html` | Ace and double-fault projections |
 | `build.py` | `edges.html` | Fair price for every market the model supports |
@@ -163,6 +164,36 @@ The rest of that gap is still open.
 `match_dist` has taken `final_set_tb_target` all along and nothing ever passed
 it. It is a small effect on games and a real one on who wins a deciding set.
 
+**A live probability is not a second model, it is the same walk started
+later.** `match_dist` propagates forward from the first point, so conditioning
+on a score is `live_dist` entering the same DP at that state -- at 0-0 it
+returns the pre-match number to twelve decimal places, which `selftest.py`
+asserts. Anything else would put two numbers for one match on the same site
+with no way to say which was wrong.
+
+**Who is serving is worth more than the scoreline.** At one set all and 5-4 in
+the decider, the same score is a **0.93 win for the server and 0.66 for the
+receiver**. ESPN does not reliably say, so `fetch._espn_match` looks in several
+places for it and reports `None` rather than guessing; the page then averages
+the two entries, which is blunter but not wrong. If a reliable source of the
+server turns up it is the single biggest improvement available to that page.
+
+**The live page ships the answers, not the model.** `model.live_table`
+precomputes P(A wins) for every state a match can reach -- 39 game scores by
+at most 9 set scores by 2 servers, so 234 states for a best-of-three and 702
+for a best-of-five -- and `encode_table` packs each into two base-36
+characters. About a kilobyte a match. The browser learns the score and does a
+lookup; it never propagates anything. A second implementation of the
+propagation in JavaScript would be a second thing to keep correct, and
+`selftest.py` runs the shipped script under `node` against the shipped table
+to prove the two halves still agree on the index arithmetic.
+
+**Building a live table is the expensive part of the build, so most matches do
+not get one.** With form integration a best-of-five table costs about 1.4
+seconds. `project.wants_live` builds one only for matches on court or starting
+within three hours, which is what keeps a slam day from paying for a hundred
+tables it will never read.
+
 **Serve alternates across the set boundary.** Whoever received the last game of
 a set serves the first game of the next. Getting this wrong is invisible in win
 probability and visible in set scores — it is why 6-3 is more likely than 6-4
@@ -222,6 +253,22 @@ whole draw, played and unplayed. `?dates=` takes any date and returns that
 week's events, which is how the post-May 2026 gap gets filled. Scoring walks
 three weeks back because a slam runs a fortnight.
 
+**The live page must never be able to write to the ledger.** It is the one
+feature whose whole job is to look at matches that have already started, which
+is exactly what `ledger.record` refuses to touch. `P.build` therefore takes
+`states` and defaults to `("pre",)`; only `build.py` asks for `"in"`, and the
+ledger never does. Two guards, because one would be enough right up until
+somebody changed the default.
+
+**Whether a browser can reach ESPN at all is unverified.** The live page
+refreshes by fetching the scoreboard from the reader's browser, which needs
+ESPN to send a permissive `Access-Control-Allow-Origin`, and this repo's other
+note says ESPN 403s browser user agents -- a browser cannot spoof that header,
+so if the bot check is not IP-conditional the fetch will fail. It degrades
+honestly: the page renders the scores it was built with, and the note under
+the table says the refresh is unavailable rather than letting a stale number
+look live. Confirm it in a real browser before trusting the word "live".
+
 **Half a slam's draw is `TBD`.** Of 127 unplayed men's singles matches at a
 slam, 63 have an undetermined side. That is not a resolver bug.
 
@@ -278,5 +325,11 @@ the number that decides how fast the accuracy page becomes readable.
 - The WTA may want a bigger gap stretch than the ATP -- its 2023 and 2024
   residual optima both land at 1.21 -- but 2025 says 1.04, so a per-tour
   constant is not supported by three seasons. Worth revisiting with a fourth.
-- Live in-match probability is not built. ESPN linescores update during play
-  but not per point, so it would be game-level, not point-level.
+- Live in-match probability is game-level, because ESPN's linescores are. A
+  point-level version would need a point-by-point feed nobody offers without a
+  key, and would mostly buy resolution inside a game the model already prices
+  from its endpoints.
+- The live page has never been watched against a real in-progress match from a
+  real browser. Everything about it is verified offline -- the model against
+  `match_dist`, the JavaScript against the model under `node` -- but whether
+  ESPN answers a browser is untested, and so is whether it reports the server.

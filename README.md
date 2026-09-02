@@ -7,8 +7,15 @@ propagated point → game → tiebreak → set → match. One engine produces ma
 odds, total games, set scores, games handicaps and straight-sets from the same
 distribution, and serve volume for the ace and double-fault props.
 
-**Pages:** [conditions](index.html) · [matches](matches.html) ·
-[props](props.html) · [fair prices](edges.html) · [accuracy](accuracy.html)
+**Pages:** [conditions](index.html) · [live](live.html) ·
+[matches](matches.html) · [props](props.html) · [fair prices](edges.html) ·
+[accuracy](accuracy.html)
+
+The live page prices matches that are on court, by entering the same
+propagation at the current score instead of at the first point — at 0-0 it
+returns exactly the pre-match number. Every state a match can reach is
+precomputed at build time and packed into about a kilobyte, so the browser
+does a lookup rather than a second implementation of the model.
 
 Measured by walk-forward backtest, ratings refit weekly on data strictly
 before each match. Log loss and MAE; lower is better.

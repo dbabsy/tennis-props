@@ -192,6 +192,12 @@ def _rho_shift(cond, slope):
 
 MIN_SEEN = 300      # tour-level serve points before a player can be priced
 
+# Half a slam's draw is a placeholder waiting on an earlier round. Those are
+# not name-matching failures and reporting them as such buries the ones that
+# are: on a US Open day, 32 of 33 "unresolved" ATP matches were TBD and the
+# one real miss was invisible among them.
+UNDETERMINED = {"tbd", "bye", "qualifier", "lucky loser", ""}
+
 
 def why_not(rt, resolver, m):
     """Why this match cannot be priced, or None if it can.
@@ -201,7 +207,9 @@ def why_not(rt, resolver, m):
     it looked exactly like a match that was never on the scoreboard.
     """
     for side in ("p1", "p2"):
-        name = m[side]["name"]
+        name = (m[side]["name"] or "").strip()
+        if name.lower() in UNDETERMINED:
+            return f"undetermined: {name or 'blank'}"
         pid = resolver.find(name)
         if not pid:
             return f"unresolved: {name}"

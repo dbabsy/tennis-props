@@ -1031,6 +1031,25 @@
    "tour": "atp",
    "tourney": "US Open"
   },
+  "atp:182716": {
+   "best_of": 5,
+   "exp_aces_p1": 10.206133880018266,
+   "exp_aces_p2": 13.511006686373813,
+   "exp_games": 39.17489302639747,
+   "id": "182716",
+   "p1": "Benjamin Bonzi",
+   "p2": "Karen Khachanov",
+   "p_over": 0.5000002949522255,
+   "p_p1": 0.3302321493239969,
+   "recorded": "2026-09-03T23:20:33.547672+00:00",
+   "result": null,
+   "round": "Round 3",
+   "start": "2026-09-05T04:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 38.5,
+   "tour": "atp",
+   "tourney": "US Open"
+  },
   "atp:182719": {
    "best_of": 5,
    "exp_aces_p1": 10.186946533353401,
@@ -1406,7 +1425,13 @@
    "p_over": 0.5234768001740905,
    "p_p1": 0.45566119576806896,
    "recorded": "2026-09-02T22:28:33.385798+00:00",
-   "result": null,
+   "result": {
+    "clean": true,
+    "detail": "Final",
+    "games": 27.0,
+    "p1_won": false,
+    "score": "2.0-6.0 6.0-7.0 0.0-6.0"
+   },
    "round": "Round 2",
    "start": "2026-09-03T04:00:00+00:00",
    "surface": "Hard",
@@ -2128,6 +2153,25 @@
    "tour": "wta",
    "tourney": "US Open"
   },
+  "wta:182536": {
+   "best_of": 3,
+   "exp_aces_p1": 2.3884718155731774,
+   "exp_aces_p2": 3.503406426202644,
+   "exp_games": 21.667531156065422,
+   "id": "182536",
+   "p1": "Nikola Bartunkova",
+   "p2": "Mirra Andreeva",
+   "p_over": 0.36157519891452916,
+   "p_p1": 0.19461726162085002,
+   "recorded": "2026-09-03T23:20:33.547672+00:00",
+   "result": null,
+   "round": "Round 3",
+   "start": "2026-09-05T04:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 22.5,
+   "tour": "wta",
+   "tourney": "US Open"
+  },
   "wta:182537": {
    "best_of": 3,
    "exp_aces_p1": 3.7716915625383547,
@@ -2158,7 +2202,13 @@
    "p_over": 0.3972053006669173,
    "p_p1": 0.2583315940386592,
    "recorded": "2026-09-01T21:20:17.976577+00:00",
-   "result": null,
+   "result": {
+    "clean": true,
+    "detail": "Final",
+    "games": 14.0,
+    "p1_won": false,
+    "score": "0.0-6.0 2.0-6.0"
+   },
    "round": "Round 2",
    "start": "2026-09-02T04:00:00+00:00",
    "surface": "Hard",

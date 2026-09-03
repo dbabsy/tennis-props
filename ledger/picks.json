@@ -962,7 +962,13 @@
    "p_over": 0.49170253143771,
    "p_p1": 0.5102596288268377,
    "recorded": "2026-08-31T23:20:16.994723+00:00",
-   "result": null,
+   "result": {
+    "clean": true,
+    "detail": "Final",
+    "games": 42.0,
+    "p1_won": false,
+    "score": "3.0-6.0 7.0-6.0 4.0-6.0 4.0-6.0"
+   },
    "round": "Round 2",
    "start": "2026-09-02T04:00:00+00:00",
    "surface": "Hard",
@@ -1117,7 +1123,13 @@
    "p_over": 0.4932743281621548,
    "p_p1": 0.5910943456468913,
    "recorded": "2026-09-01T22:26:17.422174+00:00",
-   "result": null,
+   "result": {
+    "clean": true,
+    "detail": "Final",
+    "games": 51.0,
+    "p1_won": true,
+    "score": "5.0-7.0 7.0-5.0 4.0-6.0 6.0-2.0 6.0-3.0"
+   },
    "round": "Round 2",
    "start": "2026-09-02T04:00:00+00:00",
    "surface": "Hard",
@@ -2092,6 +2104,25 @@
    "tour": "wta",
    "tourney": "US Open"
   },
+  "wta:182540": {
+   "best_of": 3,
+   "exp_aces_p1": 3.0200287336336773,
+   "exp_aces_p2": 3.0060918539475865,
+   "exp_games": 22.441996501129257,
+   "id": "182540",
+   "p1": "Amanda Anisimova",
+   "p2": "Anastasia Potapova",
+   "p_over": 0.42210095178046964,
+   "p_p1": 0.700412483193157,
+   "recorded": "2026-09-03T19:20:31.320265+00:00",
+   "result": null,
+   "round": "Round 3",
+   "start": "2026-09-05T04:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 22.5,
+   "tour": "wta",
+   "tourney": "US Open"
+  },
   "wta:182542": {
    "best_of": 3,
    "exp_aces_p1": 4.983113640897237,
@@ -2650,7 +2681,13 @@
    "p_over": 0.45549429433950334,
    "p_p1": 0.6382860624099322,
    "recorded": "2026-08-31T20:23:13.337640+00:00",
-   "result": null,
+   "result": {
+    "clean": true,
+    "detail": "Final",
+    "games": 25.0,
+    "p1_won": true,
+    "score": "6.0-3.0 3.0-6.0 6.0-1.0"
+   },
    "round": "Round 2",
    "start": "2026-09-02T04:00:00+00:00",
    "surface": "Hard",

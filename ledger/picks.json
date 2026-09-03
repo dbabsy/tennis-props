@@ -1156,6 +1156,25 @@
    "tour": "atp",
    "tourney": "US Open"
   },
+  "atp:182727": {
+   "best_of": 5,
+   "exp_aces_p1": 7.871438180920772,
+   "exp_aces_p2": 14.654861048370096,
+   "exp_games": 38.48512570003577,
+   "id": "182727",
+   "p1": "Francisco Cerundolo",
+   "p2": "Taylor Fritz",
+   "p_over": 0.4739553399372515,
+   "p_p1": 0.30334558447775106,
+   "recorded": "2026-09-03T20:27:33.810395+00:00",
+   "result": null,
+   "round": "Round 3",
+   "start": "2026-09-05T04:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 38.5,
+   "tour": "atp",
+   "tourney": "US Open"
+  },
   "atp:182729": {
    "best_of": 5,
    "exp_aces_p1": 12.028596720641868,
@@ -1578,7 +1597,13 @@
    "p_over": 0.41508572204269045,
    "p_p1": 0.17643900198770243,
    "recorded": "2026-09-01T21:20:17.976577+00:00",
-   "result": null,
+   "result": {
+    "clean": true,
+    "detail": "Final",
+    "games": 20.0,
+    "p1_won": false,
+    "score": "0.0-6.0 1.0-6.0 1.0-6.0"
+   },
    "round": "Round 2",
    "start": "2026-09-02T04:00:00+00:00",
    "surface": "Hard",
@@ -2352,7 +2377,13 @@
    "p_over": 0.4637697910194208,
    "p_p1": 0.5108586395217425,
    "recorded": "2026-09-02T03:20:16.917011+00:00",
-   "result": null,
+   "result": {
+    "clean": true,
+    "detail": "Final",
+    "games": 17.0,
+    "p1_won": true,
+    "score": "6.0-1.0 6.0-4.0"
+   },
    "round": "Round 2",
    "start": "2026-09-03T04:00:00+00:00",
    "surface": "Hard",

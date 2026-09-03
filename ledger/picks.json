@@ -2087,6 +2087,25 @@
    "tour": "wta",
    "tourney": "US Open"
   },
+  "wta:182543": {
+   "best_of": 3,
+   "exp_aces_p1": 5.522980752328317,
+   "exp_aces_p2": 6.385669411037738,
+   "exp_games": 23.7420871496437,
+   "id": "182543",
+   "p1": "Linda Noskova",
+   "p2": "Ann Li",
+   "p_over": 0.49289171199543075,
+   "p_p1": 0.5543982286457769,
+   "recorded": "2026-09-03T05:10:11.891084+00:00",
+   "result": null,
+   "round": "Round 3",
+   "start": "2026-09-04T04:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 22.5,
+   "tour": "wta",
+   "tourney": "US Open"
+  },
   "wta:182544": {
    "best_of": 3,
    "exp_aces_p1": 4.264013553898341,

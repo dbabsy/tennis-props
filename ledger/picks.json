@@ -1338,6 +1338,25 @@
    "tour": "atp",
    "tourney": "US Open"
   },
+  "atp:182747": {
+   "best_of": 5,
+   "exp_aces_p1": 12.007449061964394,
+   "exp_aces_p2": 11.750850456984491,
+   "exp_games": 40.800983223657994,
+   "id": "182747",
+   "p1": "Stefanos Tsitsipas",
+   "p2": "Jiri Lehecka",
+   "p_over": 0.5631236639963502,
+   "p_p1": 0.5349688593104782,
+   "recorded": "2026-09-03T01:20:30.979305+00:00",
+   "result": null,
+   "round": "Round 3",
+   "start": "2026-09-04T04:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 38.5,
+   "tour": "atp",
+   "tourney": "US Open"
+  },
   "atp:182750": {
    "best_of": 5,
    "exp_aces_p1": 9.320901630351564,
@@ -1509,7 +1528,13 @@
    "p_over": 0.534087332028515,
    "p_p1": 0.5921517021498077,
    "recorded": "2026-08-31T21:20:15.614553+00:00",
-   "result": null,
+   "result": {
+    "clean": true,
+    "detail": "Final",
+    "games": 28.0,
+    "p1_won": true,
+    "score": "7.0-5.0 6.0-3.0 6.0-1.0"
+   },
    "round": "Round 2",
    "start": "2026-09-02T04:00:00+00:00",
    "surface": "Hard",
@@ -1735,7 +1760,13 @@
    "p_over": 0.5532906699296547,
    "p_p1": 0.643025425751949,
    "recorded": "2026-08-31T18:23:00.358758+00:00",
-   "result": null,
+   "result": {
+    "clean": true,
+    "detail": "Final",
+    "games": 45.0,
+    "p1_won": true,
+    "score": "6.0-7.0 6.0-3.0 7.0-6.0 6.0-4.0"
+   },
    "round": "Round 2",
    "start": "2026-09-02T04:00:00+00:00",
    "surface": "Hard",
@@ -1778,7 +1809,13 @@
    "p_over": 0.5347252285582008,
    "p_p1": 0.42622237838679,
    "recorded": "2026-08-31T17:20:17.408268+00:00",
-   "result": null,
+   "result": {
+    "clean": true,
+    "detail": "Final",
+    "games": 23.0,
+    "p1_won": false,
+    "score": "3.0-6.0 1.0-6.0 1.0-6.0"
+   },
    "round": "Round 2",
    "start": "2026-09-02T04:00:00+00:00",
    "surface": "Hard",

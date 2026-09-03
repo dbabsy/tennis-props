@@ -12,6 +12,9 @@ on a schedule.
 | `build.py` | `edges.html` | Fair price for every market the model supports |
 | `ledger.py` | `accuracy.html` | Keeps score of what the projections did |
 
+`parlay.py` prices a ticket you found on a book against the model. It is not
+part of the build and it does not pick legs.
+
 `fetch.py` pulls raw data, `ratings.py` fits serve/return ratings, `model.py`
 propagates points to matches, `project.py` joins them for a slate.
 `backtest.py` and `sweep*.py` are the measurement tools, not part of the build.
@@ -193,6 +196,18 @@ not get one.** With form integration a best-of-five table costs about 1.4
 seconds. `project.wants_live` builds one only for matches on court or starting
 within three hours, which is what keeps a slam day from paying for a hundred
 tables it will never read.
+
+**A parlay is where independence gets assumed by accident.** Legs on the same
+match are not independent and the direction is not subtle: on a synthetic
+74%-favourite, "wins in straight sets" AND "over 22.5 games" is worth **0.052
+against the 0.222 you get by multiplying the two marginals** -- a parlay
+calculator overstates that ticket more than fourfold. The same pair with the
+under is understated by 58%. `match_dist` therefore keeps the joint of winner
+by total games, which costs one dict and makes the within-match answer exact
+instead of assumed. Counting props are conditioned on the length for the same
+reason: a straight-sets winner does not serve enough to clear a big ace
+number. A games handicap is refused rather than assumed independent, because
+the margin is not in that joint.
 
 **Serve alternates across the set boundary.** Whoever received the last game of
 a set serves the first game of the next. Getting this wrong is invisible in win

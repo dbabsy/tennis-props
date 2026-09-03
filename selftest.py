@@ -597,6 +597,106 @@ def test_live_js():
           "updated" in got["clock"], got["clock"])
 
 
+def test_parlay():
+    """A parlay is where independence gets assumed by accident.
+
+    Legs on the same match are not independent, and the direction is not
+    subtle: a straight-sets win and a long match are close to mutually
+    exclusive. Multiplying the two marginals -- which is what a parlay
+    calculator does -- overstates that ticket several times over.
+    """
+    print("parlay")
+    import parlay
+    import project as P
+
+    obs = _synthetic_obs()
+    rt = R.Ratings("atp", obs, date(2026, 1, 1), k_serve=50, k_return=50)
+    res = P.Resolver(obs)
+    m = {"id": "1", "event_id": "e", "tourney": "Cincinnati", "sex": "m",
+         "tour": "atp", "round": "R16", "best_of": 3, "state": "pre",
+         "completed": False, "detail": "", "court": "", "site": "",
+         "start": datetime(2026, 6, 1, 12, 0, tzinfo=timezone.utc),
+         "serving": None,
+         "p1": {"name": "A", "won": False, "sets": [], "tb": []},
+         "p2": {"name": "B", "won": False, "sets": [], "tb": []}}
+    pr = P.project(rt, res, m)
+    proj = parlay.from_slate([pr], P.DISPERSION["atp"])
+    k = "A v B"
+
+    j = pr["dist"]["joint"]
+    check("the joint is a distribution", close(sum(j.values()), 1.0, 1e-9))
+    need = pr["best_of"] // 2 + 1
+    check("the joint's winner marginal is the win probability",
+          close(sum(p for (a, _, _), p in j.items() if a == need),
+                pr["p_a"], 1e-9))
+    check("the joint's length marginal is the totals distribution",
+          all(close(v, sum(p for (_, _, g), p in j.items() if g == gm), 1e-9)
+              for gm, v in pr["dist"]["totals"].items()))
+
+    def two(m1, m2):
+        return parlay.price([m1, m2], proj)
+
+    long_straight = two({"match": k, "market": "sets", "side": "a", "odds": 150},
+                        {"match": k, "market": "total", "side": "over",
+                         "line": 22.5, "odds": -110})
+    check("a straight-sets win and a long match are worth far less together "
+          "than multiplied",
+          long_straight["p"] < 0.4 * long_straight["p_naive"],
+          f'joint {long_straight["p"]:.4f} vs product '
+          f'{long_straight["p_naive"]:.4f}')
+
+    short_straight = two({"match": k, "market": "sets", "side": "a", "odds": 150},
+                         {"match": k, "market": "total", "side": "under",
+                          "line": 22.5, "odds": -110})
+    check("and the same pair the other way round is worth more, not less",
+          short_straight["p"] > short_straight["p_naive"])
+
+    check("the two totals sides still add to one",
+          close(long_straight["rows"][1]["p"] + short_straight["rows"][1]["p"],
+                1.0, 1e-9))
+
+    # Different matches really are independent, so there the product is right.
+    m2 = dict(m, id="2")
+    m2["p1"] = dict(m["p1"]); m2["p2"] = dict(m["p2"])
+    pr2 = P.project(rt, res, m2)
+    proj2 = parlay.from_slate([pr, dict(pr2, match=dict(m2, p1={"name": "C"},
+                                                        p2={"name": "D"}))],
+                             P.DISPERSION["atp"])
+    across = parlay.price(
+        [{"match": "A v B", "market": "ml", "side": "a", "odds": -140},
+         {"match": "C v D", "market": "ml", "side": "a", "odds": -140}], proj2)
+    check("legs on different matches multiply",
+          close(across["p"], across["p_naive"], 1e-12))
+
+    # Vig, stated rather than assumed away.
+    fair = parlay.price(
+        [{"match": k, "market": "ml", "side": "a",
+          "odds": parlay.to_american(1 / pr["p_a"])}], proj)
+    check("a leg priced at exactly the model's number has no edge",
+          abs(fair["ev"]) < 0.01, f'{100*fair["ev"]:+.2f}%')
+
+    check("a games handicap is refused rather than assumed independent",
+          _raises(parlay.price,
+                  [{"match": k, "market": "spread", "side": "a", "line": -3.5,
+                    "odds": -110}], proj))
+    check("an unknown market is refused",
+          _raises(parlay.price,
+                  [{"match": k, "market": "first_set_winner", "side": "a",
+                    "odds": -110}], proj))
+
+    check("american and decimal odds round-trip",
+          all(abs(parlay.to_decimal(parlay.to_american(d)) - d) < 0.02
+              for d in (1.5, 2.0, 3.5, 5.0)))
+
+
+def _raises(fn, *args):
+    try:
+        fn(*args)
+    except Exception:
+        return True
+    return False
+
+
 def test_render():
     print("render")
     html = V.page("T", "S", V.table(["a"], [["1"]], ["num"]), "matches.html",
@@ -619,7 +719,7 @@ def test_render():
 if __name__ == "__main__":
     for fn in (test_distributions, test_serve_rotation, test_live,
                test_monotonicity, test_ratings, test_resolver, test_ledger,
-               test_pipeline, test_live_js, test_render):
+               test_pipeline, test_parlay, test_live_js, test_render):
         fn()
     print()
     if FAILURES:

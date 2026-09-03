@@ -171,6 +171,7 @@ def match_dist(pa, pb, best_of=3, final_set_tb_target=7):
     win_a = 0.0
     totals = defaultdict(float)
     setline = defaultdict(float)
+    joint = defaultdict(float)
     straight = 0.0
 
     for set_no in range(best_of):
@@ -202,6 +203,12 @@ def match_dist(pa, pb, best_of=3, final_set_tb_target=7):
                             straight += w
                     totals[ntg] += w
                     setline[(nsa, nsb)] += w
+                    # Who won and how long it took, together rather than as
+                    # two marginals. Multiplying the marginals is the mistake
+                    # a naive parlay calculator makes: a straight-sets win and
+                    # a high total are not independent, they are close to
+                    # mutually exclusive.
+                    joint[(nsa, nsb, ntg)] += w
                 else:
                     nxt[(nsa, nsb, ntg, nxt_first)] += w
         states = nxt
@@ -210,6 +217,7 @@ def match_dist(pa, pb, best_of=3, final_set_tb_target=7):
         "p_win": win_a,
         "totals": dict(totals),
         "sets": dict(setline),
+        "joint": dict(joint),
         "p_straight": straight,
         "exp_games": sum(g * p for g, p in totals.items()),
     }
@@ -413,6 +421,7 @@ def match_dist_form(pa, pb, best_of=3, sigma=0.0, nodes=3, **kw):
     acc_win = 0.0
     totals = defaultdict(float)
     sets = defaultdict(float)
+    joint = defaultdict(float)
     straight = 0.0
     for qa, qb, w in _form_pairs(pa, pb, sigma, nodes):
         d = match_dist(qa, qb, best_of=best_of, **kw)
@@ -422,9 +431,11 @@ def match_dist_form(pa, pb, best_of=3, sigma=0.0, nodes=3, **kw):
             totals[g] += w * p
         for s, p in d["sets"].items():
             sets[s] += w * p
+        for k, p in d["joint"].items():
+            joint[k] += w * p
     return {
         "p_win": acc_win, "totals": dict(totals), "sets": dict(sets),
-        "p_straight": straight,
+        "joint": dict(joint), "p_straight": straight,
         "exp_games": sum(g * p for g, p in totals.items()),
     }
 

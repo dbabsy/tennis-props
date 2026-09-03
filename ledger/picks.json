@@ -894,7 +894,13 @@
    "p_over": 0.5664719881892328,
    "p_p1": 0.5020766906950244,
    "recorded": "2026-09-01T03:20:13.390682+00:00",
-   "result": null,
+   "result": {
+    "clean": true,
+    "detail": "Final",
+    "games": 42.0,
+    "p1_won": true,
+    "score": "2.0-6.0 7.0-6.0 7.0-6.0 6.0-2.0"
+   },
    "round": "Round 2",
    "start": "2026-09-02T04:00:00+00:00",
    "surface": "Hard",
@@ -1148,7 +1154,13 @@
    "p_over": 0.5352829877516793,
    "p_p1": 0.38204777656934646,
    "recorded": "2026-09-01T02:27:33.788883+00:00",
-   "result": null,
+   "result": {
+    "clean": true,
+    "detail": "Final",
+    "games": 33.0,
+    "p1_won": false,
+    "score": "3.0-6.0 2.0-6.0 6.0-3.0 1.0-6.0"
+   },
    "round": "Round 2",
    "start": "2026-09-02T04:00:00+00:00",
    "surface": "Hard",
@@ -1224,6 +1236,25 @@
    "tour": "atp",
    "tourney": "US Open"
   },
+  "atp:182731": {
+   "best_of": 5,
+   "exp_aces_p1": 7.412146605896539,
+   "exp_aces_p2": 11.884284594960288,
+   "exp_games": 38.80463960116169,
+   "id": "182731",
+   "p1": "Flavio Cobolli",
+   "p2": "Alexander Blockx",
+   "p_over": 0.48357049440305955,
+   "p_p1": 0.2961123069715833,
+   "recorded": "2026-09-03T22:26:49.897756+00:00",
+   "result": null,
+   "round": "Round 3",
+   "start": "2026-09-05T04:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 38.5,
+   "tour": "atp",
+   "tourney": "US Open"
+  },
   "atp:182733": {
    "best_of": 5,
    "exp_aces_p1": 1.9480085322092187,
@@ -1283,7 +1314,13 @@
    "p_over": 0.5330936027589486,
    "p_p1": 0.4864937498300882,
    "recorded": "2026-09-01T22:26:17.422174+00:00",
-   "result": null,
+   "result": {
+    "clean": true,
+    "detail": "Final",
+    "games": 40.0,
+    "p1_won": true,
+    "score": "3.0-6.0 6.0-3.0 6.0-4.0 7.0-5.0"
+   },
    "round": "Round 2",
    "start": "2026-09-02T04:00:00+00:00",
    "surface": "Hard",
@@ -2421,6 +2458,25 @@
    "tour": "wta",
    "tourney": "US Open"
   },
+  "wta:182560": {
+   "best_of": 3,
+   "exp_aces_p1": 6.048632721841195,
+   "exp_aces_p2": 3.850894046236544,
+   "exp_games": 23.648020322466827,
+   "id": "182560",
+   "p1": "Zheng Qinwen",
+   "p2": "Madison Keys",
+   "p_over": 0.4891276401245748,
+   "p_p1": 0.5095742277092936,
+   "recorded": "2026-09-03T22:26:49.897756+00:00",
+   "result": null,
+   "round": "Round 3",
+   "start": "2026-09-05T04:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 22.5,
+   "tour": "wta",
+   "tourney": "US Open"
+  },
   "wta:182561": {
    "best_of": 3,
    "exp_aces_p1": 2.5015176765579885,
@@ -2606,7 +2662,13 @@
    "p_over": 0.4553964455956678,
    "p_p1": 0.3471096267973889,
    "recorded": "2026-09-01T22:26:17.422174+00:00",
-   "result": null,
+   "result": {
+    "clean": true,
+    "detail": "Final",
+    "games": 25.0,
+    "p1_won": false,
+    "score": "4.0-6.0 6.0-2.0 1.0-6.0"
+   },
    "round": "Round 2",
    "start": "2026-09-02T04:00:00+00:00",
    "surface": "Hard",

@@ -2140,6 +2140,25 @@
    "tour": "wta",
    "tourney": "US Open"
   },
+  "wta:182530": {
+   "best_of": 3,
+   "exp_aces_p1": 6.220604171137481,
+   "exp_aces_p2": 1.622959408587552,
+   "exp_games": 21.350276894261505,
+   "id": "182530",
+   "p1": "Elena Rybakina",
+   "p2": "Yuliia Starodubtseva",
+   "p_over": 0.33936010557849083,
+   "p_p1": 0.8451558728066803,
+   "recorded": "2026-09-04T03:20:25.187639+00:00",
+   "result": null,
+   "round": "Round 3",
+   "start": "2026-09-05T04:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 22.5,
+   "tour": "wta",
+   "tourney": "US Open"
+  },
   "wta:182531": {
    "best_of": 3,
    "exp_aces_p1": 4.396793802241385,
@@ -3042,7 +3061,13 @@
    "p_over": 0.36648098849042177,
    "p_p1": 0.8080328408674109,
    "recorded": "2026-09-02T02:40:35.435419+00:00",
-   "result": null,
+   "result": {
+    "clean": true,
+    "detail": "Final",
+    "games": 18.0,
+    "p1_won": true,
+    "score": "6.0-2.0 6.0-4.0"
+   },
    "round": "Round 2",
    "start": "2026-09-03T04:00:00+00:00",
    "surface": "Hard",

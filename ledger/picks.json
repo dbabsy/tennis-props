@@ -742,6 +742,25 @@
    "tour": "atp",
    "tourney": "US Open"
   },
+  "atp:182699": {
+   "best_of": 5,
+   "exp_aces_p1": 10.156896400480825,
+   "exp_aces_p2": 17.15601167300128,
+   "exp_games": 38.003550169010765,
+   "id": "182699",
+   "p1": "Alejandro Tabilo",
+   "p2": "Alexander Zverev",
+   "p_over": 0.4372412603931875,
+   "p_p1": 0.1904142788768074,
+   "recorded": "2026-09-04T06:33:16.590220+00:00",
+   "result": null,
+   "round": "Round 3",
+   "start": "2026-09-05T04:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 38.5,
+   "tour": "atp",
+   "tourney": "US Open"
+  },
   "atp:182700": {
    "best_of": 5,
    "exp_aces_p1": 6.056013280827944,
@@ -893,7 +912,13 @@
    "p_over": 0.45270131574245254,
    "p_p1": 0.19511111042841509,
    "recorded": "2026-09-02T06:37:13.562852+00:00",
-   "result": null,
+   "result": {
+    "clean": true,
+    "detail": "Final",
+    "games": 55.0,
+    "p1_won": false,
+    "score": "4.0-6.0 6.0-4.0 6.0-7.0 7.0-6.0 3.0-6.0"
+   },
    "round": "Round 2",
    "start": "2026-09-03T04:00:00+00:00",
    "surface": "Hard",

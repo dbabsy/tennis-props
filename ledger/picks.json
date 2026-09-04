@@ -1110,7 +1110,13 @@
    "p_over": 0.4727113603681948,
    "p_p1": 0.7263357433819573,
    "recorded": "2026-09-03T03:20:25.364750+00:00",
-   "result": null,
+   "result": {
+    "clean": true,
+    "detail": "Final",
+    "games": 48.0,
+    "p1_won": true,
+    "score": "6.0-4.0 3.0-6.0 6.0-7.0 6.0-1.0 6.0-3.0"
+   },
    "round": "Round 3",
    "start": "2026-09-04T04:00:00+00:00",
    "surface": "Hard",
@@ -2347,6 +2353,25 @@
    "tour": "wta",
    "tourney": "US Open"
   },
+  "wta:182541": {
+   "best_of": 3,
+   "exp_aces_p1": 5.229734598462899,
+   "exp_aces_p2": 4.90774696007793,
+   "exp_games": 22.81225575361646,
+   "id": "182541",
+   "p1": "Taylor Townsend",
+   "p2": "Aryna Sabalenka",
+   "p_over": 0.42040345516085165,
+   "p_p1": 0.2370484361741319,
+   "recorded": "2026-09-04T20:27:25.347705+00:00",
+   "result": null,
+   "round": "Round 4",
+   "start": "2026-09-06T04:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 22.5,
+   "tour": "wta",
+   "tourney": "US Open"
+  },
   "wta:182542": {
    "best_of": 3,
    "exp_aces_p1": 4.983113640897237,
@@ -2742,7 +2767,13 @@
    "p_over": 0.4868519443033479,
    "p_p1": 0.45350934716292945,
    "recorded": "2026-09-02T17:20:19.105430+00:00",
-   "result": null,
+   "result": {
+    "clean": true,
+    "detail": "Final",
+    "games": 30.0,
+    "p1_won": false,
+    "score": "2.0-6.0 7.0-6.0 3.0-6.0"
+   },
    "round": "Round 3",
    "start": "2026-09-04T04:00:00+00:00",
    "surface": "Hard",

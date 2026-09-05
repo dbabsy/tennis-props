@@ -1097,7 +1097,13 @@
    "p_over": 0.5000002949522255,
    "p_p1": 0.3302321493239969,
    "recorded": "2026-09-03T23:20:33.547672+00:00",
-   "result": null,
+   "result": {
+    "clean": true,
+    "detail": "Final",
+    "games": 27.0,
+    "p1_won": false,
+    "score": "3.0-6.0 2.0-6.0 4.0-6.0"
+   },
    "round": "Round 3",
    "start": "2026-09-05T04:00:00+00:00",
    "surface": "Hard",
@@ -2898,6 +2904,25 @@
    "tour": "wta",
    "tourney": "US Open"
   },
+  "wta:182562": {
+   "best_of": 3,
+   "exp_aces_p1": 6.597063716819518,
+   "exp_aces_p2": 2.4358668865159325,
+   "exp_games": 22.438763495605713,
+   "id": "182562",
+   "p1": "Zheng Qinwen",
+   "p2": "Iga Swiatek",
+   "p_over": 0.40522941947513597,
+   "p_p1": 0.23917079770978641,
+   "recorded": "2026-09-05T21:20:23.579803+00:00",
+   "result": null,
+   "round": "Round 4",
+   "start": "2026-09-07T04:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 22.5,
+   "tour": "wta",
+   "tourney": "US Open"
+  },
   "wta:182563": {
    "best_of": 3,
    "exp_aces_p1": 3.150948306988146,
@@ -3289,7 +3314,13 @@
    "p_over": 0.36146808869385394,
    "p_p1": 0.7953700508570878,
    "recorded": "2026-09-04T01:20:30.741613+00:00",
-   "result": null,
+   "result": {
+    "clean": true,
+    "detail": "Final",
+    "games": 19.0,
+    "p1_won": true,
+    "score": "6.0-3.0 6.0-4.0"
+   },
    "round": "Round 3",
    "start": "2026-09-05T04:00:00+00:00",
    "surface": "Hard",
@@ -3402,7 +3433,13 @@
    "p_over": 0.3338680868462794,
    "p_p1": 0.16636457929989157,
    "recorded": "2026-09-03T18:32:24.855012+00:00",
-   "result": null,
+   "result": {
+    "clean": true,
+    "detail": "Final",
+    "games": 26.0,
+    "p1_won": false,
+    "score": "6.0-7.0 6.0-7.0"
+   },
    "round": "Round 3",
    "start": "2026-09-05T04:00:00+00:00",
    "surface": "Hard",

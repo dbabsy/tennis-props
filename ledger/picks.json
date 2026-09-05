@@ -1505,7 +1505,13 @@
    "p_over": 0.4698937748736021,
    "p_p1": 0.3541095416464105,
    "recorded": "2026-09-03T03:20:25.364750+00:00",
-   "result": null,
+   "result": {
+    "clean": true,
+    "detail": "Final",
+    "games": 29.0,
+    "p1_won": false,
+    "score": "4.0-6.0 4.0-6.0 3.0-6.0"
+   },
    "round": "Round 3",
    "start": "2026-09-04T04:00:00+00:00",
    "surface": "Hard",
@@ -1641,7 +1647,13 @@
    "p_over": 0.5631236639963502,
    "p_p1": 0.5349688593104782,
    "recorded": "2026-09-03T01:20:30.979305+00:00",
-   "result": null,
+   "result": {
+    "clean": true,
+    "detail": "Final",
+    "games": 35.0,
+    "p1_won": true,
+    "score": "2.0-6.0 6.0-1.0 7.0-6.0 6.0-1.0"
+   },
    "round": "Round 3",
    "start": "2026-09-04T04:00:00+00:00",
    "surface": "Hard",

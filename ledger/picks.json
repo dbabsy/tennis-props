@@ -1198,6 +1198,25 @@
    "tour": "atp",
    "tourney": "US Open"
   },
+  "atp:182722": {
+   "best_of": 5,
+   "exp_aces_p1": 10.986838301851927,
+   "exp_aces_p2": 14.337736613382418,
+   "exp_games": 42.263602102316035,
+   "id": "182722",
+   "p1": "Stefanos Tsitsipas",
+   "p2": "Ben Shelton",
+   "p_over": 0.605382486137949,
+   "p_p1": 0.4967168968417684,
+   "recorded": "2026-09-05T06:31:15.116817+00:00",
+   "result": null,
+   "round": "Round 4",
+   "start": "2026-09-06T04:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 38.5,
+   "tour": "atp",
+   "tourney": "US Open"
+  },
   "atp:182723": {
    "best_of": 5,
    "exp_aces_p1": 9.066452641390963,
@@ -1648,7 +1667,13 @@
    "p_over": 0.5506154957275029,
    "p_p1": 0.4857587145622701,
    "recorded": "2026-09-02T23:20:32.904792+00:00",
-   "result": null,
+   "result": {
+    "clean": true,
+    "detail": "Final",
+    "games": 45.0,
+    "p1_won": false,
+    "score": "6.0-7.0 7.0-6.0 3.0-6.0 4.0-6.0"
+   },
    "round": "Round 3",
    "start": "2026-09-04T04:00:00+00:00",
    "surface": "Hard",

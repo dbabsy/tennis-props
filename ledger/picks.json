@@ -2495,6 +2495,25 @@
    "tour": "wta",
    "tourney": "US Open"
   },
+  "wta:182533": {
+   "best_of": 3,
+   "exp_aces_p1": 6.423701825338636,
+   "exp_aces_p2": 6.519706542588787,
+   "exp_games": 22.83497869849701,
+   "id": "182533",
+   "p1": "Linda Noskova",
+   "p2": "Aryna Sabalenka",
+   "p_over": 0.420099234338011,
+   "p_p1": 0.23189073280908648,
+   "recorded": "2026-09-06T19:20:24.518489+00:00",
+   "result": null,
+   "round": "Quarterfinal",
+   "start": "2026-09-08T04:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 22.5,
+   "tour": "wta",
+   "tourney": "US Open"
+  },
   "wta:182534": {
    "best_of": 3,
    "exp_aces_p1": 3.3230599453003276,
@@ -3258,7 +3277,13 @@
    "p_over": 0.48546273986757293,
    "p_p1": 0.4792903617384151,
    "recorded": "2026-09-04T22:26:19.182523+00:00",
-   "result": null,
+   "result": {
+    "clean": true,
+    "detail": "Final",
+    "games": 34.0,
+    "p1_won": true,
+    "score": "7.0-5.0 5.0-7.0 6.0-4.0"
+   },
    "round": "Round 4",
    "start": "2026-09-06T04:00:00+00:00",
    "surface": "Hard",

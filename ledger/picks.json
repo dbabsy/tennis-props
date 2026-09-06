@@ -668,6 +668,25 @@
    "tour": "atp",
    "tourney": "US Open"
   },
+  "atp:182692": {
+   "best_of": 5,
+   "exp_aces_p1": 9.732063558494582,
+   "exp_aces_p2": 11.99093430349972,
+   "exp_games": 39.19448249389744,
+   "id": "182692",
+   "p1": "Learner Tien",
+   "p2": "Karen Khachanov",
+   "p_over": 0.5089423647169754,
+   "p_p1": 0.43742021700912365,
+   "recorded": "2026-09-06T06:32:13.083117+00:00",
+   "result": null,
+   "round": "Round 4",
+   "start": "2026-09-07T04:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 38.5,
+   "tour": "atp",
+   "tourney": "US Open"
+  },
   "atp:182693": {
    "best_of": 5,
    "exp_aces_p1": 11.184928611280826,
@@ -1397,7 +1416,13 @@
    "p_over": 0.5024453768523087,
    "p_p1": 0.47400955021473523,
    "recorded": "2026-09-04T02:27:49.141635+00:00",
-   "result": null,
+   "result": {
+    "clean": true,
+    "detail": "Final",
+    "games": 48.0,
+    "p1_won": true,
+    "score": "6.0-3.0 1.0-6.0 6.0-7.0 6.0-3.0 6.0-4.0"
+   },
    "round": "Round 3",
    "start": "2026-09-05T04:00:00+00:00",
    "surface": "Hard",

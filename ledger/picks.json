@@ -580,6 +580,25 @@
    "tour": "atp",
    "tourney": "US Open"
   },
+  "atp:182688": {
+   "best_of": 5,
+   "exp_aces_p1": 10.05105962414607,
+   "exp_aces_p2": 9.010258045998631,
+   "exp_games": 39.059864972327034,
+   "id": "182688",
+   "p1": "Botic Van De Zandschulp",
+   "p2": "Arthur Gea",
+   "p_over": 0.5063559343265537,
+   "p_p1": 0.548806393381789,
+   "recorded": "2026-09-06T02:27:34.942095+00:00",
+   "result": null,
+   "round": "Round 4",
+   "start": "2026-09-07T04:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 38.5,
+   "tour": "atp",
+   "tourney": "US Open"
+  },
   "atp:182690": {
    "best_of": 5,
    "exp_aces_p1": 12.878965243946828,
@@ -1926,7 +1945,13 @@
    "p_over": 0.49839617508909106,
    "p_p1": 0.5447575020871375,
    "recorded": "2026-09-04T02:27:49.141635+00:00",
-   "result": null,
+   "result": {
+    "clean": true,
+    "detail": "Final",
+    "games": 54.0,
+    "p1_won": true,
+    "score": "3.0-6.0 7.0-6.0 4.0-6.0 7.0-6.0 6.0-3.0"
+   },
    "round": "Round 3",
    "start": "2026-09-05T04:00:00+00:00",
    "surface": "Hard",
@@ -2831,6 +2856,25 @@
    "tour": "wta",
    "tourney": "US Open"
   },
+  "wta:182557": {
+   "best_of": 3,
+   "exp_aces_p1": 4.018679794149727,
+   "exp_aces_p2": 1.2464048756218549,
+   "exp_games": 22.861581025114152,
+   "id": "182557",
+   "p1": "Coco Gauff",
+   "p2": "Iva Jovic",
+   "p_over": 0.45096741978968014,
+   "p_p1": 0.6100653886485201,
+   "recorded": "2026-09-06T02:27:34.942095+00:00",
+   "result": null,
+   "round": "Round 4",
+   "start": "2026-09-07T04:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 22.5,
+   "tour": "wta",
+   "tourney": "US Open"
+  },
   "wta:182558": {
    "best_of": 3,
    "exp_aces_p1": 2.4576036209177037,
@@ -3009,7 +3053,13 @@
    "p_over": 0.48707850094433924,
    "p_p1": 0.4541478100527627,
    "recorded": "2026-09-03T18:32:24.855012+00:00",
-   "result": null,
+   "result": {
+    "clean": true,
+    "detail": "Final",
+    "games": 30.0,
+    "p1_won": false,
+    "score": "3.0-6.0 6.0-3.0 5.0-7.0"
+   },
    "round": "Round 3",
    "start": "2026-09-05T04:00:00+00:00",
    "surface": "Hard",
@@ -3245,7 +3295,13 @@
    "p_over": 0.43265812901143513,
    "p_p1": 0.329022975135205,
    "recorded": "2026-09-04T01:20:30.741613+00:00",
-   "result": null,
+   "result": {
+    "clean": true,
+    "detail": "Final",
+    "games": 33.0,
+    "p1_won": false,
+    "score": "5.0-7.0 6.0-3.0 5.0-7.0"
+   },
    "round": "Round 3",
    "start": "2026-09-05T04:00:00+00:00",
    "surface": "Hard",

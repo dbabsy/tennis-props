@@ -2301,6 +2301,25 @@
    "tour": "atp",
    "tourney": "US Open"
   },
+  "wta:182527": {
+   "best_of": 3,
+   "exp_aces_p1": 7.394362478472591,
+   "exp_aces_p2": 5.904040249222402,
+   "exp_games": 23.988580051911022,
+   "id": "182527",
+   "p1": "Elena Rybakina",
+   "p2": "Naomi Osaka",
+   "p_over": 0.5020620004095979,
+   "p_p1": 0.6136247492968677,
+   "recorded": "2026-09-06T03:20:26.833501+00:00",
+   "result": null,
+   "round": "Round 4",
+   "start": "2026-09-07T04:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 22.5,
+   "tour": "wta",
+   "tourney": "US Open"
+  },
   "wta:182528": {
    "best_of": 3,
    "exp_aces_p1": 2.1514575270139646,
@@ -2362,7 +2381,13 @@
    "p_over": 0.33936010557849083,
    "p_p1": 0.8451558728066803,
    "recorded": "2026-09-04T03:20:25.187639+00:00",
-   "result": null,
+   "result": {
+    "clean": true,
+    "detail": "Final",
+    "games": 22.0,
+    "p1_won": true,
+    "score": "7.0-6.0 6.0-3.0"
+   },
    "round": "Round 3",
    "start": "2026-09-05T04:00:00+00:00",
    "surface": "Hard",

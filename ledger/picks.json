@@ -505,6 +505,25 @@
    "tour": "atp",
    "tourney": "US Open"
   },
+  "atp:182682": {
+   "best_of": 5,
+   "exp_aces_p1": 9.436690372446561,
+   "exp_aces_p2": 14.908904014839132,
+   "exp_games": 35.743568119062324,
+   "id": "182682",
+   "p1": "Luciano Darderi",
+   "p2": "Alexander Zverev",
+   "p_over": 0.34737444149416924,
+   "p_p1": 0.12541285914107764,
+   "recorded": "2026-09-06T05:20:21.206779+00:00",
+   "result": null,
+   "round": "Round 4",
+   "start": "2026-09-07T04:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 38.5,
+   "tour": "atp",
+   "tourney": "US Open"
+  },
   "atp:182684": {
    "best_of": 5,
    "exp_aces_p1": 12.537036944416784,
@@ -784,7 +803,13 @@
    "p_over": 0.4372412603931875,
    "p_p1": 0.1904142788768074,
    "recorded": "2026-09-04T06:33:16.590220+00:00",
-   "result": null,
+   "result": {
+    "clean": true,
+    "detail": "Final",
+    "games": 29.0,
+    "p1_won": false,
+    "score": "2.0-6.0 6.0-7.0 2.0-6.0"
+   },
    "round": "Round 3",
    "start": "2026-09-05T04:00:00+00:00",
    "surface": "Hard",
@@ -4775,6 +4800,44 @@
    "total_line": 22.5,
    "tour": "wta",
    "tourney": "US Open"
+  },
+  "wta:183577": {
+   "best_of": 3,
+   "exp_aces_p1": 4.104740629921774,
+   "exp_aces_p2": 1.5669395313723895,
+   "exp_games": 23.347895047894507,
+   "id": "183577",
+   "p1": "Rebeka Masarova",
+   "p2": "Simona Waltert",
+   "p_over": 0.47412275507897034,
+   "p_p1": 0.5770530676845511,
+   "recorded": "2026-09-06T05:20:21.206779+00:00",
+   "result": null,
+   "round": "Round 1",
+   "start": "2026-09-07T04:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 22.5,
+   "tour": "wta",
+   "tourney": "Montreux Nestl\u00e9 Open"
+  },
+  "wta:183580": {
+   "best_of": 3,
+   "exp_aces_p1": 3.0449098589525834,
+   "exp_aces_p2": 1.1619484585126303,
+   "exp_games": 22.90174235610245,
+   "id": "183580",
+   "p1": "Despina Papamichail",
+   "p2": "Anastasia Zolotareva",
+   "p_over": 0.4535781828094474,
+   "p_p1": 0.5982519690331035,
+   "recorded": "2026-09-06T05:20:21.206779+00:00",
+   "result": null,
+   "round": "Round 1",
+   "start": "2026-09-07T04:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 22.5,
+   "tour": "wta",
+   "tourney": "Montreux Nestl\u00e9 Open"
   }
  }
 }

@@ -2601,6 +2601,25 @@
    "tour": "wta",
    "tourney": "US Open"
   },
+  "wta:182535": {
+   "best_of": 3,
+   "exp_aces_p1": 2.160339922586057,
+   "exp_aces_p2": 3.077500135957732,
+   "exp_games": 22.539280149367517,
+   "id": "182535",
+   "p1": "Emma Navarro",
+   "p2": "Jessica Pegula",
+   "p_over": 0.42030650801005165,
+   "p_p1": 0.28434504366932617,
+   "recorded": "2026-09-07T03:20:23.839827+00:00",
+   "result": null,
+   "round": "Quarterfinal",
+   "start": "2026-09-08T04:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 22.5,
+   "tour": "wta",
+   "tourney": "US Open"
+  },
   "wta:182536": {
    "best_of": 3,
    "exp_aces_p1": 2.3884718155731774,
@@ -3713,7 +3732,13 @@
    "p_over": 0.47121719889240327,
    "p_p1": 0.5204927167260165,
    "recorded": "2026-09-05T04:27:07.759001+00:00",
-   "result": null,
+   "result": {
+    "clean": true,
+    "detail": "Final",
+    "games": 18.0,
+    "p1_won": true,
+    "score": "6.0-4.0 6.0-2.0"
+   },
    "round": "Round 4",
    "start": "2026-09-06T04:00:00+00:00",
    "surface": "Hard",

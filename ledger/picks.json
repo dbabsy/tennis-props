@@ -4987,6 +4987,44 @@
    "total_line": 22.5,
    "tour": "wta",
    "tourney": "Montreux Nestl\u00e9 Open"
+  },
+  "wta:183620": {
+   "best_of": 3,
+   "exp_aces_p1": 2.52187522685583,
+   "exp_aces_p2": 3.306566086695926,
+   "exp_games": 23.081946195650502,
+   "id": "183620",
+   "p1": "Suzan Lamens",
+   "p2": "Kayla Day",
+   "p_over": 0.46427686622669556,
+   "p_p1": 0.4837217935939062,
+   "recorded": "2026-09-07T05:20:20.568975+00:00",
+   "result": null,
+   "round": "Round 1",
+   "start": "2026-09-07T16:30:00+00:00",
+   "surface": "Hard",
+   "total_line": 22.5,
+   "tour": "wta",
+   "tourney": "Kia Open"
+  },
+  "wta:183627": {
+   "best_of": 3,
+   "exp_aces_p1": 3.4540395789947262,
+   "exp_aces_p2": 2.286862031522186,
+   "exp_games": 23.063479102645832,
+   "id": "183627",
+   "p1": "Julia Riera",
+   "p2": "Dominika Salkova",
+   "p_over": 0.462214092889366,
+   "p_p1": 0.44668793211941593,
+   "recorded": "2026-09-07T05:20:20.568975+00:00",
+   "result": null,
+   "round": "Round 1",
+   "start": "2026-09-08T04:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 22.5,
+   "tour": "wta",
+   "tourney": "Kia Open"
   }
  }
 }

@@ -5174,6 +5174,25 @@
    "tour": "wta",
    "tourney": "Kia Open"
   },
+  "wta:183621": {
+   "best_of": 3,
+   "exp_aces_p1": 3.42620843437368,
+   "exp_aces_p2": 2.686455785304941,
+   "exp_games": 23.216926764931635,
+   "id": "183621",
+   "p1": "Claire Liu",
+   "p2": "Varvara Lepchenko",
+   "p_over": 0.46865257600750926,
+   "p_p1": 0.44766307188207394,
+   "recorded": "2026-09-08T20:28:38.842063+00:00",
+   "result": null,
+   "round": "Round 2",
+   "start": "2026-09-09T04:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 22.5,
+   "tour": "wta",
+   "tourney": "Kia Open"
+  },
   "wta:183627": {
    "best_of": 3,
    "exp_aces_p1": 3.4540395789947262,

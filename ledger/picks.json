@@ -5211,6 +5211,25 @@
    "total_line": 22.5,
    "tour": "wta",
    "tourney": "Kia Open"
+  },
+  "wta:183635": {
+   "best_of": 3,
+   "exp_aces_p1": 3.734874423931815,
+   "exp_aces_p2": 2.6594348380631088,
+   "exp_games": 23.230908198669756,
+   "id": "183635",
+   "p1": "Elsa Jacquemot",
+   "p2": "Kayla Day",
+   "p_over": 0.4675210470098668,
+   "p_p1": 0.4200311808911132,
+   "recorded": "2026-09-08T22:28:04.292797+00:00",
+   "result": null,
+   "round": "Round 2",
+   "start": "2026-09-09T20:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 22.5,
+   "tour": "wta",
+   "tourney": "Kia Open"
   }
  }
 }

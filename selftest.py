@@ -779,9 +779,10 @@ def test_livecheck_js():
     # that needs a browser to run.
     pure = script.split('document.getElementById("origin")')[0]
 
-    def board(cid, comps):
-        return {"events": [{"name": "US Open", "groupings": [
-            {"competitions": [{"id": cid,
+    def board(cid, comps, draw="Women's Singles"):
+        return {"events": [{"name": "US Open", "id": "9000", "groupings": [
+            {"grouping": {"displayName": draw},
+             "competitions": [{"id": cid,
                                "status": {"type": {"state": "in"}},
                                "competitors": comps}]}]}]}
 
@@ -798,17 +799,24 @@ def test_livecheck_js():
     # A set at 6-7 published under the same key a point score would use.
     games = board("404", [side("1", "A", [6], score="6"),
                           side("2", "B", [7], score="7")])
+    # Both league endpoints return the whole tournament, doubles included.
+    doubles = board("405", [side("1", "A", [2, 0], score="30"),
+                            side("2", "B", [6, 0], score="15")],
+                    draw="Men's Doubles")
 
     src = pure + """
 var out = {};
-[["scored", %s], ["bare", %s], ["elsewhere", %s], ["games", %s]]
+[["scored", %s], ["bare", %s], ["elsewhere", %s], ["games", %s],
+ ["doubles", %s]]
   .forEach(function (pair) {
-    var got = inspect(pair[1], "wta");
+    var got = inspect(pair[1], "wta"), one = got.live[0] || {};
     out[pair[0]] = {found: pointsFound(got.live), hits: anyHits(got.live),
-                    tour: got.live[0].tour};
+                    tour: one.tour, eventId: one.eventId,
+                    n: got.live.length};
   });
 console.log(JSON.stringify(out));
-""" % tuple(json.dumps(d) for d in (scored, bare, elsewhere, games))
+""" % tuple(json.dumps(d)
+             for d in (scored, bare, elsewhere, games, doubles))
 
     with tempfile.TemporaryDirectory() as d:
         f = Path(d) / "livecheck.js"
@@ -836,6 +844,10 @@ console.log(JSON.stringify(out));
           str(got["elsewhere"]["hits"]))
     check("the tour is carried through, so the summary can be asked for",
           got["scored"]["tour"] == "wta", got["scored"]["tour"])
+    check("so is the tournament id, which is the one ?event= wants",
+          got["scored"]["eventId"] == "9000", got["scored"]["eventId"])
+    check("a doubles draw is not counted as a match on court",
+          got["doubles"]["n"] == 0, got["doubles"]["n"])
 
 
 if __name__ == "__main__":

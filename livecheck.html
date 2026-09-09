@@ -46,6 +46,7 @@ payload holding a 15, 30, 40 or AD, wherever it turned out to live.</p>
 <script>
 var TOURS = ["atp", "wta"];
 var BASE = "https://site.api.espn.com/apis/site/v2/sports/tennis/";
+var CORE = "https://sports.core.api.espn.com/v2/sports/tennis/leagues/";
 
 function el(tag, cls, txt) {
   var e = document.createElement(tag);
@@ -120,9 +121,12 @@ function crawl(node, path, hits, depth) {
     return;
   }
   var s = String(node).trim().toUpperCase();
-  if ((s === "15" || s === "30" || s === "40" || s === "AD" || s === "ADV") &&
-      !/linescores\[[0-9]+\]\.value$/.test(path)) {
-    hits.push(path + " = " + s);
+  var token = (s === "15" || s === "30" || s === "40" || s === "AD" ||
+               s === "ADV");
+  var pair = /(^|[^0-9A-Z])(0|15|30|40|AD)[ ]*[-\u2013:][ ]*(0|15|30|40|AD)([^0-9A-Z]|$)/
+             .test(s);
+  if ((token || pair) && !/linescores\[[0-9]+\]\.value$/.test(path)) {
+    hits.push(path + " = " + s.slice(0, 60));
   }
 }
 
@@ -133,6 +137,12 @@ function inspect(doc, tour) {
   var counts = {pre: 0, "in": 0, post: 0, other: 0};
   (doc.events || []).forEach(function (ev) {
     (ev.groupings || []).forEach(function (g) {
+      // espn_draw keeps singles only, and both league endpoints return the
+      // whole tournament -- so counting every grouping here reported one
+      // women's match as two on court, which is the sort of wrong number
+      // that makes a diagnostic worse than none.
+      var draw = ((g.grouping || {}).displayName) || "";
+      if (draw.indexOf("Singles") < 0) return;
       (g.competitions || []).forEach(function (c) {
         var st = ((c.status || {}).type || {}).state || "other";
         counts[st] = (counts[st] || 0) + 1;
@@ -149,7 +159,9 @@ function inspect(doc, tour) {
         crawl(c, "competition", hits, 0);
         live.push({
           id: c.id,
+          eventId: ev.id,
           tour: tour,
+          draw: draw,
           event: ev.name,
           players: comps.map(function (x) {
             return (x.athlete && x.athlete.displayName) || x.name || "?";
@@ -246,7 +258,10 @@ Promise.all(TOURS.map(probe)).then(function (rs) {
     if (r.doc) {
       var got = inspect(r.doc, r.tour);
       dump[r.tour] = {counts: got.counts, keys: got.keys, live: got.live};
-      allLive = allLive.concat(got.live);
+      got.live.forEach(function (m) {
+        var seen = allLive.some(function (o) { return o.id === m.id; });
+        if (!seen) allLive.push(m);
+      });
       c.appendChild(el("p", "note",
         "matches on the scoreboard — " +
         Object.keys(got.counts).map(function (k) {
@@ -296,44 +311,60 @@ Promise.all(TOURS.map(probe)).then(function (rs) {
   document.getElementById("dump").textContent = JSON.stringify(dump, null, 1);
   return allLive;
 }).then(function (allLive) {
-  // The scoreboard is one endpoint of several. If it carries no point score,
-  // the per-event summary is the next place to look, and whether a browser
-  // may read it is its own question -- it is a different path under the same
-  // host, so CORS has to be asked again rather than assumed.
+  // The scoreboard is one endpoint of several, and it is the one that has
+  // already answered no. Two others could carry a point score, and each has
+  // its own CORS answer -- a permissive header on the scoreboard says nothing
+  // about a different host.
+  //
+  // The ids matter here and are easy to get wrong: for tennis the *event* is
+  // the tournament and the *competition* is the match, so ?event= takes the
+  // tournament id and only the core path narrows to one match.
   var box = document.getElementById("results");
   if (!allLive || !allLive.length) return;
   if (pointsFound(allLive)) return;
   var m = allLive[0];
-  var url = BASE + m.tour + "/summary?event=" + m.id;
-  return fetch(url).then(function (r) {
-    return r.ok ? r.json() : null;
-  }).catch(function () { return null; }).then(function (doc) {
-    var c = el("div", "card");
-    if (!doc) {
-      c.appendChild(el("div", "verdict warn",
-        "The per-event summary is unreadable from a browser"));
-      c.appendChild(el("p", "note",
-        "Blocked or errored, so it cannot be the source either. " + url));
-    } else {
-      var hits = [];
-      crawl(doc, "summary", hits, 0);
-      c.appendChild(el("div", hits.length ? "verdict good" : "verdict warn",
-        hits.length
-          ? "The per-event summary does carry a point score"
-          : "The per-event summary has no point score either"));
-      c.appendChild(el("p", "note", hits.length
-        ? "At " + hits[0] + (hits.length > 1
-            ? " (and " + (hits.length - 1) + " more)" : "")
-          + ". This endpoint is not one the build reads today; it can be."
-        : "Both endpoints checked. Point-by-point would need a feed that is"
-          + " not ESPN."));
-      var pre = document.getElementById("dump");
-      pre.textContent = pre.textContent.replace(/\n?$/,
-        "\n\nsummary(" + m.id + ") pointHits:\n"
-        + (hits.length ? hits.join("\n") : "none"));
-    }
-    box.appendChild(c);
-  });
+  var tries = [
+    ["per-event summary", BASE + m.tour + "/summary?event=" + m.eventId],
+    ["core play-by-play",
+     CORE + m.tour + "/events/" + m.eventId + "/competitions/" + m.id
+     + "/plays?limit=25"]
+  ];
+
+  return tries.reduce(function (chain, pair) {
+    return chain.then(function () {
+      return fetch(pair[1]).then(function (r) {
+        return r.ok ? r.json() : null;
+      }).catch(function () { return null; }).then(function (doc) {
+        var c = el("div", "card"), hits = [];
+        if (doc) crawl(doc, "doc", hits, 0);
+        if (!doc) {
+          c.appendChild(el("div", "verdict warn",
+            "The " + pair[0] + " is unreadable from a browser"));
+          c.appendChild(el("p", "note",
+            "Blocked, missing or errored, so it cannot be the live source"
+            + " either. A server-side fetch may still work — the build is not"
+            + " bound by CORS, only the refresh in the reader's browser is."));
+        } else {
+          c.appendChild(el("div", hits.length ? "verdict good" : "verdict warn",
+            hits.length
+              ? "The " + pair[0] + " carries a point score"
+              : "The " + pair[0] + " is readable, and has no point score"));
+          c.appendChild(el("p", "note", hits.length
+            ? "At " + hits[0] + (hits.length > 1
+                ? " (and " + (hits.length - 1) + " more)" : "")
+              + ". This endpoint is not one the build reads today; it can be."
+            : "Readable from the browser, so CORS is not what is missing"
+              + " here — the data is."));
+        }
+        c.appendChild(el("p", "note dim", pair[1]));
+        box.appendChild(c);
+        var pre = document.getElementById("dump");
+        pre.textContent += "\n\n" + pair[0] + " pointHits:\n"
+          + (doc ? (hits.length ? hits.join("\n") : "none")
+                 : "endpoint unreadable");
+      });
+    });
+  }, Promise.resolve());
 }).catch(function (e) {
   document.getElementById("results").textContent = "check failed: " + e;
 });

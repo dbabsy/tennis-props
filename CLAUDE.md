@@ -181,12 +181,32 @@ ESPN publishes it. Two guards worth keeping: a value of 6 or 7 is refused, so
 a games number can never be read as a point score, and a tiebreak's 1-2-3 is
 shown but not priced, because the model has no mid-tiebreak entry.
 
-**Who is serving is worth more than the scoreline.** At one set all and 5-4 in
-the decider, the same score is a **0.93 win for the server and 0.66 for the
-receiver**. ESPN does not reliably say, so `fetch._espn_match` looks in several
-places for it and reports `None` rather than guessing; the page then averages
-the two entries, which is blunter but not wrong. If a reliable source of the
-server turns up it is the single biggest improvement available to that page.
+**ESPN's scoreboard does not carry the score inside the game.** Settled by
+`livecheck.html` against a live US Open match: the competitor object holds
+exactly `id`, `uid`, `type`, `order`, `homeAway`, `possession`, `curatedRank`,
+`linescores`, `athlete` and `statistics`, and a walk of the entire payload
+found nothing anywhere shaped like a 15, 30, 40 or AD. So this is not a fifth
+spelling waiting to be guessed -- the reading machinery is correct and there
+is no data for it. `fetch._game_points` stays because it costs nothing and
+because the other endpoints have not been ruled out, but nothing sourced from
+the scoreboard will ever fill it.
+
+**Who is serving is worth more than the scoreline, and ESPN does say.** At one
+set all and 5-4 in the decider, the same score is a **0.93 win for the server
+and 0.66 for the receiver**. This was written down as the single biggest
+improvement available to the live page, on the assumption the feed did not
+carry it. Checked against a real US Open match on 2026-09-09, it does:
+`competitor.possession` is a plain boolean, true on the server and false on
+the receiver, and `fetch._espn_match` was already reading that key among the
+several it tries. So the page has been using the real server, not averaging.
+
+Two things about that observation are worth keeping. It is one match, so the
+several-spellings search and the `None` fallback stay -- a feed that has the
+field today can move it. And the sibling `competition.situation` object is
+**not tennis-shaped**: it comes back holding `onFirst`, `onSecond`, `onThird`,
+which are baseball. `_espn_match` looks there for `possession` or `server`
+first and finds neither, which costs nothing, but anyone reasoning about that
+object from its name will be reasoning about the wrong sport.
 
 **The live page ships the answers, not the model.** `model.live_table`
 precomputes P(A wins) for every state a match can reach -- 39 game scores by
@@ -396,24 +416,29 @@ the number that decides how fast the accuracy page becomes readable.
 - The WTA may want a bigger gap stretch than the ATP -- its 2023 and 2024
   residual optima both land at 1.21 -- but 2025 says 1.04, so a per-tour
   constant is not supported by three seasons. Worth revisiting with a fourth.
-- **Point-level is wired end to end and has now been seen against a real
-  in-progress match, showing nothing.** A US Open match on court rendered the
-  ordinary scorebug with no point box, which means the scoreboard carried no
-  game score under any of the four spellings `fetch._game_points` tries. That
-  is one observation, and it does not distinguish the two cases that matter:
-  ESPN may not publish a point score at all, or it may publish one under a
-  fifth name. The page cannot tell them apart either -- both look like a page
-  that simply did not change -- which is why `livecheck.html` now reports the
-  difference explicitly, walking the whole payload for anything shaped like a
-  15, 30, 40 or AD and naming where it found it. `espn_probe.py` asks the same
-  question from a terminal. Whichever answers first, the fix is a name, not a
-  model. Mid-tiebreak stays display-only: pricing it would need a
-  `tiebreak_prob_from`, which is the same shape as `game_prob_from` and has
-  not been written. The prize is unchanged: at one set all and 4-5 down on
-  serve, the game-level number is 0.474 and the point score moves it between
-  **0.127 at 0-40 and 0.556 at 40-0**. That is the difference between a page
-  that says something and a page that says something useful.
-- The live page has never been watched against a real in-progress match from a
-  real browser. Everything about it is verified offline -- the model against
-  `match_dist`, the JavaScript against the model under `node` -- but whether
-  ESPN answers a browser is untested, and so is whether it reports the server.
+- **Point-level is built, correct and unfed.** The reading, the display and
+  the pricing all ship and are tested; the scoreboard has no point score to
+  give them, which is now measured rather than suspected. Two endpoints are
+  left. The per-event summary and the core play-by-play feed are what
+  `livecheck.html` asks next and what `espn_probe.py` asks from a terminal --
+  and the first attempt at the summary asked the wrong question, passing the
+  competition id where `?event=` wants the tournament id, so its "unreadable"
+  answer proved nothing and has been corrected rather than believed. Note the
+  asymmetry if either turns out to carry the data: the build is server-side
+  and CORS does not apply to it, but the live refresh runs in the reader's
+  browser and CORS does. An endpoint the build can read and the browser
+  cannot would give point scores that are two hours stale, which is worse
+  than none. Mid-tiebreak stays display-only regardless: pricing it needs a
+  `tiebreak_prob_from`, the same shape as `game_prob_from`, unwritten. The
+  prize is unchanged: at one set all and 4-5 down on serve, the game-level
+  number is 0.474 and the point score moves it between **0.127 at 0-40 and
+  0.556 at 40-0**.
+- **A browser can reach ESPN, and ESPN reports the server.** Both were open
+  and both are answered: `livecheck.html` run against a live US Open match got
+  HTTP 200 with usable CORS on both league scoreboards, and found the server
+  under `competitor.possession`. That was from a `file://` origin, so the
+  browser sent `Origin: null` and the deployed copy at `/livecheck.html` is
+  still the authoritative one -- but a permissive answer to `Origin: null` is
+  hard to reconcile with a policy that would refuse a real origin. What
+  remains untested is the live page itself over a full match: whether the
+  refresh keeps working for an hour, not whether one fetch succeeds.

@@ -199,6 +199,7 @@ def _espn_match(c, tname, sex, ev):
             "won": bool(x.get("winner")),
             "sets": [s.get("value") for s in (x.get("linescores") or [])],
             "tb": [s.get("tiebreak") for s in (x.get("linescores") or [])],
+            "points": _game_points(x),
         })
 
     st = c.get("status", {}).get("type", {})
@@ -243,6 +244,36 @@ def _espn_match(c, tname, sex, ev):
         "p1": side[0],
         "p2": side[1],
     }
+
+
+# The score inside the game being played -- 15, 30, 40, AD -- as opposed to
+# the games in the set, which is what linescores carries. ESPN has moved this
+# around, so several spellings are tried and the answer is None when none of
+# them is there. Unlike the serving flag, a wrong guess here shows nothing
+# rather than blurring a number.
+_POINTS = {"0", "15", "30", "40", "AD", "A", "ADV"}
+
+
+def _game_points(competitor):
+    """The score inside the game, as the scoreboard writes it.
+
+    A tiebreak counts 1, 2, 3 rather than 15, 30, 40, so plain small integers
+    are accepted too -- they are shown but not priced, because the model has
+    no mid-tiebreak entry. Anything larger is refused: a games value read as a
+    point score would be a silent and very confusing lie.
+    """
+    for key in ("score", "points", "gameScore", "currentScore"):
+        v = competitor.get(key)
+        if isinstance(v, dict):
+            v = v.get("value") or v.get("displayValue")
+        if v is None:
+            continue
+        s = str(v).strip().upper()
+        if s in _POINTS:
+            return "AD" if s in ("A", "ADV") else s
+        if s.isdigit() and 0 <= int(s) <= 30 and s not in ("6", "7"):
+            return s          # a tiebreak point
+    return None
 
 
 def espn_backfill(start, end, tour="atp", step=7):

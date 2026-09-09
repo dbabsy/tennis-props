@@ -543,12 +543,17 @@ setTimeout(function () {
 """
 
 
-def _espn_stub(mid, names, linescores, serving_id=None, tiebreaks=None):
+def _espn_stub(mid, names, linescores, serving_id=None, tiebreaks=None,
+               points=None):
     tiebreaks = tiebreaks or [[None] * len(ls) for ls in linescores]
     comps = [{"id": f"c{i}", "athlete": {"displayName": n, "id": f"a{i}"},
               "linescores": [{"value": v, "tiebreak": t}
                              for v, t in zip(ls, tb)]}
              for i, (n, ls, tb) in enumerate(zip(names, linescores, tiebreaks))]
+    if points:
+        for comp, pt in zip(comps, points):
+            if pt is not None:
+                comp["score"] = pt
     comp = {"id": mid, "competitors": comps}
     if serving_id is not None:
         comp["situation"] = {"possession": f"c{serving_id}"}
@@ -590,7 +595,9 @@ def test_live_js():
     rows_ = [P.project(rt, res, match("m1", 5, "Wimbledon")),
              P.project(rt, res, match("m2", 3, "Cincinnati")),
              P.project(rt, res, match("m3", 3, "Cincinnati")),
-             P.project(rt, res, match("m4", 3, "Cincinnati"))]
+             P.project(rt, res, match("m4", 3, "Cincinnati")),
+             P.project(rt, res, match("m5", 3, "Cincinnati")),
+             P.project(rt, res, match("m6", 3, "Cincinnati"))]
     live = [P.live_view(r) for r in rows_]
 
     board = {"events": [{"groupings": [{"competitions": [
@@ -601,6 +608,11 @@ def test_live_js():
         _espn_stub("m2", ["B", "A"], [[1, 3], [6, 4]], serving_id=1),
         # Nobody says who is serving.
         _espn_stub("m3", ["A", "B"], [[5], [4]]),
+        # Serving, and the scoreboard gives the score inside the game.
+        _espn_stub("m5", ["A", "B"], [[6, 3], [4, 1]], serving_id=0,
+                   points=["40", "15"]),
+        # The same match with no game score at all, to prove the fallback.
+        _espn_stub("m6", ["A", "B"], [[6, 3], [4, 1]], serving_id=0),
         # Over, and the first set went to a tiebreak.
         _espn_stub("m4", ["A", "B"], [[7, 6], [6, 3]],
                    tiebreaks=[[5, None], [7, None]]),
@@ -611,6 +623,7 @@ def test_live_js():
         "games": [f"{a}-{b}" for a, b in model.game_states()],
         "sets": {str(bo): [f"{a}-{b}" for a, b in model.set_states(bo)]
                  for bo in (3, 5)},
+        "ptStates": [f"{a}-{b}" for a, b in model.point_states()],
         "matches": live}))
         .replace("SCOREBOARD", json.dumps(board))
         .replace("LIVE_JS", build.LIVE_JS))
@@ -683,6 +696,29 @@ def test_live_js():
     check("names from the scoreboard are escaped, not injected",
           "<img" not in build.LIVE_JS.replace("esc(", "SAFE(")
           and 'replace(/[&<>"\']/g' in build.LIVE_JS)
+
+    # -- the score inside the game ----------------------------------------
+    check("a live game score is shown in the scorebug",
+          '<span class="sb-p">40</span>' in rows["m-m5"]["sb"]
+          and '<span class="sb-p">15</span>' in rows["m-m5"]["sb"],
+          rows["m-m5"]["sb"][:120])
+    check("and is absent when the scoreboard does not give one",
+          "sb-p" not in rows["m-m6"]["sb"])
+
+    # 40-15 on serve is a better spot than the game-level average, and the
+    # page should say so rather than showing the same number all game.
+    want_pt = model.live_prob(round(rows_[4]["pa"], 4), round(rows_[4]["pb"], 4),
+                              1, 0, 3, 1, True, best_of=3,
+                              sigma=P.FORM_SIGMA, nodes=P.FORM_NODES)
+    check("the point score moves the probability off the game-level number",
+          rows["m-m5"]["p"] != rows["m-m6"]["p"],
+          f'with points {rows["m-m5"]["p"]}, without {rows["m-m6"]["p"]}')
+    check("and without a point score it is exactly the game-level number",
+          rows["m-m6"]["p"] == f"{100 * want_pt:.0f}%",
+          f'{rows["m-m6"]["p"]} vs {100 * want_pt:.0f}%')
+    check("40-15 on serve reads higher than the game-level number",
+          int(rows["m-m5"]["p"].rstrip("%")) > int(rows["m-m6"]["p"].rstrip("%")),
+          f'{rows["m-m5"]["p"]} vs {rows["m-m6"]["p"]}')
 
     # -- how fresh the numbers are ----------------------------------------
     check("a successful pull reports the page as live",

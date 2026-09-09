@@ -304,10 +304,16 @@ def live_view(r):
         "p_pre": r["p_a"],
         "exp_games": r["exp_games"],
         "table": model.encode_table(table),
+        # Eighteen hold probabilities a side. The match is Markov at game
+        # boundaries, so this is all the browser needs to turn a point score
+        # into a match probability -- see model.point_table.
+        "pts": model.encode_table(model.point_table(round(r["pa"], 4),
+                                                    round(r["pb"], 4))),
         "state": m.get("state", ""),
         "sets": [m["p1"]["sets"], m["p2"]["sets"]],
         "tb": [m["p1"]["tb"], m["p2"]["tb"]],
         "serving": m.get("serving"),
+        "points": [m["p1"].get("points"), m["p2"].get("points")],
     }
 
 

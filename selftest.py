@@ -528,13 +528,20 @@ globalThis.document = {
     return {querySelector(sel) { return row[sel] || (row[sel] = cell()); }};
   }
 };
-globalThis.setInterval = function () {};
+// The refresh runs on a timer the page owns, so the harness keeps the
+// callback and fires it by hand -- that is how a second poll, with a second
+// scoreboard, can be tested at all.
+let TICK = null;
+globalThis.setInterval = function (fn, ms) { if (ms > 5000) TICK = fn; };
+let TURN = 0;
 globalThis.fetch = function (url) {
-  const doc = url.indexOf("/atp/") >= 0 ? SCOREBOARD : {events: []};
+  const boards = [SCOREBOARD, SCOREBOARD2];
+  const doc = url.indexOf("/atp/") >= 0
+    ? boards[Math.min(TURN, boards.length - 1)] : {events: []};
   return Promise.resolve({json: () => Promise.resolve(doc)});
 };
 LIVE_JS
-setTimeout(function () {
+function snap() {
   const out = {rows: {}, pill: "", clock: ""};
   for (const id of Object.keys(PAINTED)) {
     out.rows[id] = {
@@ -544,12 +551,22 @@ setTimeout(function () {
   }
   out.pill = CHROME["live-pill"] ? CHROME["live-pill"].innerHTML : "";
   out.clock = CHROME["live-clock"] ? CHROME["live-clock"].textContent : "";
-  console.log(JSON.stringify(out));
+  return out;
+}
+setTimeout(function () {
+  const out = snap();
+  TURN = 1;
+  if (TICK) TICK();
+  setTimeout(function () {
+    out.after = snap();
+    console.log(JSON.stringify(out));
+  }, 20);
 }, 20);
 """
 
 
 def _espn_stub(mid, names, linescores, serving_id=None, tiebreaks=None,
+               possession_id=None,
                points=None):
     tiebreaks = tiebreaks or [[None] * len(ls) for ls in linescores]
     comps = [{"id": f"c{i}", "athlete": {"displayName": n, "id": f"a{i}"},
@@ -561,6 +578,11 @@ def _espn_stub(mid, names, linescores, serving_id=None, tiebreaks=None,
             if pt is not None:
                 comp["score"] = pt
     comp = {"id": mid, "competitors": comps}
+    if possession_id is not None:
+        # Where ESPN actually put it, when it put it anywhere: a boolean on
+        # the competitor, with no situation object at all.
+        for i, c in enumerate(comps):
+            c["possession"] = (i == possession_id)
     if serving_id is not None:
         comp["situation"] = {"possession": f"c{serving_id}"}
     return comp
@@ -603,12 +625,14 @@ def test_live_js():
              P.project(rt, res, match("m3", 3, "Cincinnati")),
              P.project(rt, res, match("m4", 3, "Cincinnati")),
              P.project(rt, res, match("m5", 3, "Cincinnati")),
-             P.project(rt, res, match("m6", 3, "Cincinnati"))]
+             P.project(rt, res, match("m6", 3, "Cincinnati")),
+             P.project(rt, res, match("m7", 3, "Cincinnati"))]
     live = [P.live_view(r) for r in rows_]
 
     board = {"events": [{"groupings": [{"competitions": [
-        # A up a set and a break, A serving.
-        _espn_stub("m1", ["A", "B"], [[6, 3], [4, 1]], serving_id=0),
+        # A up a set and a break, A serving -- published as a boolean on the
+        # competitor, which is where ESPN was observed to put it.
+        _espn_stub("m1", ["A", "B"], [[6, 3], [4, 1]], possession_id=0),
         # ESPN lists the two the other way round -- the page has to read the
         # orientation off the names, not the position.
         _espn_stub("m2", ["B", "A"], [[1, 3], [6, 4]], serving_id=1),
@@ -619,9 +643,23 @@ def test_live_js():
                    points=["40", "15"]),
         # The same match with no game score at all, to prove the fallback.
         _espn_stub("m6", ["A", "B"], [[6, 3], [4, 1]], serving_id=0),
+        # One set all and 4-4 in the decider, A serving. One game later this
+        # becomes 5-4, which is the scoreline where the server is worth the
+        # most -- and by then ESPN has stopped saying who it is.
+        _espn_stub("m7", ["A", "B"], [[6, 3, 4], [3, 6, 4]], possession_id=0),
         # Over, and the first set went to a tiebreak.
         _espn_stub("m4", ["A", "B"], [[7, 6], [6, 3]],
                    tiebreaks=[[5, None], [7, None]]),
+    ]}]}]}
+
+    # The same slate one game later, with the server no longer published --
+    # which is what ESPN actually did between two visits an hour apart. A is
+    # anchored at 14 completed games (6-4, 3-1); at 15 (6-4, 4-1) the serve
+    # has rotated to B.
+    board2 = {"events": [{"groupings": [{"competitions": [
+        _espn_stub("m1", ["A", "B"], [[6, 4], [4, 1]]),
+        _espn_stub("m3", ["A", "B"], [[5], [4]]),
+        _espn_stub("m7", ["A", "B"], [[6, 3, 5], [3, 6, 4]]),
     ]}]}]}
 
     src = (HARNESS.replace("PAYLOAD", json.dumps({
@@ -631,6 +669,7 @@ def test_live_js():
                  for bo in (3, 5)},
         "ptStates": [f"{a}-{b}" for a, b in model.point_states()],
         "matches": live}))
+        .replace("SCOREBOARD2", json.dumps(board2))
         .replace("SCOREBOARD", json.dumps(board))
         .replace("LIVE_JS", build.LIVE_JS))
 
@@ -702,6 +741,32 @@ def test_live_js():
           'title="serving"' in rows["m-m1"]["sb"])
     check("an unknown server marks neither row",
           servers(rows["m-m3"]["sb"]) == ["", ""])
+
+    # ESPN published the server on one visit and not on the next. Serve
+    # alternates every game, so one sighting fixes every game after it -- and
+    # without that the ball blinks off and the number jumps from the sharp
+    # answer to the blunt average for no visible reason.
+    late = got["after"]["rows"]
+    check("a server seen once is still known after ESPN stops saying",
+          servers(late["m-m1"]["sb"]) != ["", ""],
+          str(servers(late["m-m1"]["sb"])))
+    check("and has rotated to the other player, one game on",
+          servers(late["m-m1"]["sb"]) == ["", "ball"],
+          str(servers(late["m-m1"]["sb"])))
+    check("a server never seen at all is still not guessed",
+          servers(late["m-m3"]["sb"]) == ["", ""],
+          str(servers(late["m-m3"]["sb"])))
+    # And the number that goes with it. A led 5-4 in the decider without
+    # serving, because A served the game before -- so the page must show the
+    # receiver's number, well below the average of the two.
+    hold = want(rows_[6], 1, 1, 5, 4, True)
+    recv = want(rows_[6], 1, 1, 5, 4, False)
+    check("the anchored server was carried into the number, not just the ball",
+          late["m-m7"]["p"] == pct(recv) and pct(recv) != pct((hold + recv) / 2),
+          f'js {late["m-m7"]["p"]} vs that server {pct(recv)}'
+          f' vs average {pct((hold + recv) / 2)}')
+    check("which is the whole point -- serving here is worth a great deal",
+          hold - recv > 0.15, f"{hold:.3f} serving vs {recv:.3f} receiving")
     check("a tiebreak margin is raised beside the set it belongs to",
           '<span class="sb-tb">5</span>' in rows["m-m4"]["sb"]
           and '<span class="sb-tb">7</span>' in rows["m-m4"]["sb"])

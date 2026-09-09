@@ -419,6 +419,56 @@ LIVE_JS = r"""
     }
   }
 
+  // ESPN publishes the server intermittently. It was on the competitor as a
+  // boolean `possession` one afternoon and absent from the same match an hour
+  // later, situation object and all. The build sees one sample every two
+  // hours and the refresh sees one every half minute, so without a memory the
+  // ball blinks on and off and the probability jumps between the sharp number
+  // and the blunt average -- at 5-4 in a decider that is 0.93 against the mean
+  // of 0.93 and 0.66, moving for a reason the reader cannot see.
+  //
+  // One sighting is enough for the rest of the match. Serve alternates every
+  // game and keeps alternating across set boundaries -- whoever received the
+  // last game of a set serves the first of the next -- and a tiebreak is one
+  // game like any other, so the parity of completed games since the sighting
+  // says who is serving now. This is derivation, not a guess: it is the same
+  // rotation model.py walks when it builds the table.
+  var ANCHOR = {};
+
+  function played(ls) {
+    var n = 0;
+    for (var r = 0; r < 2; r++) {
+      for (var i = 0; i < ls[r].length; i++) n += ls[r][i] || 0;
+    }
+    return n;
+  }
+
+  // Every place fetch._espn_match looks, in the same order, so the page and
+  // the build cannot disagree about who is serving the same match.
+  function seenServer(c, ai, bi) {
+    var A = c.competitors[ai], B = c.competitors[bi];
+    if (A.possession === true || A.serving === true) return true;
+    if (B.possession === true || B.serving === true) return false;
+    var sit = c.situation || {};
+    var who = sit.possession != null ? sit.possession : sit.server;
+    if (who && typeof who === "object") who = who.id || who.athleteId;
+    if (who != null && String(who) !== "") {
+      if (String(who) === String(A.id)) return true;
+      if (String(who) === String(B.id)) return false;
+    }
+    return null;
+  }
+
+  function serverNow(id, seen, games) {
+    if (seen !== null) {
+      ANCHOR[id] = {a: seen, games: games};
+      return seen;
+    }
+    var k = ANCHOR[id];
+    if (!k) return null;
+    return (Math.abs(games - k.games) % 2) ? !k.a : k.a;
+  }
+
   // The first paint comes from the scores the page was built with, so the
   // scorebug is drawn once here and again on every refresh -- one function,
   // not a server-rendered version and a client-rendered version that could
@@ -427,8 +477,9 @@ LIVE_JS = r"""
     D.matches.forEach(function (m) {
       var ls = [(m.sets && m.sets[0]) || [], (m.sets && m.sets[1]) || []];
       var st = derive(ls[0], ls[1], m.best_of);
-      var serving = m.serving == null ? null : m.serving;
-      var srvA = serving == null ? null : serving === 0;
+      var srvA = serverNow(m.id, m.serving == null ? null : m.serving === 0,
+                           played(ls));
+      var serving = srvA === null ? null : (srvA ? 0 : 1);
       var p = ls[0].length
         ? (st.done ? (st.sa > st.sb ? 1 : 0)
            : (withPoints(m, st, srvA, m.points) !== null
@@ -467,11 +518,7 @@ LIVE_JS = r"""
         });
       });
       var st0 = derive(ls[0], ls[1], m.best_of), st = st0;
-      var servingIsA = null;
-      if (c.situation && c.situation.possession != null) {
-        servingIsA = String(c.situation.possession)
-          === String(c.competitors[ai].id);
-      }
+      var servingIsA = serverNow(m.id, seenServer(c, ai, bi), played(ls));
       // The score inside the game being played, if the scoreboard has one.
       // A tiebreak counts 1, 2, 3 instead of 15, 30, 40; those are shown but
       // not priced, because the model has no mid-tiebreak entry.

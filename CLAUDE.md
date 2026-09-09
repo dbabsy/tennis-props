@@ -181,32 +181,52 @@ ESPN publishes it. Two guards worth keeping: a value of 6 or 7 is refused, so
 a games number can never be read as a point score, and a tiebreak's 1-2-3 is
 shown but not priced, because the model has no mid-tiebreak entry.
 
-**ESPN's scoreboard does not carry the score inside the game.** Settled by
-`livecheck.html` against a live US Open match: the competitor object holds
-exactly `id`, `uid`, `type`, `order`, `homeAway`, `possession`, `curatedRank`,
-`linescores`, `athlete` and `statistics`, and a walk of the entire payload
-found nothing anywhere shaped like a 15, 30, 40 or AD. So this is not a fifth
-spelling waiting to be guessed -- the reading machinery is correct and there
-is no data for it. `fetch._game_points` stays because it costs nothing and
-because the other endpoints have not been ruled out, but nothing sourced from
-the scoreboard will ever fill it.
+**ESPN does not carry the score inside the game, on any endpoint reachable
+from a browser.** Settled by `livecheck.html` against live US Open matches on
+two separate visits. The scoreboard's competitor object holds exactly `id`,
+`uid`, `type`, `order`, `homeAway`, `possession`, `curatedRank`, `linescores`,
+`athlete` and `statistics`; a walk of the entire payload found nothing shaped
+like a 15, 30, 40 or AD. The **core play-by-play feed answered and had none
+either** -- readable, so CORS is not what is missing, the data is. The
+per-event summary was unreadable both times.
 
-**Who is serving is worth more than the scoreline, and ESPN does say.** At one
-set all and 5-4 in the decider, the same score is a **0.93 win for the server
-and 0.66 for the receiver**. This was written down as the single biggest
-improvement available to the live page, on the assumption the feed did not
-carry it. Checked against a real US Open match on 2026-09-09, it does:
-`competitor.possession` is a plain boolean, true on the server and false on
-the receiver, and `fetch._espn_match` was already reading that key among the
-several it tries. So the page has been using the real server, not averaging.
+So this was never a fifth spelling waiting to be guessed. The reading
+machinery is correct and there is nothing to read. `fetch._game_points`,
+`model.point_table` and the point box all stay: they cost nothing when the
+field is absent, they are tested, and the day a feed provides one they are the
+whole of the work. But nothing sourced from ESPN will fill them, and a CORS
+proxy would not help -- it solves reachability, and reachability is not the
+problem.
 
-Two things about that observation are worth keeping. It is one match, so the
-several-spellings search and the `None` fallback stay -- a feed that has the
-field today can move it. And the sibling `competition.situation` object is
-**not tennis-shaped**: it comes back holding `onFirst`, `onSecond`, `onThird`,
-which are baseball. `_espn_match` looks there for `possession` or `server`
-first and finds neither, which costs nothing, but anyone reasoning about that
-object from its name will be reasoning about the wrong sport.
+**Who is serving is worth more than the scoreline, and ESPN says only
+sometimes.** At one set all and 5-4 in the decider, the same score is a
+**0.93 win for the server and 0.66 for the receiver** -- 18 points of win
+probability on one bit of information, which `selftest.py` now measures
+rather than quotes.
+
+ESPN publishes it as `competitor.possession`, a plain boolean. It was present
+on a US Open match one afternoon and **absent from the same match an hour
+later**, with the `situation` object gone from the competition entirely. So
+the field is real and intermittent, and a page that reads it directly will
+blink: ball on, ball off, and the number stepping between the sharp answer and
+the average of two answers for no reason a viewer can see. That is worse than
+either number alone, because it looks like the model changing its mind.
+
+**One sighting is enough for the rest of the match.** Serve alternates every
+game, keeps alternating across set boundaries, and a tiebreak is one game like
+any other -- so the parity of completed games since a sighting says who is
+serving now. `LIVE_JS` anchors on the first `possession` it sees and derives
+from there. This is not a guess; it is the same rotation `model.set_from`
+walks. It only fails if the feed's own sighting was wrong.
+
+Two more things worth keeping. The refresh path used to look for the server in
+`competition.situation.possession` **only** -- not on the competitor, which is
+where ESPN actually puts it -- so every poll after the first threw away a
+server the build had correctly read thirty seconds earlier. One function,
+`seenServer`, now looks in the same places `fetch._espn_match` looks, in the
+same order, because two readers of one field is how they drift. And the
+`situation` object is **not tennis-shaped** when it is there at all: it comes
+back holding `onFirst`, `onSecond`, `onThird`, which are baseball.
 
 **The live page ships the answers, not the model.** `model.live_table`
 precomputes P(A wins) for every state a match can reach -- 39 game scores by
@@ -416,29 +436,26 @@ the number that decides how fast the accuracy page becomes readable.
 - The WTA may want a bigger gap stretch than the ATP -- its 2023 and 2024
   residual optima both land at 1.21 -- but 2025 says 1.04, so a per-tour
   constant is not supported by three seasons. Worth revisiting with a fourth.
-- **Point-level is built, correct and unfed.** The reading, the display and
-  the pricing all ship and are tested; the scoreboard has no point score to
-  give them, which is now measured rather than suspected. Two endpoints are
-  left. The per-event summary and the core play-by-play feed are what
-  `livecheck.html` asks next and what `espn_probe.py` asks from a terminal --
-  and the first attempt at the summary asked the wrong question, passing the
-  competition id where `?event=` wants the tournament id, so its "unreadable"
-  answer proved nothing and has been corrected rather than believed. Note the
-  asymmetry if either turns out to carry the data: the build is server-side
-  and CORS does not apply to it, but the live refresh runs in the reader's
-  browser and CORS does. An endpoint the build can read and the browser
-  cannot would give point scores that are two hours stale, which is worse
-  than none. Mid-tiebreak stays display-only regardless: pricing it needs a
-  `tiebreak_prob_from`, the same shape as `game_prob_from`, unwritten. The
-  prize is unchanged: at one set all and 4-5 down on serve, the game-level
-  number is 0.474 and the point score moves it between **0.127 at 0-40 and
-  0.556 at 40-0**.
+- **Point-level is built, correct and unfed, and that is now an answer
+  rather than an open question.** All three ESPN endpoints have been checked
+  against live matches and none carries a point score; the play-by-play feed
+  is readable and empty of one. The live page is game-resolution because the
+  feed is, not because the model is. Reopening this needs a *different
+  source*, not more looking: a paid live-data feed, or the Match Charting
+  Project after the fact, which is not live. Whoever picks it up gets the
+  reading, the display, the pricing and the tests for free -- the missing
+  piece is only ever the field. What it would be worth, if a source turns up:
+  at one set all and 4-5 down on serve the game-level number is 0.474, and
+  the point score moves it between **0.127 at 0-40 and 0.556 at 40-0**.
 - **A browser can reach ESPN, and ESPN reports the server.** Both were open
   and both are answered: `livecheck.html` run against a live US Open match got
   HTTP 200 with usable CORS on both league scoreboards, and found the server
   under `competitor.possession`. That was from a `file://` origin, so the
   browser sent `Origin: null` and the deployed copy at `/livecheck.html` is
   still the authoritative one -- but a permissive answer to `Origin: null` is
-  hard to reconcile with a policy that would refuse a real origin. What
-  remains untested is the live page itself over a full match: whether the
-  refresh keeps working for an hour, not whether one fetch succeeds.
+  hard to reconcile with a policy that would refuse a real origin. The
+  server is reported intermittently, which is a different problem and is
+  handled by anchoring rather than by asking again. What remains untested is
+  the live page itself over a full match: whether the refresh keeps working
+  for an hour, and whether the anchor survives a match it was not watching
+  from the start.

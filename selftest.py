@@ -887,6 +887,7 @@ var out = {};
                     tour: one.tour, eventId: one.eventId,
                     n: got.live.length};
   });
+out.free = FREE.map(function (f) { return {label: f[0], url: f[1]}; });
 console.log(JSON.stringify(out));
 """ % tuple(json.dumps(d)
              for d in (scored, bare, elsewhere, games, doubles))
@@ -921,6 +922,18 @@ console.log(JSON.stringify(out));
           got["scored"]["eventId"] == "9000", got["scored"]["eventId"])
     check("a doubles draw is not counted as a match on court",
           got["doubles"]["n"] == 0, got["doubles"]["n"])
+
+    # The free-source hunt is a list of guesses, and a guess that cannot be
+    # fetched teaches nothing -- so the one thing worth asserting is that each
+    # entry is a well-formed https URL with a label to report it under.
+    free = got["free"]
+    check("the free-source hunt has somewhere to look",
+          len(free) >= 5, str(len(free)))
+    check("every candidate is https, so a browser will try it",
+          all(f["url"].startswith("https://") for f in free))
+    check("and every candidate is named, so a verdict says which",
+          len({f["label"] for f in free}) == len(free)
+          and all(f["label"] for f in free))
 
 
 if __name__ == "__main__":

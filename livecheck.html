@@ -27,9 +27,10 @@ background:var(--card);color:var(--fg);cursor:pointer}
 </style></head>
 <body><div class="wrap">
 <h1>Live feed check</h1>
-<p class="sub">Answers the three things the live page could not be tested for
-offline: whether a browser can reach ESPN's scoreboard at all, whether ESPN
-says who is serving, and whether it gives the score inside the game.</p>
+<p class="sub">Answers what the live page could not be tested for offline:
+whether a browser can reach ESPN's scoreboard at all, whether ESPN says who is
+serving, and whether anything reachable gives the score inside the game. ESPN
+does not, on any endpoint — so it also hunts for a free source that does.</p>
 
 <div id="origin" class="card"></div>
 <div id="results">Running…</div>
@@ -47,6 +48,27 @@ payload holding a 15, 30, 40 or AD, wherever it turned out to live.</p>
 var TOURS = ["atp", "wta"];
 var BASE = "https://site.api.espn.com/apis/site/v2/sports/tennis/";
 var CORE = "https://sports.core.api.espn.com/v2/sports/tennis/leagues/";
+
+// Somewhere that publishes a point score with no key and no access control.
+// These are guesses at undocumented endpoints belonging to the people who run
+// the events, so read a failure carefully: 404 means the guess was wrong, not
+// that the source has nothing. A hit is worth having -- the slams cover the
+// eight weeks of the year most worth watching, and the tour feeds would cover
+// the rest.
+var YEAR = new Date().getUTCFullYear();
+var FREE = [
+  ["US Open", "https://www.usopen.org/en_US/scores/feeds/" + YEAR
+   + "/scores/live_scores.json"],
+  ["US Open (alt path)",
+   "https://www.usopen.org/en_US/scores/feeds/live/scores/scores.json"],
+  ["Wimbledon", "https://www.wimbledon.com/en_GB/scores/feeds/" + YEAR
+   + "/scores/live_scores.json"],
+  ["Roland-Garros",
+   "https://www.rolandgarros.com/en-us/api/live/matches"],
+  ["Australian Open", "https://ausopen.com/api/live-scores"],
+  ["ATP", "https://www.atptour.com/en/-/ajax/Scores/GetScoresLive"],
+  ["WTA", "https://api.wtatennis.com/tennis/live/matches"]
+];
 
 function el(tag, cls, txt) {
   var e = document.createElement(tag);
@@ -362,6 +384,63 @@ Promise.all(TOURS.map(probe)).then(function (rs) {
         pre.textContent += "\n\n" + pair[0] + " pointHits:\n"
           + (doc ? (hits.length ? hits.join("\n") : "none")
                  : "endpoint unreadable");
+      });
+    });
+  }, Promise.resolve());
+}).then(function () {
+  // Every candidate gets the same three questions: does it answer, is it
+  // JSON, and is there a point score in it. A CORS refusal and a 404 look the
+  // same to fetch(), so a failure is reported as "no answer" rather than as a
+  // verdict about the source.
+  var box = document.getElementById("results");
+  var head = el("div", "card");
+  head.appendChild(el("div", "verdict", "Free sources, hunted"));
+  head.appendChild(el("p", "note",
+    "Undocumented endpoints belonging to the people who run the events. A"
+    + " failure here means the URL guess was wrong or the browser was refused"
+    + " — not that the source has no point score. A hit is a free feed."));
+  box.appendChild(head);
+
+  return FREE.reduce(function (chain, pair) {
+    return chain.then(function () {
+      return fetch(pair[1]).then(function (r) {
+        return r.ok ? r.text() : null;
+      }).catch(function () { return null; }).then(function (body) {
+        var c = el("div", "card"), hits = [], doc = null;
+        if (body) {
+          try { doc = JSON.parse(body); } catch (e) { doc = null; }
+          if (doc) crawl(doc, "doc", hits, 0);
+        }
+        var verdict, cls, note;
+        if (!body) {
+          cls = "verdict dim"; verdict = pair[0] + ": no answer";
+          note = "Refused, missing, or blocked. Nothing learned about the"
+               + " source itself.";
+        } else if (!doc) {
+          cls = "verdict warn"; verdict = pair[0] + ": answered, not JSON";
+          note = "Reachable, so the browser is allowed. It returned "
+               + body.length + " bytes that are not JSON — probably a page"
+               + " rather than a feed, so the feed is at another path.";
+        } else if (hits.length) {
+          cls = "verdict good";
+          verdict = pair[0] + ": JSON, WITH a point score";
+          note = "At " + hits[0] + (hits.length > 1
+                 ? " (and " + (hits.length - 1) + " more)" : "")
+               + ". This is a free feed — send it back.";
+        } else {
+          cls = "verdict warn"; verdict = pair[0] + ": JSON, no point score";
+          note = "Readable and parseable, but nothing shaped like a 15, 30,"
+               + " 40 or AD. Either nothing is on court here, or this feed"
+               + " does not carry points.";
+        }
+        c.appendChild(el("div", cls, verdict));
+        c.appendChild(el("p", "note", note));
+        c.appendChild(el("p", "note dim", pair[1]));
+        box.appendChild(c);
+        var pre = document.getElementById("dump");
+        pre.textContent += "\n\n" + pair[0] + ": "
+          + (!body ? "no answer" : (!doc ? "not JSON" :
+             (hits.length ? hits.join("\n  ") : "JSON, no point score")));
       });
     });
   }, Promise.resolve());

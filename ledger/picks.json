@@ -2252,6 +2252,25 @@
    "tour": "atp",
    "tourney": "US Open"
   },
+  "atp:182766": {
+   "best_of": 5,
+   "exp_aces_p1": 20.599384322616494,
+   "exp_aces_p2": 10.400422161569628,
+   "exp_games": 41.01632381210135,
+   "id": "182766",
+   "p1": "Ben Shelton",
+   "p2": "Frances Tiafoe",
+   "p_over": 0.5683843431101995,
+   "p_p1": 0.5827842016080577,
+   "recorded": "2026-09-09T08:30:10.937291+00:00",
+   "result": null,
+   "round": "Semifinal",
+   "start": "2026-09-11T04:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 38.5,
+   "tour": "atp",
+   "tourney": "US Open"
+  },
   "atp:182767": {
    "best_of": 5,
    "exp_aces_p1": 6.782624604424757,
@@ -2473,7 +2492,13 @@
    "p_over": 0.4039738471985972,
    "p_p1": 0.843905896504284,
    "recorded": "2026-09-07T01:20:21.851680+00:00",
-   "result": null,
+   "result": {
+    "clean": true,
+    "detail": "Final",
+    "games": 49.0,
+    "p1_won": false,
+    "score": "7.0-6.0 1.0-6.0 3.0-6.0 6.0-1.0 6.0-7.0"
+   },
    "round": "Quarterfinal",
    "start": "2026-09-08T04:00:00+00:00",
    "surface": "Hard",

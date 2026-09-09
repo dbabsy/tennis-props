@@ -236,6 +236,11 @@ font-variant-numeric:tabular-nums;font-size:12.5px}
 color:var(--fg)}
 .sb-tb{position:absolute;top:-3px;right:-3px;font-size:8.5px;line-height:1;
 color:var(--dim);font-weight:500}
+/* The score inside the game being played, kept visually apart from the sets
+   because it is a different kind of number and it changes every rally. */
+.sb-p{width:26px;height:21px;line-height:21px;flex:none;text-align:center;
+border-radius:5px;margin-left:5px;font-size:12px;font-weight:650;
+font-variant-numeric:tabular-nums;background:var(--accent);color:var(--bg)}
 .livebar{display:flex;align-items:center;gap:9px;margin:0 0 14px;
 font-size:12px;color:var(--dim);flex-wrap:wrap}
 .pill{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;
@@ -277,6 +282,19 @@ LIVE_JS = r"""
   function dec(tbl, i) {                       // two base-36 chars -> 0..1
     return parseInt(tbl.substr(i * 2, 2), 36) / 1295;
   }
+  // 15-30-40-AD as the model counts them: points won, not the scoreboard word.
+  var PVAL = {"0": 0, "15": 1, "30": 2, "40": 3, "AD": 4};
+  var NP = D.ptStates.length, pidx = {};
+  D.ptStates.forEach(function (s, i) { pidx[s] = i; });
+
+  function ptIndex(pts, servingIsA) {
+    if (!pts) return null;
+    var a = PVAL[pts[0]], b = PVAL[pts[1]];
+    if (a == null || b == null) return null;
+    var sv = servingIsA ? a : b, rc = servingIsA ? b : a;
+    var k = pidx[sv + "-" + rc];
+    return k == null ? null : k;
+  }
   // The twin of ledger._set_over: a set still being played, or abandoned, is
   // not a set somebody has won.
   function setOver(a, b) {
@@ -295,7 +313,7 @@ LIVE_JS = r"""
     return {sa: sa, sb: sb, ga: ga, gb: gb, done: sa >= need || sb >= need};
   }
 
-  function scorebug(names, ls, tbs, servingRow, st) {
+  function scorebug(names, ls, tbs, servingRow, st, pts) {
     var n = Math.max(ls[0].length, ls[1].length), html = "";
     for (var r = 0; r < 2; r++) {
       var cells = "";
@@ -311,10 +329,13 @@ LIVE_JS = r"""
           + "</span>";
       }
       var ahead = st && (r === 0 ? st.sa > st.sb : st.sb > st.sa);
+      // The live game score, when the scoreboard gives one.
+      var pt = pts && pts[r] != null && pts[r] !== ""
+        ? '<span class="sb-p">' + esc(pts[r]) + "</span>" : "";
       html += '<div class="sb-r' + (ahead ? " up" : "") + '">'
         + '<span class="sb-n">' + esc(names[r]) + "</span>"
         + '<span class="sb-sv">' + (servingRow === r ? "●" : "") + "</span>"
-        + cells + "</div>";
+        + cells + pt + "</div>";
     }
     return html;
   }
@@ -328,6 +349,40 @@ LIVE_JS = r"""
       return (dec(m.table, base) + dec(m.table, base + 1)) / 2;
     }
     return dec(m.table, base + (servingIsA ? 0 : 1));
+  }
+
+  // Where the match stands once the current game resolves. Serve alternates,
+  // and a game that finishes the set resets the games and banks it.
+  function afterGame(st, servingIsA, held) {
+    var sa = st.sa, sb = st.sb, ga = st.ga, gb = st.gb;
+    if (servingIsA === held) ga++; else gb++;
+    if (setOver(ga, gb)) {
+      if (ga > gb) sa++; else sb++;
+      ga = 0; gb = 0;
+    }
+    return {sa: sa, sb: sb, ga: ga, gb: gb, srvA: !servingIsA};
+  }
+
+  function outcome(m, s) {
+    var need = (m.best_of >> 1) + 1;
+    if (s.sa >= need) return 1;
+    if (s.sb >= need) return 0;
+    return lookup(m, s, s.srvA);
+  }
+
+  // The point-level number. The match is Markov at game boundaries, so a
+  // point score changes nothing except whether THIS game is held -- both
+  // continuation states are already in the table. See model.point_table.
+  function withPoints(m, st, servingIsA, pts) {
+    if (servingIsA === null || !m.pts) return null;
+    if (st.ga === 6 && st.gb === 6) return null;   // a tiebreak, not a game
+    var i = ptIndex(pts, servingIsA);
+    if (i == null) return null;
+    var h = dec(m.pts, (servingIsA ? 0 : NP) + i);
+    var w = outcome(m, afterGame(st, servingIsA, true));
+    var l = outcome(m, afterGame(st, servingIsA, false));
+    if (w == null || l == null) return null;
+    return h * w + (1 - h) * l;
   }
 
   function paint(m, p, bug) {
@@ -358,11 +413,13 @@ LIVE_JS = r"""
       var ls = [(m.sets && m.sets[0]) || [], (m.sets && m.sets[1]) || []];
       var st = derive(ls[0], ls[1], m.best_of);
       var serving = m.serving == null ? null : m.serving;
+      var srvA = serving == null ? null : serving === 0;
       var p = ls[0].length
         ? (st.done ? (st.sa > st.sb ? 1 : 0)
-           : lookup(m, st, serving == null ? null : serving === 0))
+           : (withPoints(m, st, srvA, m.points) !== null
+              ? withPoints(m, st, srvA, m.points) : lookup(m, st, srvA)))
         : m.p_pre;
-      paint(m, p, scorebug([m.p1, m.p2], ls, m.tb, serving, st));
+      paint(m, p, scorebug([m.p1, m.p2], ls, m.tb, serving, st, m.points));
     });
   }
 
@@ -394,16 +451,34 @@ LIVE_JS = r"""
           return s.tiebreak;
         });
       });
-      var st = derive(ls[0], ls[1], m.best_of);
+      var st0 = derive(ls[0], ls[1], m.best_of), st = st0;
       var servingIsA = null;
       if (c.situation && c.situation.possession != null) {
         servingIsA = String(c.situation.possession)
           === String(c.competitors[ai].id);
       }
-      var p = st.done ? (st.sa > st.sb ? 1 : 0) : lookup(m, st, servingIsA);
+      // The score inside the game being played, if the scoreboard has one.
+      // A tiebreak counts 1, 2, 3 instead of 15, 30, 40; those are shown but
+      // not priced, because the model has no mid-tiebreak entry.
+      var inTb = st0.ga === 6 && st0.gb === 6;
+      var pts = [ai, bi].map(function (k) {
+        var x = c.competitors[k], v = x.score;
+        if (v && typeof v === "object") v = v.displayValue || v.value;
+        for (var j = 0, alt = [v, x.points, x.gameScore]; j < 3; j++) {
+          var t = alt[j] == null ? null : String(alt[j]).trim().toUpperCase();
+          if (t === "A" || t === "ADV") t = "AD";
+          if (t == null || t === "") continue;
+          if (PVAL[t] != null) return t;
+          if (inTb && /^\d{1,2}$/.test(t)) return t;
+        }
+        return null;
+      });
+      var fine = st.done ? null : withPoints(m, st, servingIsA, pts);
+      var p = st.done ? (st.sa > st.sb ? 1 : 0)
+        : (fine !== null ? fine : lookup(m, st, servingIsA));
       paint(m, p, scorebug([m.p1, m.p2], ls, tbs,
                            servingIsA === null ? null : (servingIsA ? 0 : 1),
-                           st));
+                           st, pts));
       seen++;
     });
     return seen;
@@ -502,6 +577,7 @@ def page_live(live, theme=None, event=None):
         "games": [f"{a}-{b}" for a, b in model.game_states()],
         "sets": {str(bo): [f"{a}-{b}" for a, b in model.set_states(bo)]
                  for bo in (3, 5)},
+        "ptStates": [f"{a}-{b}" for a, b in model.point_states()],
         "matches": live,
     }
     body = [

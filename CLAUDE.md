@@ -171,6 +171,16 @@ returns the pre-match number to twelve decimal places, which `selftest.py`
 asserts. Anything else would put two numbers for one match on the same site
 with no way to say which was wrong.
 
+**The score inside the game is read, shown and priced -- when the scoreboard
+gives one.** `fetch._game_points` looks for it under several spellings and
+returns `None` when none is there; the scorebug then shows a point box beside
+the sets, and the page prices the state with `model.point_table` instead of
+the game-level entry. All three degrade to exactly the previous behaviour when
+the field is absent, which is why it could be wired before knowing whether
+ESPN publishes it. Two guards worth keeping: a value of 6 or 7 is refused, so
+a games number can never be read as a point score, and a tiebreak's 1-2-3 is
+shown but not priced, because the model has no mid-tiebreak entry.
+
 **Who is serving is worth more than the scoreline.** At one set all and 5-4 in
 the decider, the same score is a **0.93 win for the server and 0.66 for the
 receiver**. ESPN does not reliably say, so `fetch._espn_match` looks in several
@@ -369,10 +379,14 @@ the number that decides how fast the accuracy page becomes readable.
 - The WTA may want a bigger gap stretch than the ATP -- its 2023 and 2024
   residual optima both land at 1.21 -- but 2025 says 1.04, so a per-tour
   constant is not supported by three seasons. Worth revisiting with a fourth.
-- Live in-match probability is game-level, because ESPN's linescores are.
-  The modelling for point-level is done and tested (`game_prob_from`,
-  `point_table`, and the Markov assertion that licenses them); what is missing
-  is only the feed. It is worth more than the old note here suggested: at one
+- Point-level is wired end to end -- read, displayed and priced -- but has
+  never been seen against a real in-progress match, because ESPN is
+  unreachable from where it was written. If the scoreboard does not carry a
+  game score under any of the spellings `fetch._game_points` tries, the page
+  silently stays at game resolution and nothing looks wrong. `espn_probe.py`
+  is what settles it. Mid-tiebreak stays display-only: pricing it would need a
+  `tiebreak_prob_from`, which is the same shape as `game_prob_from` and has
+  not been written. It is worth more than the old note here suggested: at one
   set all and 4-5 down on serve, the game-level number is 0.474 and the point
   score moves it between **0.127 at 0-40 and 0.556 at 40-0**. That is the
   difference between a page that says something and a page that says something

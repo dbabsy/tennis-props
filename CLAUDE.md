@@ -194,6 +194,28 @@ seconds. `project.wants_live` builds one only for matches on court or starting
 within three hours, which is what keeps a slam day from paying for a hundred
 tables it will never read.
 
+**A set entered at 6-6 plays a tiebreak, and for a while did not.** The
+tiebreak branch in `set_from` fires on *arriving* at 6-6 from 6-5 or 5-6, so
+entering there -- exactly what the live page does for a match sitting at 6-6 --
+fell through to ordinary play and modelled an advantage set that need never
+end, with scores like 87-85 in the distribution. Every 6-6 entry in the shipped
+lookup table was wrong by up to 3.6 points of win probability, on the one
+scoreline a viewer is most likely to be staring at. It was invisible because
+`set_dist` always starts at 0-0 and was therefore correct, and because a wrong
+number at 6-6 still looks like a number.
+
+**The match is Markov at game boundaries, and that is what makes point-level
+cheap.** A point score inside the current game changes nothing except whether
+that game is held, so
+`P(win) = P(hold) x T[state after a hold] + (1 - P(hold)) x T[state after a
+break]`, where both those states are already in the lookup table the browser
+has. `selftest.py` asserts this over all 988 ordinary game states to 1e-15 --
+and it was that assertion, failing at 1.8e-02, which found the 6-6 bug above.
+So point resolution costs no bigger match table and no extra build time: just
+`model.point_table`, eighteen hold probabilities per player, seventy-two
+characters a match. What it is waiting on is a feed that publishes a point
+score; `espn_probe.py` answers whether ESPN is one.
+
 **Serve alternates across the set boundary.** Whoever received the last game of
 a set serves the first game of the next. Getting this wrong is invisible in win
 probability and visible in set scores — it is why 6-3 is more likely than 6-4
@@ -347,10 +369,14 @@ the number that decides how fast the accuracy page becomes readable.
 - The WTA may want a bigger gap stretch than the ATP -- its 2023 and 2024
   residual optima both land at 1.21 -- but 2025 says 1.04, so a per-tour
   constant is not supported by three seasons. Worth revisiting with a fourth.
-- Live in-match probability is game-level, because ESPN's linescores are. A
-  point-level version would need a point-by-point feed nobody offers without a
-  key, and would mostly buy resolution inside a game the model already prices
-  from its endpoints.
+- Live in-match probability is game-level, because ESPN's linescores are.
+  The modelling for point-level is done and tested (`game_prob_from`,
+  `point_table`, and the Markov assertion that licenses them); what is missing
+  is only the feed. It is worth more than the old note here suggested: at one
+  set all and 4-5 down on serve, the game-level number is 0.474 and the point
+  score moves it between **0.127 at 0-40 and 0.556 at 40-0**. That is the
+  difference between a page that says something and a page that says something
+  useful.
 - The live page has never been watched against a real in-progress match from a
   real browser. Everything about it is verified offline -- the model against
   `match_dist`, the JavaScript against the model under `node` -- but whether

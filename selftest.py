@@ -179,6 +179,100 @@ def test_live():
               worst < 0.001, f"worst {worst:.5f}")
 
 
+def test_tiebreak_entry():
+    """A set entered at 6-6 plays a tiebreak, not an advantage set.
+
+    The tiebreak branch in set_from only fires on ARRIVING at 6-6, so entering
+    there -- which is exactly what the live page does for a match sitting at
+    6-6 -- fell through to ordinary play and modelled a set that need never
+    end. The shipped lookup table carried a wrong entry for every 6-6 state,
+    worth up to 3.6 points of win probability, on the one scoreline a viewer
+    is most likely to be staring at.
+    """
+    print("tiebreak entry")
+    pa, pb = 0.66, 0.63
+    d = model.set_from(pa, pb, 6, 6, True)
+    check("entering at 6-6 gives exactly two outcomes", len(d) == 2, str(sorted(d)))
+    check("and they are the tiebreak's own probabilities",
+          close(d.get((7, 6), 0), model.tiebreak_prob(pa, pb, 7), 1e-12))
+    d2 = model.set_from(pa, pb, 6, 6, False)
+    check("with the server the other way round it mirrors",
+          close(d2.get((6, 7), 0), model.tiebreak_prob(pb, pa, 7), 1e-12))
+
+    dec = model.live_dist(pa, pb, 1, 1, 6, 6, True, best_of=3)
+    check("a deciding set at 6-6 has exactly one game left to play",
+          close(dec["exp_remaining"], 1.0, 1e-9), f'{dec["exp_remaining"]:.3f}')
+    check("and the match probability is the tiebreak's",
+          close(dec["p_win"], model.tiebreak_prob(pa, pb, 7), 1e-9))
+
+    ten = model.live_dist(pa, pb, 2, 2, 6, 6, True, best_of=5,
+                          final_set_tb_target=10)
+    check("a slam decider at 6-6 uses the ten-point tiebreak",
+          close(ten["p_win"], model.tiebreak_prob(pa, pb, 10), 1e-9))
+
+
+def test_markov():
+    """The match is Markov at game boundaries, and the live page depends on it.
+
+    Point-level resolution is only cheap because of this: a point score inside
+    the current game changes nothing except whether that game is held. If this
+    ever stops holding, the browser's point-level blend silently stops being
+    the model's answer.
+    """
+    print("markov at game boundaries")
+    pa, pb = 0.66, 0.63
+
+    def set_over(a, b):
+        hi, lo = max(a, b), min(a, b)
+        return hi >= 6 and (hi - lo >= 2 or hi == 7)
+
+    def after(sa, sb, ga, gb, srv, held):
+        na, nb = ((ga + 1, gb) if held else (ga, gb + 1)) if srv \
+            else ((ga, gb + 1) if held else (ga + 1, gb))
+        if set_over(na, nb):
+            s = (sa + 1, sb) if na > nb else (sa, sb + 1)
+            return s[0], s[1], 0, 0, not srv
+        return sa, sb, na, nb, not srv
+
+    worst, n = 0.0, 0
+    for bo in (3, 5):
+        need = bo // 2 + 1
+
+        def T(st):
+            nsa, nsb, nga, ngb, ns = st
+            if nsa >= need:
+                return 1.0
+            if nsb >= need:
+                return 0.0
+            return model.live_dist(pa, pb, nsa, nsb, nga, ngb, ns,
+                                   best_of=bo)["p_win"]
+
+        for (sa, sb) in model.set_states(bo):
+            for (ga, gb) in model.game_states():
+                if (ga, gb) == (6, 6):
+                    continue           # a tiebreak, not an ordinary game
+                for srv in (True, False):
+                    direct = model.live_dist(pa, pb, sa, sb, ga, gb, srv,
+                                             best_of=bo)["p_win"]
+                    h = model.game_prob(pa if srv else pb)
+                    mixed = (h * T(after(sa, sb, ga, gb, srv, True))
+                             + (1 - h) * T(after(sa, sb, ga, gb, srv, False)))
+                    worst = max(worst, abs(direct - mixed))
+                    n += 1
+    check(f"holding the current game is the only thing a point score changes "
+          f"({n} states)", worst < 1e-9, f"worst {worst:.2e}")
+
+    check("game_prob_from at 0-0 is game_prob",
+          close(model.game_prob_from(0.66, 0, 0), model.game_prob(0.66), 1e-15))
+    check("a won game is won", model.game_prob_from(0.66, 4, 2) == 1.0)
+    check("a lost game is lost", model.game_prob_from(0.66, 2, 4) == 0.0)
+    check("40-0 beats deuce beats 0-40",
+          model.game_prob_from(0.66, 3, 0) > model.game_prob_from(0.66, 3, 3)
+          > model.game_prob_from(0.66, 0, 3))
+    check("the point table covers both servers",
+          len(model.point_table(0.66, 0.63)) == 2 * len(model.point_states()))
+
+
 def test_monotonicity():
     print("monotonicity")
     check("a better server wins more often",
@@ -618,6 +712,7 @@ def test_render():
 
 if __name__ == "__main__":
     for fn in (test_distributions, test_serve_rotation, test_live,
+               test_tiebreak_entry, test_markov,
                test_monotonicity, test_ratings, test_resolver, test_ledger,
                test_pipeline, test_live_js, test_render):
         fn()

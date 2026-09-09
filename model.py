@@ -55,6 +55,57 @@ def game_points(p):
     return base + p_deuce * (6 + 2.0 / (p * p + q * q))
 
 
+@lru_cache(maxsize=None)
+def game_prob_from(p, won, lost):
+    """P(server holds) from a point score inside the game.
+
+    `won`/`lost` count points, so 40-30 is (3, 2) and deuce is (3, 3). At
+    0-0 this is game_prob; everywhere else it is what a point-level feed
+    would buy, and the buying is considerable: on a 0.66 server, 40-0 holds
+    99.2% of the time and 0-40 holds 22.7%.
+    """
+    q = 1.0 - p
+    if won >= 4 and won - lost >= 2:
+        return 1.0
+    if lost >= 4 and lost - won >= 2:
+        return 0.0
+    if won >= 3 and lost >= 3:
+        # From deuce onward only the difference matters, and it repeats every
+        # two points -- the same closed form game_prob uses.
+        deuce = (p * p) / (p * p + q * q)
+        d = won - lost
+        if d == 0:
+            return deuce
+        return p + q * deuce if d == 1 else p * deuce
+    return p * game_prob_from(p, won + 1, lost) + q * game_prob_from(p, won, lost + 1)
+
+
+def point_states():
+    """Every point score a game can be at without being over, in the order
+    the browser will index them."""
+    out = []
+    for a in range(4):
+        for b in range(4):
+            if a == 3 and b == 3:
+                continue          # deuce and the advantages are listed below
+            out.append((a, b))
+    return out + [(3, 3), (4, 3), (3, 4)]      # deuce, ad-in, ad-out
+
+
+def point_table(pa, pb):
+    """P(hold) from every point state, for each player serving.
+
+    This is what makes a point-level live page nearly free. The match is
+    Markov at game boundaries -- selftest.py asserts it to 1e-15 -- so a point
+    score changes nothing except the probability the CURRENT game is held.
+    The browser reads two entries it already has (the state after a hold and
+    the state after a break) and mixes them by the number in here. No bigger
+    match table, no extra build time: about seventy bytes a match.
+    """
+    return [game_prob_from(round(p, 4), a, b)
+            for p in (pa, pb) for (a, b) in point_states()]
+
+
 # ---------------------------------------------------------------------------
 # Point -> tiebreak
 # ---------------------------------------------------------------------------
@@ -454,6 +505,17 @@ def set_from(pa, pb, games_a, games_b, a_serving, tb_at=6, tb_target=7):
     from 0-0 once per state it can be reached from. Without it a best-of-five
     table takes thirteen seconds and the build takes a quarter of an hour.
     """
+    # A set entered at the tiebreak score plays the tiebreak next, not
+    # another game. The branch below only fires on ARRIVING at 6-6 from 6-5 or
+    # 5-6, so starting there fell through to ordinary play and modelled an
+    # advantage set that need never end -- the live page was carrying 6-6
+    # entries with scores like 87-85 in them, and every one of those states is
+    # a tiebreak somebody is actually watching.
+    if games_a == tb_at and games_b == tb_at:
+        t = (tiebreak_prob(pa, pb, tb_target) if a_serving
+             else 1.0 - tiebreak_prob(pb, pa, tb_target))
+        return {(tb_at + 1, tb_at): t, (tb_at, tb_at + 1): 1.0 - t}
+
     out = defaultdict(float)
     states = {(games_a, games_b, a_serving): 1.0}
     while states:

@@ -3,3 +3,6 @@ __pycache__/
 public/
 *.pyc
 *.bak
+
+# what espn_probe.py writes -- a raw feed dump, not repo content
+espn_sample.json

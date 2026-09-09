@@ -2306,7 +2306,13 @@
    "p_over": 0.5514278436767256,
    "p_p1": 0.4252768587023558,
    "recorded": "2026-09-08T02:29:05.658203+00:00",
-   "result": null,
+   "result": {
+    "clean": false,
+    "detail": "Retired",
+    "games": 25.0,
+    "p1_won": false,
+    "score": "2.0-6.0 5.0-7.0 2.0-3.0"
+   },
    "round": "Quarterfinal",
    "start": "2026-09-09T04:00:00+00:00",
    "surface": "Hard",

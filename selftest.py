@@ -678,7 +678,11 @@ def test_live_js():
         return re.findall(r'<span class="(sb-g[^"]*)">(\d*)', html or "")
 
     def servers(html):
-        return re.findall(r'<span class="sb-sv">([^<]*)</span>', html or "")
+        # The marker is a drawn ball, so match the span and ask whether it
+        # holds one rather than comparing its text -- there is no text.
+        found = re.findall(r'<span class="sb-sv"(.*?)</span>', html or "",
+                           re.S)
+        return ["ball" if "sb-ball" in x else "" for x in found]
 
     check("the scorebug draws a box per set per player, in order",
           [v for _, v in boxes(rows["m-m1"]["sb"])] == ["6", "3", "4", "1"],
@@ -690,8 +694,12 @@ def test_live_js():
           all("cur" in [c for c, _ in boxes(rows["m-m1"]["sb"])][i]
               for i in (1, 3)))
     check("the server is marked on their own row and nobody else's",
-          servers(rows["m-m1"]["sb"]) == ["●", ""],
+          servers(rows["m-m1"]["sb"]) == ["ball", ""],
           str(servers(rows["m-m1"]["sb"])))
+    check("the marker is drawn, so it looks the same in every browser",
+          "<svg" in rows["m-m1"]["sb"] and "🎾" not in rows["m-m1"]["sb"])
+    check("and says what it means to anyone not reading the picture",
+          'title="serving"' in rows["m-m1"]["sb"])
     check("an unknown server marks neither row",
           servers(rows["m-m3"]["sb"]) == ["", ""])
     check("a tiebreak margin is raised beside the set it belongs to",

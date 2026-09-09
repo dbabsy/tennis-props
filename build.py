@@ -226,8 +226,14 @@ LIVE_CSS = """
 .sb-n{flex:1;min-width:0;white-space:nowrap;overflow:hidden;
 text-overflow:ellipsis;max-width:180px}
 .sb-r.up .sb-n{font-weight:650}
-.sb-sv{width:10px;text-align:center;color:var(--accent);font-size:10px;
-line-height:1}
+/* The ball sits beside whoever is serving. It is the one thing on this page
+   the model knows and the reader cannot see, and at 5-4 in a deciding set it
+   is worth more than the scoreline -- 0.93 against 0.66 for the same score.
+   Ball yellow rather than the theme accent: it has to read as an object, and
+   it is legible against every palette in both modes. */
+.sb-sv{width:14px;height:14px;flex:none;display:flex;align-items:center;
+justify-content:center}
+.sb-ball{display:block}
 .sb-g{position:relative;width:21px;height:21px;line-height:21px;flex:none;
 text-align:center;border-radius:5px;background:var(--chip);color:var(--dim);
 font-variant-numeric:tabular-nums;font-size:12.5px}
@@ -313,6 +319,13 @@ LIVE_JS = r"""
     return {sa: sa, sb: sb, ga: ga, gb: gb, done: sa >= need || sb >= need};
   }
 
+  // Drawn rather than an emoji: an emoji is a different picture in every
+  // browser and cannot be sized against a 21px games chip.
+  var BALL = '<svg class="sb-ball" viewBox="0 0 12 12" width="11" height="11"'
+    + ' aria-hidden="true"><circle cx="6" cy="6" r="5.3" fill="#d8e64a"/>'
+    + '<path d="M2.0 2.2Q5.1 6 2.0 9.8M10.0 2.2Q6.9 6 10.0 9.8" fill="none"'
+    + ' stroke="#fbfbf5" stroke-width="1" stroke-linecap="round"/></svg>';
+
   function scorebug(names, ls, tbs, servingRow, st, pts) {
     var n = Math.max(ls[0].length, ls[1].length), html = "";
     for (var r = 0; r < 2; r++) {
@@ -334,7 +347,9 @@ LIVE_JS = r"""
         ? '<span class="sb-p">' + esc(pts[r]) + "</span>" : "";
       html += '<div class="sb-r' + (ahead ? " up" : "") + '">'
         + '<span class="sb-n">' + esc(names[r]) + "</span>"
-        + '<span class="sb-sv">' + (servingRow === r ? "●" : "") + "</span>"
+        + '<span class="sb-sv"'
+        + (servingRow === r ? ' title="serving">' + BALL : ">")
+        + "</span>"
         + cells + pt + "</div>";
     }
     return html;

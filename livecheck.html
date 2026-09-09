@@ -27,17 +27,19 @@ background:var(--card);color:var(--fg);cursor:pointer}
 </style></head>
 <body><div class="wrap">
 <h1>Live feed check</h1>
-<p class="sub">Answers the two things the live page could not be tested for
-offline: whether a browser can reach ESPN's scoreboard at all, and whether
-ESPN says who is serving.</p>
+<p class="sub">Answers the three things the live page could not be tested for
+offline: whether a browser can reach ESPN's scoreboard at all, whether ESPN
+says who is serving, and whether it gives the score inside the game.</p>
 
 <div id="origin" class="card"></div>
 <div id="results">Running…</div>
 
 <h2>What ESPN sent back</h2>
-<p class="note">If the serving line below says "not found", paste this block
-back to Claude — it lists the field names ESPN actually used, which is what
-the page needs to key on.</p>
+<p class="note">If either the serving line or the point-score line below says
+"not found", paste this block back to Claude — it lists the field names ESPN
+actually used, which is what the page needs to key on. The
+<code>pointHits</code> entries are the most useful part: every place in the
+payload holding a 15, 30, 40 or AD, wherever it turned out to live.</p>
 <pre id="dump">—</pre>
 <p><button onclick="location.reload()">Run again</button></p>
 
@@ -71,9 +73,62 @@ function probe(tour) {
   });
 }
 
+// The score inside the game, read exactly the way fetch._game_points reads it,
+// so that "found" here means the shipped page would have found it too. A 6 or
+// a 7 is refused for the same reason it is refused there: a games value shown
+// as a point score is a silent lie rather than a visible failure.
+var POINT_KEYS = ["score", "points", "gameScore", "currentScore"];
+var POINTS = {"0": 1, "15": 1, "30": 1, "40": 1, "AD": 1, "A": 1, "ADV": 1};
+
+function accepted(v) {
+  if (v == null) return null;
+  var s = String(v).trim().toUpperCase();
+  if (POINTS[s]) return (s === "A" || s === "ADV") ? "AD" : s;
+  if (/^[0-9]+$/.test(s) && +s <= 30 && s !== "6" && s !== "7") return s;
+  return null;
+}
+
+function pointOf(x) {
+  var out = {};
+  POINT_KEYS.forEach(function (k) {
+    var v = x[k];
+    if (v && typeof v === "object") {
+      v = v.value != null ? v.value : v.displayValue;
+    }
+    if (v !== undefined) out[k] = v;
+  });
+  return out;
+}
+
+// A fifth spelling is the failure mode that looks like no data at all, so
+// rather than only checking the four names the page knows, walk the whole
+// competition and report every path holding something shaped like a point
+// score. 15, 30, 40 and AD only: a bare 0 is too common to be a signal, and
+// a linescore value is a games count wearing the same clothes.
+function crawl(node, path, hits, depth) {
+  if (node == null || depth > 9 || hits.length > 40) return;
+  if (typeof node === "object") {
+    if (Array.isArray(node)) {
+      for (var i = 0; i < node.length && i < 8; i++) {
+        crawl(node[i], path + "[" + i + "]", hits, depth + 1);
+      }
+    } else {
+      Object.keys(node).forEach(function (k) {
+        crawl(node[k], path ? path + "." + k : k, hits, depth + 1);
+      });
+    }
+    return;
+  }
+  var s = String(node).trim().toUpperCase();
+  if ((s === "15" || s === "30" || s === "40" || s === "AD" || s === "ADV") &&
+      !/linescores\[[0-9]+\]\.value$/.test(path)) {
+    hits.push(path + " = " + s);
+  }
+}
+
 // Everything the page would need to read, gathered without assuming where it
 // lives -- the point is to find out where it lives.
-function inspect(doc) {
+function inspect(doc, tour) {
   var live = [], keys = {competition: {}, situation: {}, competitor: {}};
   var counts = {pre: 0, "in": 0, post: 0, other: 0};
   (doc.events || []).forEach(function (ev) {
@@ -90,8 +145,11 @@ function inspect(doc) {
         comps.forEach(function (x) {
           Object.keys(x).forEach(function (k) { keys.competitor[k] = 1; });
         });
+        var hits = [];
+        crawl(c, "competition", hits, 0);
         live.push({
           id: c.id,
+          tour: tour,
           event: ev.name,
           players: comps.map(function (x) {
             return (x.athlete && x.athlete.displayName) || x.name || "?";
@@ -103,7 +161,9 @@ function inspect(doc) {
           possessionFields: comps.map(function (x) {
             return {possession: x.possession, serving: x.serving,
                     active: x.active, order: x.order};
-          })
+          }),
+          pointFields: comps.map(pointOf),
+          pointHits: hits
         });
       });
     });
@@ -123,6 +183,30 @@ function servingFound(all) {
     }
   }
   return null;
+}
+
+function pointsFound(all) {
+  for (var i = 0; i < all.length; i++) {
+    var f = all[i].pointFields || [];
+    for (var j = 0; j < f.length; j++) {
+      for (var k = 0; k < POINT_KEYS.length; k++) {
+        if (accepted(f[j][POINT_KEYS[k]]) != null) {
+          return "competitor." + POINT_KEYS[k];
+        }
+      }
+    }
+  }
+  return null;
+}
+
+function anyHits(all) {
+  var out = [];
+  all.forEach(function (m) {
+    (m.pointHits || []).forEach(function (h) {
+      if (out.indexOf(h) < 0) out.push(h);
+    });
+  });
+  return out;
 }
 
 document.getElementById("origin").innerHTML =
@@ -160,7 +244,7 @@ Promise.all(TOURS.map(probe)).then(function (rs) {
     c.appendChild(line);
     if (r.error) c.appendChild(el("p", "note", r.error));
     if (r.doc) {
-      var got = inspect(r.doc);
+      var got = inspect(r.doc, r.tour);
       dump[r.tour] = {counts: got.counts, keys: got.keys, live: got.live};
       allLive = allLive.concat(got.live);
       c.appendChild(el("p", "note",
@@ -194,9 +278,62 @@ Promise.all(TOURS.map(probe)).then(function (rs) {
             : "Serving: not found in any of the fields checked. The live page"
               + " will average the two possibilities, which costs it real"
               + " sharpness — see the dump below."));
+
+    var pts = pointsFound(allLive), hits = anyHits(allLive);
+    s.appendChild(el("p", pts ? "note good" : "note warn",
+      pts ? "Point score is reported, in " + pts
+            + " — the scorebug shows it and the page prices it."
+          : hits.length
+            ? "Point score: not under any name the page reads, but something"
+              + " shaped like one is in the payload — " + hits[0]
+              + (hits.length > 1 ? " (and " + (hits.length - 1) + " more)" : "")
+              + ". That is a name the page can be taught."
+            : "Point score: not found, and nothing shaped like one is anywhere"
+              + " in the scoreboard payload. The page stays at game"
+              + " resolution, which is not a bug — it is this feed."));
   }
   box.appendChild(s);
   document.getElementById("dump").textContent = JSON.stringify(dump, null, 1);
+  return allLive;
+}).then(function (allLive) {
+  // The scoreboard is one endpoint of several. If it carries no point score,
+  // the per-event summary is the next place to look, and whether a browser
+  // may read it is its own question -- it is a different path under the same
+  // host, so CORS has to be asked again rather than assumed.
+  var box = document.getElementById("results");
+  if (!allLive || !allLive.length) return;
+  if (pointsFound(allLive)) return;
+  var m = allLive[0];
+  var url = BASE + m.tour + "/summary?event=" + m.id;
+  return fetch(url).then(function (r) {
+    return r.ok ? r.json() : null;
+  }).catch(function () { return null; }).then(function (doc) {
+    var c = el("div", "card");
+    if (!doc) {
+      c.appendChild(el("div", "verdict warn",
+        "The per-event summary is unreadable from a browser"));
+      c.appendChild(el("p", "note",
+        "Blocked or errored, so it cannot be the source either. " + url));
+    } else {
+      var hits = [];
+      crawl(doc, "summary", hits, 0);
+      c.appendChild(el("div", hits.length ? "verdict good" : "verdict warn",
+        hits.length
+          ? "The per-event summary does carry a point score"
+          : "The per-event summary has no point score either"));
+      c.appendChild(el("p", "note", hits.length
+        ? "At " + hits[0] + (hits.length > 1
+            ? " (and " + (hits.length - 1) + " more)" : "")
+          + ". This endpoint is not one the build reads today; it can be."
+        : "Both endpoints checked. Point-by-point would need a feed that is"
+          + " not ESPN."));
+      var pre = document.getElementById("dump");
+      pre.textContent = pre.textContent.replace(/\n?$/,
+        "\n\nsummary(" + m.id + ") pointHits:\n"
+        + (hits.length ? hits.join("\n") : "none"));
+    }
+    box.appendChild(c);
+  });
 }).catch(function (e) {
   document.getElementById("results").textContent = "check failed: " + e;
 });

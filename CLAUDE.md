@@ -301,6 +301,19 @@ honestly: the page renders the scores it was built with, and the note under
 the table says the refresh is unavailable rather than letting a stale number
 look live. Confirm it in a real browser before trusting the word "live".
 
+`livecheck.html` is that confirmation, and it ships beside the site so it can
+be run from the one place the answer is authoritative. It reports three
+things, each of which was unanswerable offline: whether the fetch is allowed
+at all (a CORS rejection and a dead network look identical to `fetch()`, so it
+asks again in `no-cors` mode to separate them), whether ESPN says who is
+serving, and whether it gives the score inside the game. The last of those
+does not stop at the four names `fetch._game_points` reads -- it walks the
+payload for anything shaped like a point score and prints the path, because a
+fifth spelling and no data at all are the same silence, and `selftest.py`
+asserts on a stub that it tells those two apart. If the scoreboard has
+nothing, it asks the per-event summary endpoint, which the build does not read
+today.
+
 **A name that differs only in spacing is the same player, and used to be a
 different one.** The archive writes "Xin Yu Wang", ESPN writes "Xinyu Wang".
 The surname-plus-initial fallback assumes the first token is the given name
@@ -383,18 +396,23 @@ the number that decides how fast the accuracy page becomes readable.
 - The WTA may want a bigger gap stretch than the ATP -- its 2023 and 2024
   residual optima both land at 1.21 -- but 2025 says 1.04, so a per-tour
   constant is not supported by three seasons. Worth revisiting with a fourth.
-- Point-level is wired end to end -- read, displayed and priced -- but has
-  never been seen against a real in-progress match, because ESPN is
-  unreachable from where it was written. If the scoreboard does not carry a
-  game score under any of the spellings `fetch._game_points` tries, the page
-  silently stays at game resolution and nothing looks wrong. `espn_probe.py`
-  is what settles it. Mid-tiebreak stays display-only: pricing it would need a
+- **Point-level is wired end to end and has now been seen against a real
+  in-progress match, showing nothing.** A US Open match on court rendered the
+  ordinary scorebug with no point box, which means the scoreboard carried no
+  game score under any of the four spellings `fetch._game_points` tries. That
+  is one observation, and it does not distinguish the two cases that matter:
+  ESPN may not publish a point score at all, or it may publish one under a
+  fifth name. The page cannot tell them apart either -- both look like a page
+  that simply did not change -- which is why `livecheck.html` now reports the
+  difference explicitly, walking the whole payload for anything shaped like a
+  15, 30, 40 or AD and naming where it found it. `espn_probe.py` asks the same
+  question from a terminal. Whichever answers first, the fix is a name, not a
+  model. Mid-tiebreak stays display-only: pricing it would need a
   `tiebreak_prob_from`, which is the same shape as `game_prob_from` and has
-  not been written. It is worth more than the old note here suggested: at one
-  set all and 4-5 down on serve, the game-level number is 0.474 and the point
-  score moves it between **0.127 at 0-40 and 0.556 at 40-0**. That is the
-  difference between a page that says something and a page that says something
-  useful.
+  not been written. The prize is unchanged: at one set all and 4-5 down on
+  serve, the game-level number is 0.474 and the point score moves it between
+  **0.127 at 0-40 and 0.556 at 40-0**. That is the difference between a page
+  that says something and a page that says something useful.
 - The live page has never been watched against a real in-progress match from a
   real browser. Everything about it is verified offline -- the model against
   `match_dist`, the JavaScript against the model under `node` -- but whether

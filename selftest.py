@@ -752,11 +752,98 @@ def test_render():
               "src=" not in text and text.count("<script") == 1)
 
 
+def test_livecheck_js():
+    """The feed check is the only thing that can tell a missing point score
+    from a point score under a name we do not read.
+
+    Those two look identical on the page -- no point box either way -- so the
+    check has to be right about which it is seeing, and it runs somewhere no
+    test can follow it. What can be tested here is the reading: that it
+    accepts a real point score under the name the page uses, refuses a games
+    value wearing the same clothes, and still finds a 40 when it is filed
+    somewhere nobody guessed.
+    """
+    print("live feed check javascript")
+    node = shutil.which("node")
+    if not node:
+        check("node is available to exercise the feed check", True,
+              "skipped: no node on this machine")
+        return
+
+    probe = Path(__file__).resolve().parent / "livecheck.html"
+    if not probe.exists():
+        return
+    script = probe.read_text(encoding="utf-8").split("<script>")[1] \
+                                              .split("</script>")[0]
+    # Everything up to the first DOM call is pure: the readers, and nothing
+    # that needs a browser to run.
+    pure = script.split('document.getElementById("origin")')[0]
+
+    def board(cid, comps):
+        return {"events": [{"name": "US Open", "groupings": [
+            {"competitions": [{"id": cid,
+                               "status": {"type": {"state": "in"}},
+                               "competitors": comps}]}]}]}
+
+    def side(pid, name, sets, **extra):
+        return dict({"id": pid, "athlete": {"displayName": name},
+                     "linescores": [{"value": v} for v in sets]}, **extra)
+
+    scored = board("401", [side("1", "A", [2, 0], score="30"),
+                           side("2", "B", [6, 0], score="15")])
+    bare = board("402", [side("1", "A", [6, 0]), side("2", "B", [2, 0])])
+    elsewhere = board("403", [side("1", "A", [6, 0]), side("2", "B", [2, 0])])
+    elsewhere["events"][0]["groupings"][0]["competitions"][0]["situation"] = {
+        "lastPlay": {"gameScoreDisplay": "40"}}
+    # A set at 6-7 published under the same key a point score would use.
+    games = board("404", [side("1", "A", [6], score="6"),
+                          side("2", "B", [7], score="7")])
+
+    src = pure + """
+var out = {};
+[["scored", %s], ["bare", %s], ["elsewhere", %s], ["games", %s]]
+  .forEach(function (pair) {
+    var got = inspect(pair[1], "wta");
+    out[pair[0]] = {found: pointsFound(got.live), hits: anyHits(got.live),
+                    tour: got.live[0].tour};
+  });
+console.log(JSON.stringify(out));
+""" % tuple(json.dumps(d) for d in (scored, bare, elsewhere, games))
+
+    with tempfile.TemporaryDirectory() as d:
+        f = Path(d) / "livecheck.js"
+        f.write_text(src, encoding="utf-8")
+        proc = subprocess.run([node, str(f)], capture_output=True, text=True,
+                              timeout=60)
+    if proc.returncode != 0:
+        check("the feed check's javascript runs", False,
+              proc.stderr.strip().splitlines()[-1] if proc.stderr else "")
+        return
+    got = json.loads(proc.stdout)
+
+    check("a point score is found under the name the page reads",
+          got["scored"]["found"] == "competitor.score",
+          got["scored"]["found"])
+    check("a scoreboard without one says so rather than inventing a field",
+          got["bare"]["found"] is None and not got["bare"]["hits"],
+          f"{got['bare']['found']} {got['bare']['hits']}")
+    check("a games value is refused where a point score would be accepted",
+          got["games"]["found"] is None, got["games"]["found"])
+    check("a point score filed under an unguessed name is still reported",
+          got["elsewhere"]["found"] is None
+          and got["elsewhere"]["hits"]
+          == ["competition.situation.lastPlay.gameScoreDisplay = 40"],
+          str(got["elsewhere"]["hits"]))
+    check("the tour is carried through, so the summary can be asked for",
+          got["scored"]["tour"] == "wta", got["scored"]["tour"])
+
+
 if __name__ == "__main__":
     for fn in (test_distributions, test_serve_rotation, test_live,
                test_tiebreak_entry, test_markov,
                test_monotonicity, test_ratings, test_resolver, test_ledger,
-               test_pipeline, test_live_js, test_render):
+               test_pipeline, test_live_js, test_render,
+               test_livecheck_js):
         fn()
     print()
     if FAILURES:

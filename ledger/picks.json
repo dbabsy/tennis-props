@@ -5417,6 +5417,25 @@
    "tour": "wta",
    "tourney": "Kia Open"
   },
+  "wta:183642": {
+   "best_of": 3,
+   "exp_aces_p1": 3.5559304158139318,
+   "exp_aces_p2": 2.4061127380332414,
+   "exp_games": 23.064489344836147,
+   "id": "183642",
+   "p1": "Claire Liu",
+   "p2": "Leolia Jeanjean",
+   "p_over": 0.45890133547397133,
+   "p_p1": 0.6184081967861177,
+   "recorded": "2026-09-11T00:35:43.619927+00:00",
+   "result": null,
+   "round": "Semifinal",
+   "start": "2026-09-12T04:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 22.5,
+   "tour": "wta",
+   "tourney": "Kia Open"
+  },
   "wta:183643": {
    "best_of": 3,
    "exp_aces_p1": 1.772725335078238,

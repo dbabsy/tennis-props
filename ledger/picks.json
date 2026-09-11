@@ -5423,6 +5423,25 @@
    "tour": "wta",
    "tourney": "Kia Open"
   },
+  "wta:183641": {
+   "best_of": 3,
+   "exp_aces_p1": 1.653209405802863,
+   "exp_aces_p2": 3.693458541044731,
+   "exp_games": 23.024641845525572,
+   "id": "183641",
+   "p1": "Anna Blinkova",
+   "p2": "Elsa Jacquemot",
+   "p_over": 0.4621150829073312,
+   "p_p1": 0.5019414758610524,
+   "recorded": "2026-09-11T02:29:01.599368+00:00",
+   "result": null,
+   "round": "Semifinal",
+   "start": "2026-09-11T22:30:00+00:00",
+   "surface": "Hard",
+   "total_line": 22.5,
+   "tour": "wta",
+   "tourney": "Kia Open"
+  },
   "wta:183642": {
    "best_of": 3,
    "exp_aces_p1": 3.5559304158139318,
@@ -5453,7 +5472,13 @@
    "p_over": 0.4446044163873272,
    "p_p1": 0.36903610630323913,
    "recorded": "2026-09-10T04:29:47.947938+00:00",
-   "result": null,
+   "result": {
+    "clean": true,
+    "detail": "Final",
+    "games": 16.0,
+    "p1_won": true,
+    "score": "6.0-2.0 6.0-2.0"
+   },
    "round": "Quarterfinal",
    "start": "2026-09-10T23:30:00+00:00",
    "surface": "Hard",

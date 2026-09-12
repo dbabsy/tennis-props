@@ -5831,6 +5831,25 @@
    "total_line": 22.5,
    "tour": "wta",
    "tourney": "SP Open"
+  },
+  "wta:185916": {
+   "best_of": 3,
+   "exp_aces_p1": 2.333683510362687,
+   "exp_aces_p2": 1.6927235130154854,
+   "exp_games": 23.02524450082353,
+   "id": "185916",
+   "p1": "Caroline Dolehide",
+   "p2": "Sara Sorribes Tormo",
+   "p_over": 0.46164446029730166,
+   "p_p1": 0.47168619916653615,
+   "recorded": "2026-09-12T20:29:25.706072+00:00",
+   "result": null,
+   "round": "Qualifying Final",
+   "start": "2026-09-13T04:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 22.5,
+   "tour": "wta",
+   "tourney": "Guadalajara Open presentado por Santander"
   }
  }
 }

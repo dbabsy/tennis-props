@@ -5629,6 +5629,25 @@
    "tour": "wta",
    "tourney": "Kia Open"
   },
+  "wta:183704": {
+   "best_of": 3,
+   "exp_aces_p1": 3.9196477383426402,
+   "exp_aces_p2": 3.115535248150854,
+   "exp_games": 23.43282621238046,
+   "id": "183704",
+   "p1": "Viktoria Hruncakova",
+   "p2": "Erika Andreeva",
+   "p_over": 0.47951810163971115,
+   "p_p1": 0.5142080360107399,
+   "recorded": "2026-09-13T13:20:20.283099+00:00",
+   "result": null,
+   "round": "Round 1",
+   "start": "2026-09-14T04:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 22.5,
+   "tour": "wta",
+   "tourney": "Caldas da Rainha Ladies Open"
+  },
   "wta:183785": {
    "best_of": 3,
    "exp_aces_p1": 2.632121828865876,

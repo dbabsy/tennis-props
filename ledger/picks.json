@@ -5672,6 +5672,25 @@
    "tour": "wta",
    "tourney": "Caldas da Rainha Ladies Open"
   },
+  "wta:183761": {
+   "best_of": 3,
+   "exp_aces_p1": 2.9944746665206288,
+   "exp_aces_p2": 1.1993780593416878,
+   "exp_games": 22.86254408679262,
+   "id": "183761",
+   "p1": "Clara Burel",
+   "p2": "Martina Trevisan",
+   "p_over": 0.4541109559293451,
+   "p_p1": 0.56164547360095,
+   "recorded": "2026-09-15T17:20:23.928149+00:00",
+   "result": null,
+   "round": "Round 2",
+   "start": "2026-09-16T09:30:00+00:00",
+   "surface": "Hard",
+   "total_line": 22.5,
+   "tour": "wta",
+   "tourney": "BBVA Open Internacional De Valencia"
+  },
   "wta:183785": {
    "best_of": 3,
    "exp_aces_p1": 2.632121828865876,
@@ -6079,7 +6098,13 @@
    "p_over": 0.45881173878373865,
    "p_p1": 0.4677622627157305,
    "recorded": "2026-09-12T18:28:50.669917+00:00",
-   "result": null,
+   "result": {
+    "clean": true,
+    "detail": "Final",
+    "games": 18.0,
+    "p1_won": true,
+    "score": "6.0-2.0 6.0-4.0"
+   },
    "round": "Round 1",
    "start": "2026-09-14T04:00:00+00:00",
    "surface": "Hard",

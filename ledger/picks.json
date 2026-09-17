@@ -6199,6 +6199,25 @@
    "tour": "wta",
    "tourney": "SP Open"
   },
+  "wta:183835": {
+   "best_of": 3,
+   "exp_aces_p1": 4.193186485923707,
+   "exp_aces_p2": 2.589547269310087,
+   "exp_games": 22.873086527004965,
+   "id": "183835",
+   "p1": "Paula Badosa",
+   "p2": "Jazmin Ortenzi",
+   "p_over": 0.4477613507964151,
+   "p_p1": 0.6473340165991016,
+   "recorded": "2026-09-17T00:35:42.219802+00:00",
+   "result": null,
+   "round": "Round 2",
+   "start": "2026-09-17T17:30:00+00:00",
+   "surface": "Hard",
+   "total_line": 22.5,
+   "tour": "wta",
+   "tourney": "SP Open"
+  },
   "wta:183837": {
    "best_of": 3,
    "exp_aces_p1": 3.072286482201267,

@@ -6528,7 +6528,13 @@
    "p_over": 0.39173195066618355,
    "p_p1": 0.765615082647497,
    "recorded": "2026-09-19T01:20:23.294033+00:00",
-   "result": null,
+   "result": {
+    "clean": true,
+    "detail": "Final",
+    "games": 19.0,
+    "p1_won": false,
+    "score": "3.0-6.0 4.0-6.0"
+   },
    "round": "Semifinal",
    "start": "2026-09-19T17:00:00+00:00",
    "surface": "Hard",

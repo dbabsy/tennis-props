@@ -7147,6 +7147,25 @@
    "tour": "wta",
    "tourney": "Singapore Tennis Open presented by BNP Paribas"
   },
+  "wta:184098": {
+   "best_of": 3,
+   "exp_aces_p1": 1.9539541301696182,
+   "exp_aces_p2": 1.8564075446987163,
+   "exp_games": 23.15852662020938,
+   "id": "184098",
+   "p1": "Maja Chwalinska",
+   "p2": "Oleksandra Oliynykova",
+   "p_over": 0.4667382931569428,
+   "p_p1": 0.4594664791074109,
+   "recorded": "2026-09-22T05:21:03.697786+00:00",
+   "result": null,
+   "round": "Round 2",
+   "start": "2026-09-23T04:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 22.5,
+   "tour": "wta",
+   "tourney": "Singapore Tennis Open presented by BNP Paribas"
+  },
   "wta:184099": {
    "best_of": 3,
    "exp_aces_p1": 5.343652399430278,

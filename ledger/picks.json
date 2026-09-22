@@ -2821,6 +2821,25 @@
    "tour": "atp",
    "tourney": "Chengdu Open"
   },
+  "atp:186149": {
+   "best_of": 5,
+   "exp_aces_p1": 15.101489921140073,
+   "exp_aces_p2": 13.942582334848087,
+   "exp_games": 39.67332118481226,
+   "id": "186149",
+   "p1": "Federico Cina",
+   "p2": "Nikoloz Basilashvili",
+   "p_over": 0.5258985869733457,
+   "p_p1": 0.45699652430956433,
+   "recorded": "2026-09-22T12:33:57.372564+00:00",
+   "result": null,
+   "round": "Qualifying Final",
+   "start": "2026-09-23T06:30:00+00:00",
+   "surface": "Hard",
+   "total_line": 38.5,
+   "tour": "atp",
+   "tourney": "Chengdu Open"
+  },
   "wta:182527": {
    "best_of": 3,
    "exp_aces_p1": 7.394362478472591,

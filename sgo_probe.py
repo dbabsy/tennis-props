@@ -131,31 +131,79 @@ def main():
               "--events to see one.")
         return
 
-    print("\n3. one events call")
-    for q in ([f"/events/?leagueID={a.league}&oddsAvailable=true"] if a.league
-              else ["/events/?leagueID=ATP&oddsAvailable=true",
-                    "/events/?leagueID=TENNIS&oddsAvailable=true",
-                    "/events/?sportID=TENNIS&oddsAvailable=true"]):
-        st, ebody, ehdrs = get(base + q, header, value)
+    print("\n   every sport in the plan:")
+    for s in doc.get("data", []) if isinstance(doc, dict) else []:
+        print(f"     {str(s.get('sportID')):14} enabled={s.get('enabled')}"
+              f"  {s.get('name')}")
+
+    # The league ids are what the events call needs, and the first run showed
+    # guessing them costs a 400 each. Ask instead.
+    print("\n3. the tennis leagues, by their real ids")
+    leagues = []
+    for q in ("/leagues/?sportID=TENNIS", "/leagues/"):
+        st, lbody, _ = get(base + q, header, value)
+        print(f"   {st} {q}")
+        if st != 200:
+            print(f"      {lbody[:300]}")
+            continue
+        try:
+            ldoc = json.loads(lbody)
+        except ValueError:
+            continue
+        rows = ldoc.get("data", []) if isinstance(ldoc, dict) else ldoc
+        leagues = [x for x in rows if isinstance(x, dict)
+                   and "TENNIS" in str(x.get("sportID", "")).upper()]
+        for x in leagues:
+            print(f"     {str(x.get('leagueID')):16} enabled={x.get('enabled')}"
+                  f"  {x.get('name') or x.get('shortName')}")
+        if leagues:
+            break
+    if not leagues:
+        print("   no tennis league came back -- the sport may be listed but "
+              "not carry leagues on this plan")
+
+    print("\n4. what the account has used")
+    for q in ("/account/usage/", "/account/usage"):
+        st, ubody, uh = get(base + q, header, value)
         print(f"   {st} {q}")
         if st == 200:
             try:
-                edoc = json.loads(ebody)
+                walk(json.loads(ubody))
             except ValueError:
-                print("   not JSON"); continue
-            walk(edoc)
-            out = "sgo_sample.json"
-            with open(out, "w") as f:
-                json.dump(edoc, f, indent=1)
-            print(f"\n   full response written to {out} — send me that file "
-                  f"and I will write the parser against it, not against a guess")
-            if ehdrs:
-                print("   usage headers:")
-                for k, v in sorted(ehdrs.items()):
-                    print(f"     {k}: {v}")
-            return
-    print("   no tennis events endpoint answered; the league id is probably "
-          "different — try --league with whatever the listing above showed.")
+                print("   not JSON")
+            break
+        print(f"      {ubody[:300]}")
+
+    if not a.events:
+        print("\n5. skipped the events call (costs objects). Re-run with "
+              "--events to see one.")
+        return
+
+    print("\n5. one small events call per tennis league")
+    ids = ([a.league] if a.league else
+           [x.get("leagueID") for x in leagues if x.get("enabled", True)])
+    for lid in ids[:4]:
+        q = f"/events/?leagueID={lid}&oddsAvailable=true&limit=3"
+        st, ebody, ehdrs = get(base + q, header, value)
+        print(f"   {st} {q}")
+        if st != 200:
+            # The first run printed only "400". The body says why.
+            print(f"      {ebody[:400]}")
+            continue
+        try:
+            edoc = json.loads(ebody)
+        except ValueError:
+            print("   not JSON"); continue
+        walk(edoc)
+        with open("sgo_sample.json", "w") as f:
+            json.dump(edoc, f, indent=1)
+        print("\n   full response written to sgo_sample.json")
+        if ehdrs:
+            print("   usage headers:")
+            for k, v in sorted(ehdrs.items()):
+                print(f"     {k}: {v}")
+        return
+    print("   no tennis events came back with odds -- see the messages above")
 
 
 if __name__ == "__main__":

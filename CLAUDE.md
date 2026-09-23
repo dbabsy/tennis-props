@@ -60,6 +60,15 @@ number is current.
 No API keys anywhere. There is no keyless source of live odds, which is why
 `edges.html` prices markets rather than claiming edges.
 
+**SportsGameOdds' free tier does not cover tennis.** Checked 2026-09-23 with
+the manual `sgo-probe.yml` workflow: the key works (v2, `X-Api-Key`), and
+tennis appears among the API's eleven sports, but the "amateur" plan's leagues
+are exactly NBA, NCAAB, NFL, NCAAF, MLB, NHL, MLS and the Champions League.
+There is no tennis league to ask for events in, so there are no tennis odds
+on this plan. The `SGO_API_KEY` repository secret exists and nothing in the
+build reads it. The account-usage endpoint returns the owner's email with the
+limits, and the workflow's log is public: the probe prints limits only.
+
 ## Decisions that took measurement to reach
 
 Do not undo these without re-measuring. Several are counter-intuitive.

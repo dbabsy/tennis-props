@@ -1,0 +1,59 @@
+name: SportsGameOdds probe
+
+# Manual only: never on a push, a pull request or a schedule. It answers the
+# questions that have to be settled before odds go anywhere near the build --
+# is tennis in the plan, what shape is the data, what does a slate cost --
+# from a machine that can reach the API, which neither the sandbox that wrote
+# this nor a locked-down laptop could.
+#
+# The key comes from the SGO_API_KEY repository secret. GitHub masks secret
+# values in the log, and sgo_probe.py never prints it anyway. The log is
+# public because the repository is, so what it shows is the API's responses
+# and nothing else.
+on:
+  workflow_dispatch:
+    inputs:
+      events:
+        description: "Also make one events call (spends a few objects)"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Ask the API what the key buys
+        env:
+          SGO_API_KEY: ${{ secrets.SGO_API_KEY }}
+        run: |
+          if [ -z "$SGO_API_KEY" ]; then
+            echo "::error::No SGO_API_KEY secret. Add it under Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+          # The probe exits non-zero when no endpoint accepts the key; that is
+          # an answer, not a crash, so let the next step still run.
+          python3 sgo_probe.py ${{ inputs.events && '--events' || '' }} || true
+      - name: The first events, in full
+        # The probe prints the shape; a parser needs the substance. Two events
+        # is enough to write against and small enough to read in a log.
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json, os
+          if not os.path.exists("sgo_sample.json"):
+              print("no events sample was written -- see the step above")
+              raise SystemExit
+          doc = json.load(open("sgo_sample.json"))
+          events = doc.get("data", doc) if isinstance(doc, dict) else doc
+          if isinstance(events, list):
+              print(f"{len(events)} events in the response; the first two:")
+              events = events[:2]
+          print(json.dumps(events, indent=1)[:30000])
+          PY

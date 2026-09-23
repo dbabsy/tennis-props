@@ -1,0 +1,37 @@
+name: The Odds API probe
+
+# Manual only, like sgo-probe.yml: never on a push, a pull request or a
+# schedule. It asks whether The Odds API prices tennis on DraftKings, which
+# markets, and at what cost in credits, from a machine that can reach it.
+#
+# The key comes from the ODDS_API_KEY repository secret. It travels in the
+# query string, so odds_probe.py never prints a URL whole; GitHub masks the
+# value in the log as well. The log is public because the repository is.
+on:
+  workflow_dispatch:
+    inputs:
+      odds:
+        description: "Also price the active events (costs a few credits)"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Ask what The Odds API has for tennis
+        env:
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+        run: |
+          if [ -z "$ODDS_API_KEY" ]; then
+            echo "::error::No ODDS_API_KEY secret. Add it under Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+          python3 odds_probe.py ${{ inputs.odds && '--odds' || '' }}

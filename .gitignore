@@ -9,3 +9,4 @@ espn_sample.json
 
 # what sgo_probe.py writes -- an API response, not repo content
 sgo_sample.json
+odds_sample.json

@@ -151,8 +151,15 @@ def main():
         except ValueError:
             continue
         rows = ldoc.get("data", []) if isinstance(ldoc, dict) else ldoc
-        leagues = [x for x in rows if isinstance(x, dict)
-                   and "TENNIS" in str(x.get("sportID", "")).upper()]
+        rows = [x for x in rows if isinstance(x, dict)]
+        # Every league, not just the tennis ones: "none came back" has to be
+        # distinguishable from "the filter looked at the wrong field".
+        print(f"     {len(rows)} leagues returned:")
+        for x in rows:
+            print(f"       {str(x.get('leagueID')):16} "
+                  f"{str(x.get('sportID')):12} enabled={x.get('enabled')}")
+        leagues = [x for x in rows
+                   if "TENNIS" in str(x.get("sportID", "")).upper()]
         for x in leagues:
             print(f"     {str(x.get('leagueID')):16} enabled={x.get('enabled')}"
                   f"  {x.get('name') or x.get('shortName')}")
@@ -162,15 +169,26 @@ def main():
         print("   no tennis league came back -- the sport may be listed but "
               "not carry leagues on this plan")
 
+    # This endpoint also returns the account's email, customer id and key
+    # id. The workflow's log is public because the repository is, so only
+    # the plan and its limits are printed -- never who the account is. An
+    # earlier version walked the whole response and put the email in a
+    # public log; that log was deleted.
     print("\n4. what the account has used")
     for q in ("/account/usage/", "/account/usage"):
         st, ubody, uh = get(base + q, header, value)
         print(f"   {st} {q}")
         if st == 200:
             try:
-                walk(json.loads(ubody))
-            except ValueError:
+                u = json.loads(ubody).get("data", {})
+            except (ValueError, AttributeError):
                 print("   not JSON")
+                break
+            print(f"     tier: {u.get('tier')}  active: {u.get('isActive')}")
+            for span, lim in (u.get("rateLimits") or {}).items():
+                if isinstance(lim, dict):
+                    print(f"     {span:10} " + "  ".join(
+                        f"{k}={v}" for k, v in lim.items()))
             break
         print(f"      {ubody[:300]}")
 

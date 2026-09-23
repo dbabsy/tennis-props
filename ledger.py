@@ -8,6 +8,13 @@ undetectable later because the stored row looks identical either way.
 So: `record` refuses any match whose start time has passed, and refuses to
 modify a row that already exists. `score` only fills in results. Both are
 idempotent, because CI reruns them and races with pushes.
+
+There is one narrow exception, and it is not to the prediction. A DraftKings
+price can be attached to a row once, before the match starts, if the row has
+none -- because DraftKings posts prices a day or so ahead while ESPN names the
+players earlier, so most rows are frozen before any price exists. The price is
+market data, not a prediction; it is only ever added before the start, so it
+cannot know the result; and once on a row it is never replaced.
 """
 
 import argparse
@@ -18,6 +25,7 @@ from collections import defaultdict
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
+import dk
 import fetch
 import model
 import project as P
@@ -42,7 +50,9 @@ def record(day=None, now=None):
     """Freeze today's projections. Silently skips matches already under way."""
     now = now or datetime.now(timezone.utc)
     db = _load()
-    added = skipped_started = skipped_existing = 0
+    added = skipped_started = skipped_existing = priced = 0
+    # Read-only: build.py refreshes the cache, the ledger never spends credits.
+    prices = dk.index(dk.load(key=""))
 
     for tour in ("atp", "wta"):
         try:
@@ -53,12 +63,22 @@ def record(day=None, now=None):
         for r in rows:
             m = r["match"]
             key = f'{tour}:{m["id"]}'
+            upcoming = bool(m["start"]) and m["start"] > now
             if key in db["picks"]:
+                row = db["picks"][key]
+                # The one write to an existing row -- see the module note.
+                # Oriented by the names stored on the row, not today's order.
+                price = dk.lookup(prices, row["p1"], row["p2"], m["start"])
+                if upcoming and price and not row.get("dk"):
+                    row["dk"] = dict(price, seen=now.isoformat())
+                    priced += 1
                 skipped_existing += 1
                 continue
-            if not m["start"] or m["start"] <= now:
+            if not upcoming:
                 skipped_started += 1
                 continue
+            price = dk.lookup(prices, m["p1"]["name"], m["p2"]["name"],
+                              m["start"])
             lines = (20.5, 21.5, 22.5, 23.5) if r["best_of"] == 3 else (36.5, 38.5, 40.5)
             mid = lines[len(lines) // 2]
             db["picks"][key] = {
@@ -76,11 +96,15 @@ def record(day=None, now=None):
                 "exp_aces_p2": r["props"]["b"]["exp_aces"],
                 "result": None,
             }
+            if price:
+                db["picks"][key]["dk"] = dict(price, seen=now.isoformat())
+                priced += 1
             added += 1
 
     _save(db)
     print(f"recorded {added}; {skipped_started} already started, "
-          f"{skipped_existing} already on file")
+          f"{skipped_existing} already on file; DraftKings prices on "
+          f"{priced}")
     return added
 
 
@@ -217,6 +241,43 @@ def _theme():
     return None, None
 
 
+def versus_dk(done):
+    """How the model did against DraftKings on the scored rows that carry a
+    DraftKings price: log loss of each on the same matches, and what flat
+    one-unit bets on the model's value side would have returned."""
+    rows = []
+    for p in done:
+        d = p.get("dk")
+        if not d:
+            continue
+        q = dk.no_vig(d["p1"], d["p2"])
+        if q is None:
+            continue
+        rows.append((p, d, q, 1 if p["result"]["p1_won"] else 0))
+    if not rows:
+        return None
+
+    def ll(pr, y):
+        pr = min(max(pr, 1e-6), 1 - 1e-6)
+        return -(y * math.log(pr) + (1 - y) * math.log(1 - pr))
+
+    model_ll = sum(ll(p["p_p1"], y) for p, _, _, y in rows) / len(rows)
+    book_ll = sum(ll(q, y) for _, _, q, y in rows) / len(rows)
+    bets = won = 0
+    profit = 0.0
+    for p, d, _, y in rows:
+        sides = [(dk.ev(p["p_p1"], d["p1"]), d["p1"], y == 1),
+                 (dk.ev(1 - p["p_p1"], d["p2"]), d["p2"], y == 0)]
+        e, price, hit = max(sides)
+        if e <= 0:
+            continue
+        bets += 1
+        won += hit
+        profit += (dk.decimal(price) - 1) if hit else -1.0
+    return {"n": len(rows), "model_ll": model_ll, "book_ll": book_ll,
+            "bets": bets, "won": won, "profit": profit}
+
+
 def report():
     theme, event = _theme()
     db = _load()
@@ -287,6 +348,35 @@ abandoned in the second set did not play a short match.</p>"""
         V.esc(p["result"]["score"]),
         f'{p["exp_games"]:.1f} / {p["result"]["games"]}',
     ] for p in recent]
+
+    vs = versus_dk(done)
+    waiting = sum(1 for p in db["picks"].values()
+                  if p.get("dk") and not p.get("result"))
+    if vs:
+        roi = vs["profit"] / vs["bets"] if vs["bets"] else None
+        cards += f"""<h2>Against DraftKings</h2>
+<div class="grid">
+<div class="card"><div class="lab">Scored with a DK price</div><div class="stat">{vs["n"]}</div>
+<p class="note">{waiting} more waiting on a result</p></div>
+<div class="card"><div class="lab">Log loss, model vs DK</div>
+<div class="stat">{vs["model_ll"]:.3f} / {vs["book_ll"]:.3f}</div>
+<p class="note">lower is better; DK with its margin removed</p></div>
+<div class="card"><div class="lab">Value bets, flat stakes</div>
+<div class="stat">{vs["won"]}–{vs["bets"] - vs["won"]}</div>
+<p class="note">every side where the model saw value at DK's price</p></div>
+<div class="card"><div class="lab">Return at DK prices</div>
+<div class="stat {"good" if roi and roi > 0 else "bad" if roi else ""}">{"—" if roi is None else f"{100 * roi:+.1f}%"}</div>
+<p class="note">{vs["profit"]:+.2f} units on {vs["bets"]} bets</p></div>
+</div>
+<p class="note">The price is the first DraftKings price seen before the match
+started, not the closing price, so this is what betting off this site when it
+was published would have done. A few hundred bets before the return means much;
+the log loss comparison settles faster, and says directly whether the model
+knows anything the price does not.</p>"""
+    elif waiting:
+        cards += (f'<p class="note">{waiting} frozen picks carry a DraftKings '
+                  'price and are waiting on results; the comparison with '
+                  'DraftKings appears here once they are scored.</p>')
 
     body = [cards,
             "<h2>Calibration</h2>",

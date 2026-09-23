@@ -57,8 +57,11 @@ via ESPN but no serve statistics, so ace projections lean on rates fitted
 before June. Re-check whether the mirror has caught up before assuming an ace
 number is current.
 
-No API keys anywhere. There is no keyless source of live odds, which is why
-`edges.html` prices markets rather than claiming edges.
+Two API keys, both repository secrets and both optional: `ODDS_API_KEY`
+brings DraftKings tennis prices (below), and `SGO_API_KEY` is used only by the
+manual probe workflow. Without either, every page builds exactly as it did.
+There is still no keyless source of live odds, which is why `edges.html`
+prices markets rather than claiming edges.
 
 **SportsGameOdds' free tier does not cover tennis.** Checked 2026-09-23 with
 the manual `sgo-probe.yml` workflow: the key works (v2, `X-Api-Key`), and
@@ -79,8 +82,27 @@ day it was WTA Singapore alone. DraftKings priced every match there, head to
 head only -- a totals-and-spreads request came back with no markets at all.
 The allowance is 500 credits a month; listing the sports is free, and one
 match-winner request for one tournament is one credit, so a two-hourly build
-is out of reach and about twice a day is the budget. Nothing in the build
-reads the key yet.
+is out of reach and about twice a day is the budget.
+
+**So the prices are cached in the repository and refreshed twice a day.**
+`dk.py` keeps them in `data/dk_odds.json`, which the build workflow commits
+with the ledger -- the only thing that survives one CI run to the next -- and
+refreshes it only when it is older than `REFRESH_HOURS` (11, so twice a day
+at a two-hourly build). It stops spending at `FLOOR` credits left and starts
+again when the month turns, keeps the old prices when a refresh fails, and
+shows nothing older than `MAX_AGE_HOURS`. The ledger reads the cache and never
+spends. A typical week, one or two covered events, costs 60-120 credits a
+month; a week with four running at once would cost about 240.
+
+Prices are matched to matches on **both** players' names, accents and spacing
+stripped, and a start time within a day: The Odds API writes "Viktória
+Morvayová", and a single matching name is how a result gets inverted. The
+matches page adds a DK column and a Value column -- the side DraftKings pays
+more for than the model thinks fair, as expected return -- only when some
+match has a price, and the accuracy page adds model-against-DraftKings log
+loss and the flat-stake return on those value bets once priced picks are
+scored. That return is the number `BETTOR_NOTE` warns about: on everything
+measured so far the market has beaten this model.
 
 ## Decisions that took measurement to reach
 
@@ -368,6 +390,14 @@ in a browser string — that is what causes it.
 refuses any match whose start time has passed and never rewrites an existing
 row. This used to be a manual check; it is now the first thing `selftest.py`
 asserts, with a stubbed slate, so CI fails before a build rather than after.
+
+There is exactly one write to an existing row, and it is not to the
+prediction: a DraftKings price may be attached **once, before the start**, to
+a row that has none. ESPN names the players a day or two before DraftKings
+posts a price, so most rows are frozen before one exists, and without this the
+comparison with DraftKings would starve. A price added before the start
+cannot know the result, the prediction fields are never touched, and a price
+once on a row is never replaced -- `selftest.py` asserts all three.
 
 **A retirement has a winner but not a games total.** ESPN reports the partial
 sets, and scoring those against a full-match projection is a straight

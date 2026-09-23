@@ -126,11 +126,6 @@ def main():
     print("\n   tennis mentioned in the listing: "
           + (", ".join(tennis) if tennis else "NO — this is the answer that matters"))
 
-    if not a.events:
-        print("\n3. skipped the events call (costs objects). Re-run with "
-              "--events to see one.")
-        return
-
     print("\n   every sport in the plan:")
     for s in doc.get("data", []) if isinstance(doc, dict) else []:
         print(f"     {str(s.get('sportID')):14} enabled={s.get('enabled')}"

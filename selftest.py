@@ -979,6 +979,173 @@ def test_layout():
           and mm["p2"]["aid"] == "102")
 
 
+def test_dk():
+    """DraftKings prices: spend the allowance only when due, match only the
+    right players, and never let a price reach a started match's row."""
+    print("draftkings prices")
+    import build
+    import dk
+
+    check("an accent does not decide a match",
+          dk.norm("Viktória Morvayová") == dk.norm("Viktoria Morvayova"))
+    check("nor does spacing", dk.norm("Xin Yu Wang") == dk.norm("Xinyu Wang"))
+    check("an even pair de-vigs to a coin toss",
+          close(dk.no_vig(-110, -110), 0.5))
+    check("an even-money bet on a coin toss is worth nothing",
+          close(dk.ev(0.5, 100), 0.0) and close(dk.decimal(-200), 1.5))
+
+    start = datetime(2026, 9, 24, 6, 30, tzinfo=timezone.utc)
+    cache = {"fetched_at": "2026-09-23T16:00:00Z", "remaining": 480,
+             "events": ["tennis_wta_singapore_open"], "matches": [
+                 {"event": "WTA Singapore Open", "start": "2026-09-24T06:30:00Z",
+                  "a": "Joanna Garland", "pa": 242,
+                  "b": "Xinyu Wang", "pb": -309, "at": "2026-09-23T16:00:00Z"}]}
+    idx = dk.index(cache)
+    got = dk.lookup(idx, "Xin Yu Wang", "Joanna Garland", start)
+    check("a price is oriented to the row's players, not the feed's order",
+          got and got["p1"] == -309 and got["p2"] == 242, str(got))
+    check("both names have to match, not one",
+          dk.lookup(idx, "Xinyu Wang", "Someone Else", start) is None)
+    check("and a rematch a week later does not borrow the price",
+          dk.lookup(idx, "Xinyu Wang", "Joanna Garland",
+                    start + timedelta(days=7)) is None)
+
+    calls = []
+
+    def fake_get(path, key, **params):
+        calls.append(path)
+        if path == "/sports/":
+            return ([{"key": "tennis_wta_singapore_open", "active": True},
+                     {"key": "tennis_atp_us_open", "active": False},
+                     {"key": "basketball_nba", "active": True}], "499")
+        return ([{"sport_title": "WTA Singapore Open",
+                  "commence_time": "2026-09-24T06:30:00Z",
+                  "bookmakers": [
+                      {"key": "fanduel", "markets": [{"key": "h2h", "outcomes": [
+                          {"name": "Joanna Garland", "price": 250},
+                          {"name": "Xinyu Wang", "price": -320}]}]},
+                      {"key": "draftkings", "last_update": "2026-09-23T16:28:04Z",
+                       "markets": [{"key": "h2h", "outcomes": [
+                           {"name": "Joanna Garland", "price": 242},
+                           {"name": "Xinyu Wang", "price": -309}]}]}]}], "498")
+
+    got = dk.fetch("k", get=fake_get)
+    check("only active tennis events are priced, one request each",
+          calls == ["/sports/", "/sports/tennis_wta_singapore_open/odds/"],
+          str(calls))
+    check("and only DraftKings' price is kept",
+          got["matches"][0]["pa"] == 242 and got["remaining"] == 498)
+
+    saved_cache = dk.CACHE
+    with tempfile.TemporaryDirectory() as d:
+        dk.CACHE = Path(d) / "dk_odds.json"
+        try:
+            now = datetime(2026, 9, 23, 18, 0, tzinfo=timezone.utc)
+
+            def run(cached, key="k", at=now):
+                calls.clear()
+                if cached is None:
+                    dk.CACHE.unlink(missing_ok=True)
+                else:
+                    dk.CACHE.write_text(json.dumps(cached))
+                return dk.load(key=key, now=at, get=fake_get)
+
+            def aged(hours, remaining=480):
+                return dict(cache, remaining=remaining, fetched_at=(
+                    now - timedelta(hours=hours)).strftime("%Y-%m-%dT%H:%M:%SZ"))
+
+            run(None)
+            check("no cache and a key: prices are fetched and kept",
+                  calls and dk.CACHE.exists())
+            run(aged(2))
+            check("a fresh cache spends nothing", not calls)
+            run(aged(12))
+            check("a cache past the refresh interval is refreshed", bool(calls))
+            run(aged(12, remaining=dk.FLOOR))
+            check("at the floor, the allowance is left alone", not calls)
+            run(aged(12, remaining=dk.FLOOR),
+                at=datetime(2026, 10, 1, 1, 0, tzinfo=timezone.utc))
+            check("until the month turns and it resets", bool(calls))
+            run(aged(12), key="")
+            check("without a key nothing is ever fetched", not calls)
+            check("and prices too old to trust are not shown",
+                  run(aged(dk.MAX_AGE_HOURS + 1), key="") is None)
+
+            def broken(path, key, **params):
+                raise OSError("down")
+            dk.CACHE.write_text(json.dumps(aged(12)))
+            kept = dk.load(key="k", now=now, get=broken)
+            check("a failed refresh keeps the prices it had",
+                  kept is not None and kept["matches"] == cache["matches"])
+        finally:
+            dk.CACHE = saved_cache
+
+    # The ledger: a price is attached at freezing, or once afterwards before
+    # the start, and never after the start or over an existing price.
+    saved = ledger._load, ledger._save, ledger.P.build, ledger.dk.load
+    db = {"picks": {}}
+    try:
+        ledger._load = lambda: db
+        ledger._save = lambda _db: None
+        ledger.dk.load = lambda key=None, **kw: cache
+        row = {"match": {"id": "9", "tourney": "WTA Singapore Open",
+                         "round": "R16", "start": start,
+                         "p1": {"name": "Xinyu Wang"},
+                         "p2": {"name": "Joanna Garland"}},
+               "surface": "Hard", "best_of": 3, "p_a": 0.7, "exp_games": 21.0,
+               "dist": model.match_dist(0.62, 0.55),
+               "props": {"a": {"exp_aces": 3.0}, "b": {"exp_aces": 2.0}}}
+        ledger.P.build = lambda tour, day=None: (
+            None, None, [row] if tour == "wta" else [], [])
+        ledger.record(now=start - timedelta(hours=10))
+        pick = db["picks"].get("wta:9", {})
+        check("a pick frozen with a price carries it, oriented to the pick",
+              pick.get("dk", {}).get("p1") == -309, str(pick.get("dk")))
+        pick.pop("dk")
+        ledger.record(now=start + timedelta(minutes=5))
+        check("a price never reaches a row once the match has started",
+              "dk" not in pick)
+        ledger.record(now=start - timedelta(hours=2))
+        check("before the start, a row without one gets it once",
+              pick.get("dk", {}).get("p1") == -309)
+        first = dict(pick["dk"])
+        cache["matches"][0]["pb"] = -400
+        ledger.record(now=start - timedelta(hours=1))
+        check("and a later price never replaces it", pick["dk"] == first)
+        check("the prediction itself is untouched throughout",
+              pick["p_p1"] == 0.7 and pick["p1"] == "Xinyu Wang")
+    finally:
+        ledger._load, ledger._save, ledger.P.build, ledger.dk.load = saved
+        cache["matches"][0]["pb"] = -309
+
+    done = [
+        # The model likes p1 at +120: a bet on p1, which wins 1.2.
+        {"p_p1": 0.6, "dk": {"p1": 120, "p2": -140},
+         "result": {"p1_won": True}},
+        # The model likes p2 at +170: a bet on p2, which loses 1.
+        {"p_p1": 0.5, "dk": {"p1": -200, "p2": 170},
+         "result": {"p1_won": True}},
+        # No value either side at these prices: no bet.
+        {"p_p1": 0.5, "dk": {"p1": -120, "p2": -120},
+         "result": {"p1_won": False}},
+        {"p_p1": 0.9, "result": {"p1_won": True}},
+    ]
+    vs = ledger.versus_dk(done)
+    check("only rows with a price are compared", vs["n"] == 3)
+    check("a bet is placed only where the model saw value",
+          vs["bets"] == 2 and vs["won"] == 1, f'{vs["won"]}/{vs["bets"]}')
+    check("and the return is the sum of what those bets paid",
+          close(vs["profit"], 0.2), f'{vs["profit"]:.4f}')
+
+    base = {"match": {"p1": {"name": "Xinyu Wang"},
+                      "p2": {"name": "Joanna Garland"}}, "p_a": 0.8, "p_b": 0.2}
+    check("the matches page names the value side and its return",
+          "Wang +5.9%" in build._value(dict(base, dk={"p1": -309, "p2": 242})))
+    check("and says none when neither side is worth it",
+          ">none<" in build._value(dict(base, p_a=0.72, p_b=0.28,
+                                        dk={"p1": -309, "p2": 242})))
+
+
 def test_livecheck_js():
     """The feed check is the only thing that can tell a missing point score
     from a point score under a name we do not read.
@@ -1095,7 +1262,7 @@ if __name__ == "__main__":
                test_tiebreak_entry, test_markov,
                test_monotonicity, test_ratings, test_resolver, test_ledger,
                test_pipeline, test_live_js, test_render, test_layout,
-               test_livecheck_js):
+               test_dk, test_livecheck_js):
         fn()
     print()
     if FAILURES:

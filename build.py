@@ -18,6 +18,7 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 
 import conditions as C
+import dk
 import fetch
 import model
 import project as P
@@ -92,6 +93,36 @@ def event_groups(items, key, unit=("match", "matches")):
             for tn, tour in order]
 
 
+def attach_dk(rows, cache):
+    """DraftKings' prices for each row, oriented to its players, or None."""
+    idx = dk.index(cache)
+    n = 0
+    for r in rows:
+        m = r["match"]
+        r["dk"] = dk.lookup(idx, m["p1"]["name"], m["p2"]["name"], m["start"])
+        n += r["dk"] is not None
+    return n
+
+
+def _am(x):
+    return f"{int(x):+d}"
+
+
+def _value(r):
+    """The side DraftKings is paying more than the model thinks it should, as
+    that side's expected return at DraftKings' price -- or nothing."""
+    d = r.get("dk")
+    if not d:
+        return '<span class="dim">—</span>'
+    m = r["match"]
+    sides = [(dk.ev(r["p_a"], d["p1"]), m["p1"]["name"]),
+             (dk.ev(r["p_b"], d["p2"]), m["p2"]["name"])]
+    e, who = max(sides)
+    if e <= 0:
+        return '<span class="dim">none</span>'
+    return (f'<span class="good">{V.esc(who.split()[-1])} +{100 * e:.1f}%</span>')
+
+
 def two(a, b):
     """A value per player, stacked to sit level with that player's row."""
     return f'<div class="two"><div>{a}</div><div>{b}</div></div>'
@@ -120,7 +151,8 @@ def _sides(pr):
 
 # ---------------------------------------------------------------------------
 
-def page_matches(rows, theme=None, event=None):
+def page_matches(rows, theme=None, event=None, dk_at=None):
+    priced = any(r.get("dk") for r in rows)
     never = datetime.max.replace(tzinfo=timezone.utc)
     rs = sorted(rows, key=lambda r: r["match"]["start"] or never)
     groups = []
@@ -137,11 +169,16 @@ def page_matches(rows, theme=None, event=None):
             sets_txt = " ".join(
                 f'{k[0]}-{k[1]}&nbsp;{100*v:.0f}%'
                 for k, v in sorted(r["sets"].items(), key=lambda x: -x[1])[:3])
+            d = r.get("dk")
+            dkcells = ([two(_am(d["p1"]), _am(d["p2"])) if d else
+                        '<span class="dim">—</span>', _value(r)]
+                       if priced else [])
             trs.append([
                 f'<span class="dim">{V.clock(m["start"])}</span>',
                 V.who(m["p1"], bold=fa) + V.who(m["p2"], bold=not fa),
                 two(V.pct(r["p_a"]), V.pct(r["p_b"])),
                 two(V.fair(r["p_a"]), V.fair(r["p_b"])),
+                *dkcells,
                 V.num(r["exp_games"], 1),
                 f'o{mid} {V.pct(ov, 0)} <span class="dim">{V.fair(ov)}</span>',
                 V.pct(r["p_straight_a"] + _straight_b(r), 0),
@@ -149,11 +186,23 @@ def page_matches(rows, theme=None, event=None):
                 f'<span class="dim">{V.esc(m["round"])}</span>',
             ])
         groups.append((head, trs))
-    body = [BETTOR_NOTE, V.grouped_table(
-        ['Time <span class="tz">CT</span>', "Match", "Win %", "Fair",
-         "Games", "Total", "Straight", "Likeliest sets", "Round"],
-        groups,
-        ["", "", "num", "num", "num", "num", "num", "", ""])]
+    heads = (['Time <span class="tz">CT</span>', "Match", "Win %", "Fair"]
+             + (["DK", "Value"] if priced else [])
+             + ["Games", "Total", "Straight", "Likeliest sets", "Round"])
+    aligns = (["", "", "num", "num"] + (["num", ""] if priced else [])
+              + ["num", "num", "num", "", ""])
+    body = [BETTOR_NOTE, V.grouped_table(heads, groups, aligns)]
+    if priced:
+        body.append(
+            '<p class="note">DK is DraftKings\' match-winner price, from The '
+            'Odds API, fetched <time datetime="' + V.esc(dk_at or "") + '" '
+            'data-fmt="datetime">' + V.esc((dk_at or "")[:16].replace("T", " "))
+            + ' UTC</time>. It is refreshed about twice a day and covers only '
+            'the bigger events — slams, 1000s and some 500s — so most '
+            'matches in a normal week have none. Value is the model\'s expected '
+            'return on the side DraftKings is paying more for than the model '
+            'thinks fair; read it with the box above, because the closing line '
+            'has beaten this model. Check the live price before betting.</p>')
     body.append(
         '<p class="note">Win percentages come from a point model, not a '
         'match model: each player\'s serve and return rates are opponent- and '
@@ -956,12 +1005,20 @@ def main():
     theme, event = slate_theme(rows)
     print(f"  theme: {theme} ({themes.label(theme)}) — {event}")
 
+    # DraftKings prices: refreshed from The Odds API only when the cached ones
+    # are due, because the free allowance is 500 requests a month -- see dk.py.
+    prices = dk.load()
+    print(f"  DraftKings prices on {attach_dk(rows, prices)} matches")
+    dk_at = (prices or {}).get("fetched_at")
+
     for name, fn in (("index.html", page_conditions),
-                     ("matches.html", page_matches),
                      ("props.html", page_props),
                      ("edges.html", page_edges)):
         (out / name).write_text(fn(rows, theme, event), encoding="utf-8")
         print(f"  wrote {name}")
+    (out / "matches.html").write_text(
+        page_matches(rows, theme, event, dk_at), encoding="utf-8")
+    print("  wrote matches.html")
     (out / "live.html").write_text(page_live(live, theme, event),
                                    encoding="utf-8")
     print("  wrote live.html")

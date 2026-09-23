@@ -37,6 +37,11 @@ jobs:
           python3 selftest.py
 
       - name: Build pages
+        env:
+          # DraftKings prices for the matches page. dk.py spends this only
+          # when data/dk_odds.json is due a refresh -- about twice a day --
+          # because the free allowance is 500 requests a month.
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
         run: |
           python3 build.py --out public
 
@@ -48,18 +53,25 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add ledger/picks.json
+          # The DraftKings price cache rides along: it is the only way a
+          # refresh made by this run is still known to the next one, and
+          # without it every run would spend a request.
+          git add ledger/picks.json data/dk_odds.json 2>/dev/null || git add ledger/picks.json
           git diff --staged --quiet && exit 0
           # [skip ci] or this commit triggers another build, forever.
           git commit -m "ledger: record and score [skip ci]"
           # The build takes minutes and races with any other push. Take the
           # newer main and re-derive on top; record and score are idempotent.
+          # This run's price cache is the newest there is, so it is carried
+          # across the reset rather than thrown away with it.
           for i in 1 2 3; do
             git push && exit 0
+            cp data/dk_odds.json "$RUNNER_TEMP/dk_odds.json" 2>/dev/null || true
             git fetch origin main
             git reset --hard origin/main
+            cp "$RUNNER_TEMP/dk_odds.json" data/dk_odds.json 2>/dev/null || true
             python3 ledger.py --all >/dev/null
-            git add ledger/picks.json
+            git add ledger/picks.json data/dk_odds.json 2>/dev/null || git add ledger/picks.json
             git diff --staged --quiet && exit 0
             git commit -m "ledger: record and score [skip ci]"
           done

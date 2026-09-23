@@ -69,6 +69,19 @@ on this plan. The `SGO_API_KEY` repository secret exists and nothing in the
 build reads it. The account-usage endpoint returns the owner's email with the
 limits, and the workflow's log is public: the probe prints limits only.
 
+**The Odds API's free tier does carry DraftKings tennis prices -- match
+winner only, and only at the bigger events.** Checked 2026-09-23 with the
+manual `odds-probe.yml` workflow and the `ODDS_API_KEY` secret. It keys tennis
+by tournament and lists 46: the slams, the Masters and WTA 1000s, and a dozen
+500-level stops (Barcelona, Halle, Queen's, Washington, Dubai, Qatar and so
+on). No 250s, so a typical week has one or two events covered, or none; that
+day it was WTA Singapore alone. DraftKings priced every match there, head to
+head only -- a totals-and-spreads request came back with no markets at all.
+The allowance is 500 credits a month; listing the sports is free, and one
+match-winner request for one tournament is one credit, so a two-hourly build
+is out of reach and about twice a day is the budget. Nothing in the build
+reads the key yet.
+
 ## Decisions that took measurement to reach
 
 Do not undo these without re-measuring. Several are counter-intuitive.

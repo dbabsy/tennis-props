@@ -1,0 +1,63 @@
+{
+ "events": [
+  "tennis_wta_singapore_open"
+ ],
+ "fetched_at": "2026-09-23T16:38:07Z",
+ "matches": [
+  {
+   "a": "Talia Gibson",
+   "at": "2026-09-23T16:37:06Z",
+   "b": "Vikt\u00f3ria Morvayov\u00e1",
+   "event": "WTA Singapore Open",
+   "pa": -1140,
+   "pb": 680,
+   "start": "2026-09-24T05:00:00Z"
+  },
+  {
+   "a": "Joanna Garland",
+   "at": "2026-09-23T16:37:06Z",
+   "b": "Xinyu Wang",
+   "event": "WTA Singapore Open",
+   "pa": 242,
+   "pb": -309,
+   "start": "2026-09-24T06:30:00Z"
+  },
+  {
+   "a": "Alexandra Eala",
+   "at": "2026-09-23T16:37:06Z",
+   "b": "Tatiana Prozorova",
+   "event": "WTA Singapore Open",
+   "pa": -411,
+   "pb": 310,
+   "start": "2026-09-24T10:30:00Z"
+  },
+  {
+   "a": "Maria Sakkari",
+   "at": "2026-09-23T16:37:06Z",
+   "b": "Nao Hibino",
+   "event": "WTA Singapore Open",
+   "pa": -539,
+   "pb": 390,
+   "start": "2026-09-24T12:00:00Z"
+  },
+  {
+   "a": "Leylah Fernandez",
+   "at": "2026-09-23T16:37:06Z",
+   "b": "Mirra Andreeva",
+   "event": "WTA Singapore Open",
+   "pa": 277,
+   "pb": -361,
+   "start": "2026-09-25T03:00:00Z"
+  },
+  {
+   "a": "Elise Mertens",
+   "at": "2026-09-23T16:37:06Z",
+   "b": "Maja Chwalinska",
+   "event": "WTA Singapore Open",
+   "pa": -219,
+   "pb": 176,
+   "start": "2026-09-25T04:00:00Z"
+  }
+ ],
+ "remaining": 496
+}

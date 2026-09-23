@@ -17,6 +17,10 @@ on:
         description: "Also make one events call (spends a few objects)"
         type: boolean
         default: true
+      league:
+        description: "League id to ask for events in, e.g. NFL (blank = tennis)"
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -32,6 +36,9 @@ jobs:
       - name: Ask the API what the key buys
         env:
           SGO_API_KEY: ${{ secrets.SGO_API_KEY }}
+          # Through the environment, not interpolated into the script, so the
+          # text of an input can never become shell.
+          LEAGUE: ${{ inputs.league }}
         run: |
           if [ -z "$SGO_API_KEY" ]; then
             echo "::error::No SGO_API_KEY secret. Add it under Settings > Secrets and variables > Actions."
@@ -39,21 +46,51 @@ jobs:
           fi
           # The probe exits non-zero when no endpoint accepts the key; that is
           # an answer, not a crash, so let the next step still run.
-          python3 sgo_probe.py ${{ inputs.events && '--events' || '' }} || true
-      - name: The first events, in full
-        # The probe prints the shape; a parser needs the substance. Two events
-        # is enough to write against and small enough to read in a log.
+          python3 sgo_probe.py ${{ inputs.events && '--events' || '' }} \
+            ${LEAGUE:+--league "$LEAGUE"} || true
+      - name: What one event carries
+        # The probe prints the shape; a parser needs the substance -- which
+        # markets exist, which bookmakers price them, and what a player prop
+        # looks like -- so summarise one event and print a few odds in full.
         if: always()
         run: |
           python3 - <<'PY'
           import json, os
+          from collections import Counter
           if not os.path.exists("sgo_sample.json"):
               print("no events sample was written -- see the step above")
               raise SystemExit
           doc = json.load(open("sgo_sample.json"))
           events = doc.get("data", doc) if isinstance(doc, dict) else doc
-          if isinstance(events, list):
-              print(f"{len(events)} events in the response; the first two:")
-              events = events[:2]
-          print(json.dumps(events, indent=1)[:30000])
+          events = events if isinstance(events, list) else [events]
+          print(f"{len(events)} events in the response")
+          ev = events[0]
+          print("event keys:", sorted(ev))
+          odds = ev.get("odds") or {}
+          items = list(odds.values()) if isinstance(odds, dict) else list(odds)
+          print(f"{len(items)} odds entries on the first event")
+          if items:
+              print("keys of one odds entry:", sorted(items[0]))
+              stat = Counter(str(o.get("statID")) for o in items)
+              print("statIDs, most common:", stat.most_common(30))
+              ent = Counter(str(o.get("statEntityID")) for o in items)
+              print("statEntityIDs (first 12):", ent.most_common(12))
+              books = Counter(b for o in items for b in (o.get("byBookmaker") or {}))
+              print("bookmakers:", books.most_common(20))
+              props = [o for o in items if o.get("playerID")]
+              print(f"{len(props)} entries carry a playerID")
+              dk = [o for o in props if "draftkings" in (o.get("byBookmaker") or {})]
+              print(f"{len(dk)} of those are priced by DraftKings")
+              for o in (dk or props)[:4]:
+                  print(json.dumps(o, indent=1)[:2500])
+              game = [o for o in items if not o.get("playerID")]
+              if game:
+                  print("one game-level entry:")
+                  print(json.dumps(game[0], indent=1)[:2500])
+          for k in ("players", "teams"):
+              v = ev.get(k)
+              if isinstance(v, dict) and v:
+                  first = next(iter(v.items()))
+                  print(f"{k}: {len(v)} entries; one of them:")
+                  print(json.dumps({first[0]: first[1]}, indent=1)[:1500])
           PY

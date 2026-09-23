@@ -238,6 +238,25 @@ propagation in JavaScript would be a second thing to keep correct, and
 `selftest.py` runs the shipped script under `node` against the shipped table
 to prove the two halves still agree on the index arithmetic.
 
+**What the game in play is worth is two lookups, not a feature.** Under each
+live match, when the server is known, the page shows the server's chance of
+winning the match if they hold and if they are broken -- the two numbers
+`withPoints` mixes, shown instead of mixed. Both are `afterGame` and
+`outcome` against the table the page already has, so this added no model, no
+payload and no build time. It is the live bettor's number: before a game is
+played, it says where the price goes either way. A game that ends the match
+either way -- a deciding tiebreak -- says so in words, because 100% and 0%
+are correct and tell a reader nothing.
+
+**Every price is American, and the page prices what it holds.** Fair prices
+are break-even American odds, the decimal on hover, because the prices they
+get compared against are American. `render.american` rounds half-up to match
+`Math.round`, so the build and the browser never disagree by one. And the
+live page's price is the American price of the probability it decoded from
+the table -- quantised to 1/1295 -- which near -930 is four points away from
+the unquantised model; `selftest.py` compares against what was shipped, not
+against what the model would have said, because that is the promise.
+
 **Building a live table is the expensive part of the build, so most matches do
 not get one.** With form integration a best-of-five table costs about 1.4
 seconds. `project.wants_live` builds one only for matches on court or starting
@@ -284,9 +303,37 @@ tinted background is the one thing that must not vary by event.
 `build.py` writes the chosen theme to `data/theme.json` so `ledger.py` can
 match it. Without that the accuracy page would look like a different site.
 
+**Player photographs are ESPN's, and they are a different kind of thing from
+colours.** The pages show a face beside each name: `render.avatar` draws the
+initials, then lays ESPN's headshot over them -- the feed's own
+`athlete.headshot.href` when it sends one, else ESPN's standard path for the
+athlete id. The reader's browser fetches them from ESPN's image host, with no
+referrer, exactly as the live page already fetches ESPN's scoreboard; nothing
+is copied into this repository. But they are licensed photographs, not court
+colours, so `render.PHOTOS` is one switch that turns them off, and the
+initials stay either way. A failed image removes itself rather than leaving a
+broken-image icon, which is also why a wrong guess at the path costs nothing.
+Whether ESPN sends a headshot link at all has not been observed --
+`livecheck.html` now lists the athlete object's keys, which settles it.
+
 **Players below 300 tour-level serve points are refused, not guessed.** About
 20% of a slam's first round is qualifiers and wildcards the model has never
 seen. Pricing them anyway is worse than skipping them.
+
+**Every page is grouped by tournament.** A week runs several events at once,
+and naming them only in the page badge left a reader guessing which match was
+in which. `build.event_groups` splits a slate by tournament and tour, busiest
+first -- men and women at one slam are separate groups, being different draws
+over different numbers of sets -- and each table is one table with a `tbody`
+per group, so the columns do not re-size from event to event.
+
+**The pages tell a bettor where not to trust them, with numbers.**
+`build.BETTOR_NOTE` leads the matches and edges pages with three measured
+caveats: fair is break-even, the closing line has beaten this model by about
+0.03 in log loss, and totals lean over (52.7% priced, 46.9% landed). Those are
+quotations from the open questions below. **If any of them is re-measured,
+the note changes with it** -- a caveat that has gone stale is worse than none,
+because it is the one paragraph a reader trusts to be conservative.
 
 ## Gotchas that have bitten before
 

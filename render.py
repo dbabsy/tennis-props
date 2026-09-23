@@ -6,6 +6,7 @@ overridden for dark, so the pages follow the reader's system theme.
 """
 
 import html
+import re
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
@@ -70,6 +71,41 @@ text-transform:uppercase;color:var(--accent);font-weight:650;margin:0 0 6px}
 .tz{font-size:10px;color:var(--dim);font-weight:500}
 footer{margin-top:36px;padding-top:14px;border-top:1px solid var(--line);
 font-size:12px;color:var(--dim)}
+/* A tournament header inside a table: one tbody per event, so the columns
+   line up down the whole page instead of re-sizing per event. */
+tr.evh td,tr.evh:hover td{background:none;padding:22px 10px 8px;
+border-bottom:1px solid var(--fg)}
+tbody:first-of-type tr.evh td{padding-top:8px}
+.ev{font-weight:650;font-size:14.5px;color:var(--fg);margin-right:8px;
+letter-spacing:-.01em;white-space:normal}
+.evc{color:var(--dim);font-size:12px;margin-left:4px}
+h2.evt{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;
+padding-bottom:6px;border-bottom:1px solid var(--fg)}
+/* A player: initials underneath, the photograph over them when it loads.
+   If it does not, the image removes itself and the initials are what is
+   left -- never a broken-image icon. */
+.av{position:relative;display:inline-flex;align-items:center;
+justify-content:center;width:var(--s,28px);height:var(--s,28px);flex:none;
+border-radius:50%;background:var(--chip);color:var(--dim);
+font-size:calc(var(--s,28px)*.36);vertical-align:middle}
+.av>b{font-weight:650;letter-spacing:.02em}
+.av>img{position:absolute;inset:0;width:100%;height:100%;border-radius:50%;
+object-fit:cover;object-position:50% 18%;background:var(--chip)}
+.av>img.fl{inset:auto -2px -2px auto;width:44%;height:44%;
+object-position:50% 50%;box-shadow:0 0 0 1.5px var(--bg)}
+.who{display:flex;align-items:center;gap:8px;min-height:30px}
+.who+.who{margin-top:3px}
+/* Per-player values stacked to sit level with each player's .who line. */
+.two>div{min-height:30px;display:flex;align-items:center}
+.two>div+div{margin-top:3px}
+.num .two>div{justify-content:flex-end}
+.callout{border:1px solid var(--line);border-left:3px solid var(--warn);
+border-radius:8px;padding:10px 14px;margin:0 0 18px;font-size:12.5px;
+max-width:88ch;background:var(--card)}
+.callout b{color:var(--fg)}
+.callout ul{margin:4px 0 0;padding-left:18px}
+.callout li{margin:3px 0;color:var(--dim)}
+.px{font-variant-numeric:tabular-nums}
 """
 
 
@@ -103,6 +139,80 @@ def clock(dt, tz="America/Chicago"):
     # not jump width when the localiser runs.
     return (f'<time datetime="{dt.strftime("%Y-%m-%dT%H:%M:%SZ")}">'
             f'{local.strftime("%I:%M %p").lstrip("0")}</time>')
+
+
+def american(p):
+    """A probability as the fair American price, the way a US book prints it.
+
+    Rounded half-up to match Math.round, because the live page computes the
+    same number in the browser and the two must not disagree by one.
+    """
+    if p is None or p <= 0 or p >= 1:
+        return "—"
+    if p > 0.5:
+        return f"-{int(100 * p / (1 - p) + 0.5)}"
+    return f"+{int(100 * (1 - p) / p + 0.5)}"
+
+
+def fair(p):
+    """The break-even price, American first -- that is the number it gets
+    compared against -- with the decimal on hover."""
+    if p is None or p <= 0 or p >= 1:
+        return "—"
+    return f'<span class="px" title="decimal {1 / p:.2f}">{american(p)}</span>'
+
+
+# Player photographs. These are ESPN's, loaded by the reader's browser from
+# ESPN's image host exactly as the live page already loads ESPN's scoreboard;
+# nothing is copied into this repository. They are licensed photographs, which
+# is a different kind of thing from a tournament's colours, so this is the one
+# switch that turns them off -- the initials underneath stay either way.
+PHOTOS = True
+HEADSHOT = "https://a.espncdn.com/i/headshots/tennis/players/full/{}.png"
+
+
+def initials(name):
+    parts = [w for w in re.split(r"[\s\-]+", name or "") if w]
+    if not parts:
+        return "?"
+    if len(parts) == 1:
+        return parts[0][:2].upper()
+    return (parts[0][0] + parts[-1][0]).upper()
+
+
+def photo_url(side):
+    """The feed's own headshot link when it gives one, else ESPN's standard
+    path for the athlete id. A wrong guess costs nothing: the image fails,
+    removes itself, and the initials show."""
+    if not PHOTOS or not side:
+        return None
+    if side.get("photo"):
+        return side["photo"]
+    aid = str(side.get("aid") or "")
+    return HEADSHOT.format(aid) if aid.isdigit() else None
+
+
+def avatar(side, size=28):
+    side = side or {}
+    name = side.get("name", "")
+    url = photo_url(side)
+    img = (f'<img src="{esc(url)}" alt="" loading="lazy" decoding="async" '
+           f'referrerpolicy="no-referrer" onerror="this.remove()">'
+           if url else "")
+    fl = (f'<img class="fl" src="{esc(side["flag"])}" alt="" loading="lazy" '
+          f'referrerpolicy="no-referrer" onerror="this.remove()">'
+          if side.get("flag") else "")
+    title = name + (f" · {side['country']}" if side.get("country") else "")
+    return (f'<span class="av" style="--s:{size}px" title="{esc(title)}">'
+            f'<b>{esc(initials(name))}</b>{img}{fl}</span>')
+
+
+def who(side, bold=False, size=28, extra=""):
+    """A player as a line: face, then name."""
+    side = side or {}
+    cls = "name" if bold else ""
+    return (f'<div class="who">{avatar(side, size)}'
+            f'<span class="{cls}">{esc(side.get("name", ""))}</span>{extra}</div>')
 
 
 def bar(p, width=52):
@@ -164,6 +274,26 @@ Projections are estimates, not advice.{(" " + note) if note else ""}</footer>
 }})();
 </script>
 </body></html>"""
+
+
+def grouped_table(headers, groups, aligns=None):
+    """One table, one tbody per group, the group's header as its first row.
+
+    A table per tournament would let each one size its own columns, and the
+    page would jitter from event to event. One table keeps every column where
+    the eye left it.
+    """
+    aligns = aligns or [""] * len(headers)
+    th = "".join(f'<th class="{a}">{h}</th>' for h, a in zip(headers, aligns))
+    bodies = []
+    for head, rows in groups:
+        trs = [f'<tr class="evh"><td colspan="{len(headers)}">{head}</td></tr>']
+        for r in rows:
+            tds = "".join(f'<td class="{a}">{c}</td>' for c, a in zip(r, aligns))
+            trs.append(f"<tr>{tds}</tr>")
+        bodies.append(f"<tbody>{''.join(trs)}</tbody>")
+    return (f'<div class="scroll"><table><thead><tr>{th}</tr></thead>'
+            f'{"".join(bodies)}</table></div>')
 
 
 def table(headers, rows, aligns=None):

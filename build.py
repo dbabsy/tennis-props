@@ -13,7 +13,7 @@ to demand before backing anything here.
 import argparse
 import json
 import math
-from collections import defaultdict
+from collections import Counter, defaultdict
 from datetime import date, datetime, timezone
 from pathlib import Path
 
@@ -57,8 +57,60 @@ def slate_theme(rows):
     return key, label
 
 
-def _price(p):
-    return "—" if not p or p <= 0 else f"{1/p:.2f}"
+def event_head(tourney, tour, surface, n, unit=("match", "matches")):
+    """A tournament, as a header: name, tour, surface, whether it is under a
+    roof, and how many rows follow. Before this the event was named only in
+    the page badge, which on a week with five events does not say which match
+    is in which."""
+    v = venues.find(tourney)
+    chips = [f'<span class="chip">{V.esc((tour or "").upper())}</span>']
+    if surface:
+        chips.append(f'<span class="chip">{V.esc(surface)}</span>')
+    if v and v["indoor"]:
+        chips.append('<span class="chip">indoor</span>')
+    return (f'<span class="ev">{V.esc(tourney or "Other events")}</span>'
+            + " ".join(chips)
+            + f'<span class="evc">{n} {unit[0] if n == 1 else unit[1]}</span>')
+
+
+def event_groups(items, key, unit=("match", "matches")):
+    """Split items by tournament and tour, busiest tournament first.
+
+    key(item) -> (tourney, tour, surface). Order within a group is the
+    caller's, so sort by start time first. Men and women at the same event
+    are separate groups under the same name -- they are different draws with
+    different formats, and at a slam different numbers of sets.
+    """
+    by, size = defaultdict(list), Counter()
+    for it in items:
+        tn, tour, _ = key(it)
+        by[(tn, tour)].append(it)
+        size[tn] += 1
+    order = sorted(by, key=lambda k: (-size[k[0]], k[0] or "", k[1] or ""))
+    return [(event_head(tn, tour, key(by[(tn, tour)][0])[2],
+                        len(by[(tn, tour)]), unit), by[(tn, tour)])
+            for tn, tour in order]
+
+
+def two(a, b):
+    """A value per player, stacked to sit level with that player's row."""
+    return f'<div class="two"><div>{a}</div><div>{b}</div></div>'
+
+
+# What a bettor most needs to know about this model is where not to trust it,
+# and every item here is a measurement rather than a caveat for its own sake.
+BETTOR_NOTE = (
+    '<div class="callout"><b>Before betting off these numbers</b><ul>'
+    '<li><b>Fair is break-even, not a bet.</b> A price is only worth taking if '
+    'it beats fair by more than this model\'s own error.</li>'
+    '<li><b>The closing line has beaten this model</b> — by about 0.03 in log '
+    'loss, steadily across both tours in 2024 and 2025, when last measured. '
+    'Where the two disagree, the market is right more often.</li>'
+    '<li><b>Totals lean over.</b> Best-of-three overs priced at 52.7% landed '
+    '46.9% (ATP 2024), and the WTA leans the same way. Read every over here as '
+    'a few points too high and every under as a few points too low.</li>'
+    '</ul></div>')
+
 
 
 def _sides(pr):
@@ -69,18 +121,16 @@ def _sides(pr):
 # ---------------------------------------------------------------------------
 
 def page_matches(rows, theme=None, event=None):
-    body = []
-    for tour, label in (("atp", "ATP"), ("wta", "WTA")):
-        rs = [r for r in rows if r["match"]["tour"] == tour]
-        if not rs:
-            continue
-        rs.sort(key=lambda r: (r["match"]["start"] or datetime.max.replace(
-            tzinfo=timezone.utc)))
+    never = datetime.max.replace(tzinfo=timezone.utc)
+    rs = sorted(rows, key=lambda r: r["match"]["start"] or never)
+    groups = []
+    for head, grp in event_groups(
+            rs, lambda r: (r["match"]["tourney"], r["match"]["tour"],
+                           r["surface"])):
         trs = []
-        for r in rs:
-            a, b = _sides(r)
+        for r in grp:
             m = r["match"]
-            fav, p = (a, r["p_a"]) if r["p_a"] >= 0.5 else (b, r["p_b"])
+            fa = r["p_a"] >= 0.5
             lines = TOTAL_LINES[r["best_of"]]
             mid = lines[len(lines) // 2]
             ov = model.total_over(r["dist"], mid)
@@ -89,31 +139,27 @@ def page_matches(rows, theme=None, event=None):
                 for k, v in sorted(r["sets"].items(), key=lambda x: -x[1])[:3])
             trs.append([
                 f'<span class="dim">{V.clock(m["start"])}</span>',
-                f'<span class="name">{V.esc(a)}</span><br><span class="dim">{V.esc(b)}</span>',
-                f'{V.pct(r["p_a"])}<br><span class="dim">{V.pct(r["p_b"])}</span>',
-                f'{_price(r["p_a"])}<br><span class="dim">{_price(r["p_b"])}</span>',
-                V.bar(p) + f' <span class="dim">{V.esc(fav.split()[-1])}</span>',
+                V.who(m["p1"], bold=fa) + V.who(m["p2"], bold=not fa),
+                two(V.pct(r["p_a"]), V.pct(r["p_b"])),
+                two(V.fair(r["p_a"]), V.fair(r["p_b"])),
                 V.num(r["exp_games"], 1),
-                f'{V.pct(ov, 0)} <span class="dim">o{mid}</span>',
+                f'o{mid} {V.pct(ov, 0)} <span class="dim">{V.fair(ov)}</span>',
                 V.pct(r["p_straight_a"] + _straight_b(r), 0),
                 f'<span class="dim">{sets_txt}</span>',
-                f'<span class="chip">{V.esc(r["surface"])}</span> '
                 f'<span class="dim">{V.esc(m["round"])}</span>',
             ])
-        body.append(f"<h2>{label} — {len(rs)} matches</h2>")
-        body.append(V.table(
-            ['Time <span class="tz">CT</span>', "Match", "Win %", "Fair",
-             "Favourite", "Games",
-             "Total", "Straight", "Likeliest sets", "Context"],
-            trs,
-            ["", "name", "num", "num", "", "num", "num", "num", "", ""]))
+        groups.append((head, trs))
+    body = [BETTOR_NOTE, V.grouped_table(
+        ['Time <span class="tz">CT</span>', "Match", "Win %", "Fair",
+         "Games", "Total", "Straight", "Likeliest sets", "Round"],
+        groups,
+        ["", "", "num", "num", "num", "num", "num", "", ""])]
     body.append(
         '<p class="note">Win percentages come from a point model, not a '
         'match model: each player\'s serve and return rates are opponent- and '
         'surface-adjusted, then propagated point to game to set to match. '
-        '"Fair" is the decimal price at which a bet breaks even — you need a '
-        'price better than that, by more than the model\'s measured gap to the '
-        'closing line, before there is an edge.</p>')
+        '"Fair" is the American price at which a bet breaks even; hover it for '
+        'the decimal. The favourite is in bold.</p>')
     return V.page("Match projections",
                   "Win probability, total games and set scores for today's slate",
                   "\n".join(body), "matches.html", theme=theme, event=event)
@@ -127,40 +173,46 @@ def _straight_b(r):
 
 def page_props(rows, theme=None, event=None):
     body = []
-    for tour, label in (("atp", "ATP"), ("wta", "WTA")):
-        rs = [r for r in rows if r["match"]["tour"] == tour]
-        if not rs:
-            continue
+    groups = []
+    for head, grp in event_groups(
+            rows, lambda r: (r["match"]["tourney"], r["match"]["tour"],
+                             r["surface"]), unit=("match", "matches")):
         trs = []
-        for r in rs:
-            a, b = _sides(r)
-            for tag, who, opp in (("a", a, b), ("b", b, a)):
+        for r in grp:
+            m = r["match"]
+            for tag, me, opp in (("a", m["p1"], m["p2"]),
+                                 ("b", m["p2"], m["p1"])):
                 pp = r["props"][tag]
                 ace_line = max(1.5, round(pp["exp_aces"]) - 0.5)
                 df_line = max(1.5, round(pp["exp_dfs"]) - 0.5)
                 o_ace = model.over(pp["aces"], ace_line)
                 o_df = model.over(pp["dfs"], df_line)
                 trs.append([
-                    f'<span class="name">{V.esc(who)}</span>'
-                    f'<br><span class="dim">v {V.esc(opp.split()[-1])}</span>',
+                    V.who(me, extra=f' <span class="dim">v '
+                          f'{V.esc(opp["name"].split()[-1])}</span>'),
                     V.num(pp["sv_points"], 0),
                     V.num(pp["exp_aces"], 1),
                     f'o{ace_line} <span class="{"good" if o_ace>.5 else "dim"}">'
                     f'{V.pct(o_ace,0)}</span> <span class="dim">'
-                    f'({_price(o_ace)})</span>',
+                    f'{V.fair(o_ace)}</span>',
                     V.num(pp["exp_dfs"], 1),
                     f'o{df_line} <span class="{"good" if o_df>.5 else "dim"}">'
                     f'{V.pct(o_df,0)}</span> <span class="dim">'
-                    f'({_price(o_df)})</span>',
-                    f'<span class="chip">{V.esc(r["surface"])}</span>'
-                    + (f' <span class="dim">ρ {r["cond"]["rho"]:.3f}</span>'
-                       if r["cond"] else ' <span class="dim">indoor</span>'),
+                    f'{V.fair(o_df)}</span>',
+                    # No reading is not the same as a roof: an outdoor event
+                    # whose weather lookup failed used to say "indoor" here,
+                    # under a header that now says otherwise.
+                    (f'<span class="dim">ρ {r["cond"]["rho"]:.3f}</span>'
+                     if r["cond"] else
+                     '<span class="dim">indoor</span>'
+                     if (venues.find(m["tourney"]) or {}).get("indoor") else
+                     '<span class="dim" title="no weather reading">—</span>'),
                 ])
-        body.append(f"<h2>{label}</h2>")
-        body.append(V.table(
-            ["Player", "Serve pts", "Aces", "Ace line", "DFs", "DF line",
-             "Conditions"],
-            trs, ["name", "num", "num", "", "num", "", ""]))
+        groups.append((head, trs))
+    body.append(V.grouped_table(
+        ["Player", "Serve pts", "Aces", "Ace line", "DFs", "DF line",
+         "Air"],
+        groups, ["", "num", "num", "", "num", "", ""]))
     body.append(
         '<p class="note">A counting prop is a rate times an opportunity, and '
         'the opportunity is the part most projections get wrong: a player who '
@@ -182,38 +234,43 @@ def page_props(rows, theme=None, event=None):
 
 def page_edges(rows, theme=None, event=None):
     """Fair prices across every market the point model supports."""
-    body = ['<p class="note">No keyless source of live odds exists, so this '
-            'page prices the markets rather than claiming an edge. Compare each '
-            'fair price to your book: you need a better price, by enough to '
-            'cover the gap between this model and the closing line reported on '
-            'the accuracy page.</p>']
+    body = [BETTOR_NOTE,
+            '<p class="note">No keyless source of live odds exists, so this '
+            'page prices the markets rather than claiming an edge. Every price '
+            'is American and break-even; hover for the decimal.</p>']
     rs = sorted(rows, key=lambda r: -max(r["p_a"], r["p_b"]))
-    trs = []
-    for r in rs:
-        a, b = _sides(r)
-        lines = TOTAL_LINES[r["best_of"]]
-        cells = []
-        for ln in lines:
-            ov = model.total_over(r["dist"], ln)
-            cells.append(f'{ln}: <span class="dim">o</span>{_price(ov)}'
-                         f' <span class="dim">u</span>{_price(1-ov)}')
-        cover = model.spread_cover_form(r["pa"], r["pb"], r["best_of"], -3.5,
-                                        sigma=P.FORM_SIGMA, nodes=P.FORM_NODES)
-        trs.append([
-            f'<span class="chip">{V.esc(r["match"]["tour"].upper())}</span> '
-            f'<span class="name">{V.esc(a)}</span>'
-            f'<br><span class="dim">{V.esc(b)}</span>',
-            f'{_price(r["p_a"])}<br><span class="dim">{_price(r["p_b"])}</span>',
-            "<br>".join(cells),
-            f'-3.5 {_price(cover)}',
-            f'{_price(r["p_straight_a"])}<br>'
-            f'<span class="dim">{_price(_straight_b(r))}</span>',
-        ])
-    body.append(V.table(
+    groups = []
+    for head, grp in event_groups(
+            rs, lambda r: (r["match"]["tourney"], r["match"]["tour"],
+                           r["surface"])):
+        trs = []
+        for r in grp:
+            m = r["match"]
+            lines = TOTAL_LINES[r["best_of"]]
+            cells = []
+            for ln in lines:
+                ov = model.total_over(r["dist"], ln)
+                cells.append(f'{ln}: <span class="dim">o</span> {V.fair(ov)}'
+                             f' <span class="dim">u</span> {V.fair(1-ov)}')
+            cover = model.spread_cover_form(r["pa"], r["pb"], r["best_of"],
+                                            -3.5, sigma=P.FORM_SIGMA,
+                                            nodes=P.FORM_NODES)
+            trs.append([
+                f'<span class="name">{V.esc(m["p1"]["name"])}</span>'
+                f'<br><span class="dim">{V.esc(m["p2"]["name"])}</span>',
+                f'{V.fair(r["p_a"])}<br><span class="dim">'
+                f'{V.fair(r["p_b"])}</span>',
+                "<br>".join(cells),
+                f'-3.5 {V.fair(cover)}',
+                f'{V.fair(r["p_straight_a"])}<br>'
+                f'<span class="dim">{V.fair(_straight_b(r))}</span>',
+            ])
+        groups.append((head, trs))
+    body.append(V.grouped_table(
         ["Match", "Winner", "Total games", "Games spread", "Straight sets"],
-        trs, ["name", "num", "", "num", "num"]))
+        groups, ["name", "num", "", "num", "num"]))
     return V.page("Fair prices",
-                  "Break-even decimal odds for every market the model supports",
+                  "Break-even American odds for every market the model supports",
                   "\n".join(body), "edges.html", theme=theme, event=event)
 
 
@@ -259,6 +316,39 @@ text-transform:uppercase;background:var(--chip);color:var(--dim)}
 .pill.on .dot{animation:pulse 2s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
 @media(prefers-reduced-motion:reduce){.pill.on .dot{animation:none}}
+/* Cards, grouped under their tournament. A table made the reader scroll
+   sideways on a phone to reach the probability, which is the one number the
+   page exists for. */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));
+gap:12px;margin:0 0 6px}
+.mc{background:var(--card);border:1px solid var(--line);border-radius:12px;
+padding:12px 14px 10px;min-width:0}
+.mc-top{display:flex;gap:10px;flex-wrap:wrap;font-size:11px;font-weight:600;
+text-transform:uppercase;letter-spacing:.05em;margin:0 0 8px}
+.mc-top .dim{font-weight:500}
+.mc-main{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 12px;
+align-items:start}
+.mc .sb{min-width:0;gap:4px}
+.mc .sb-r{height:34px}
+.sb-av{display:inline-flex;margin-right:6px}
+.mc-p{display:flex;flex-direction:column;gap:4px}
+.mc-p>div{height:34px;display:flex;align-items:center;justify-content:flex-end;
+gap:8px;font-variant-numeric:tabular-nums}
+.mc-p b{font-size:17px;font-weight:650;min-width:42px;text-align:right;
+color:var(--dim)}
+.mc-p b.hi{color:var(--fg)}
+.mc-p .px{font-size:12px;color:var(--dim);min-width:48px;text-align:right}
+.mc .bar{display:block;height:4px;margin:10px 0 0;min-width:0}
+.mc-foot{display:flex;justify-content:space-between;align-items:baseline;
+gap:6px 12px;flex-wrap:wrap;margin-top:8px;font-size:12px}
+/* What the game in play is worth: the server's chance if they hold and if
+   they are broken. Both are already in the table the page was sent. */
+.js-sw{display:flex;gap:4px 12px;flex-wrap:wrap;align-items:baseline}
+.sw-l{color:var(--dim)}
+.sw-o b{font-weight:650;font-variant-numeric:tabular-nums}
+.sw-o .px{color:var(--dim);font-size:11.5px;margin-left:3px}
+@media(max-width:420px){.cards{grid-template-columns:1fr}
+.mc .sb-n{max-width:130px}}
 """
 
 LIVE_JS = r"""
@@ -326,7 +416,7 @@ LIVE_JS = r"""
     + '<path d="M2.0 2.2Q5.1 6 2.0 9.8M10.0 2.2Q6.9 6 10.0 9.8" fill="none"'
     + ' stroke="#fbfbf5" stroke-width="1" stroke-linecap="round"/></svg>';
 
-  function scorebug(names, ls, tbs, servingRow, st, pts) {
+  function scorebug(names, ls, tbs, servingRow, st, pts, avs) {
     var n = Math.max(ls[0].length, ls[1].length), html = "";
     for (var r = 0; r < 2; r++) {
       var cells = "";
@@ -346,6 +436,9 @@ LIVE_JS = r"""
       var pt = pts && pts[r] != null && pts[r] !== ""
         ? '<span class="sb-p">' + esc(pts[r]) + "</span>" : "";
       html += '<div class="sb-r' + (ahead ? " up" : "") + '">'
+        // The face is markup built and escaped by render.avatar at build
+        // time; it is not re-derived from anything the scoreboard sends.
+        + (avs && avs[r] ? '<span class="sb-av">' + avs[r] + "</span>" : "")
         + '<span class="sb-n">' + esc(names[r]) + "</span>"
         + '<span class="sb-sv"'
         + (servingRow === r ? ' title="serving">' + BALL : ">")
@@ -400,7 +493,50 @@ LIVE_JS = r"""
     return h * w + (1 - h) * l;
   }
 
-  function paint(m, p, bug) {
+  // Rounded half-up, like render.american, so the page and the build never
+  // disagree by one about the same probability.
+  function american(p) {
+    if (p == null || p <= 0 || p >= 1) return "—";
+    return p > 0.5 ? "-" + Math.floor(100 * p / (1 - p) + 0.5)
+                   : "+" + Math.floor(100 * (1 - p) / p + 0.5);
+  }
+  function pc(p) { return (100 * p).toFixed(0) + "%"; }
+
+  // What the game in play is worth, to the player serving it: their chance of
+  // winning the match if they hold, and if they are broken. Both are entries
+  // the table already holds -- this is afterGame and outcome, the same two
+  // numbers withPoints mixes, shown instead of mixed. At 6-6 the game is the
+  // tiebreak, and the words say so.
+  function swing(m, st, srvA) {
+    if (srvA === null || st.done) return "";
+    var hold = outcome(m, afterGame(st, srvA, true));
+    var brk = outcome(m, afterGame(st, srvA, false));
+    if (hold == null || brk == null) return "";
+    if (!srvA) { hold = 1 - hold; brk = 1 - brk; }
+    var tb = st.ga === 6 && st.gb === 6;
+    var who = String(srvA ? m.p1 : m.p2).split(" ").pop();
+    var lead = '<span class="sw-l" title="' + esc(who) + "'s chance of "
+      + "winning the match once this " + (tb ? "tiebreak" : "game")
+      + ' is decided">' + esc(who)
+      + (tb ? " serves first in the tiebreak" : " to serve") + "</span>";
+    // A deciding tiebreak ends the match either way, so 100% and 0% are
+    // right and say nothing. Say what they mean instead.
+    if (hold >= 1 && brk <= 0) {
+      return lead + '<span class="sw-o"><b>winner takes the match</b></span>';
+    }
+    var cell = function (label, x) {
+      if (x >= 1) return '<span class="sw-o">' + label + " <b>takes the "
+        + "match</b></span>";
+      if (x <= 0) return '<span class="sw-o">' + label + " <b>loses the "
+        + "match</b></span>";
+      return '<span class="sw-o">' + label + " <b>" + pc(x) + "</b>"
+        + '<span class="px">' + american(x) + "</span></span>";
+    };
+    return lead + cell(tb ? "wins it" : "holds", hold)
+      + cell(tb ? "loses it" : "broken", brk);
+  }
+
+  function paint(m, p, bug, sw) {
     var row = document.getElementById("m-" + m.id);
     if (!row) return;
     if (bug != null) row.querySelector(".js-sb").innerHTML = bug;
@@ -408,6 +544,12 @@ LIVE_JS = r"""
     q(".js-p").textContent = p == null ? "—" : (100 * p).toFixed(0) + "%";
     q(".js-p2").textContent = p == null ? "—"
       : (100 * (1 - p)).toFixed(0) + "%";
+    q(".js-p").className = "js-p" + (p != null && p >= 0.5 ? " hi" : "");
+    q(".js-p2").className = "js-p2" + (p != null && p < 0.5 ? " hi" : "");
+    var o = q(".js-o"), o2 = q(".js-o2"), w = q(".js-sw");
+    if (o) o.textContent = p == null ? "—" : american(p);
+    if (o2) o2.textContent = p == null ? "—" : american(1 - p);
+    if (w && sw != null) w.innerHTML = sw;
     var bar = q(".js-bar > i");
     if (bar && p != null) bar.style.width = (100 * p).toFixed(0) + "%";
     var mv = q(".js-move");
@@ -485,7 +627,8 @@ LIVE_JS = r"""
            : (withPoints(m, st, srvA, m.points) !== null
               ? withPoints(m, st, srvA, m.points) : lookup(m, st, srvA)))
         : m.p_pre;
-      paint(m, p, scorebug([m.p1, m.p2], ls, m.tb, serving, st, m.points));
+      paint(m, p, scorebug([m.p1, m.p2], ls, m.tb, serving, st, m.points,
+                           m.avs), swing(m, st, srvA));
     });
   }
 
@@ -540,7 +683,7 @@ LIVE_JS = r"""
         : (fine !== null ? fine : lookup(m, st, servingIsA));
       paint(m, p, scorebug([m.p1, m.p2], ls, tbs,
                            servingIsA === null ? null : (servingIsA ? 0 : 1),
-                           st, pts));
+                           st, pts, m.avs), swing(m, st, servingIsA));
       seen++;
     });
     return seen;
@@ -604,6 +747,35 @@ LIVE_JS = r"""
 """
 
 
+def _live_card(m):
+    """One match, drawn like a broadcast graphic: faces and sets on the left,
+    each player's chance and fair price level with their row on the right,
+    and underneath, what the game being played is worth."""
+    p = m["p_pre"]
+    when = ""
+    if m.get("state") != "in" and m.get("start"):
+        when = ('<span class="dim">starts '
+                + V.clock(datetime.fromisoformat(m["start"])) + "</span>")
+    who = m.get("who") or [{"name": m["p1"]}, {"name": m["p2"]}]
+    rows = "".join(
+        f'<div class="sb-r"><span class="sb-av">{V.avatar(w, 30)}</span>'
+        f'<span class="sb-n">{V.esc(w.get("name", ""))}</span></div>'
+        for w in who)
+    return f"""<article class="mc" id="m-{V.esc(m["id"])}">
+<div class="mc-top"><span>{V.esc(m["round"])}</span>
+<span class="dim">best of {m["best_of"]}</span>{when}</div>
+<div class="mc-main"><div class="js-sb sb">{rows}</div>
+<div class="mc-p">
+<div><b class="js-p{" hi" if p >= .5 else ""}">{V.pct(p, 0)}</b><span class="js-o px">{V.american(p)}</span></div>
+<div><b class="js-p2{" hi" if p < .5 else ""}">{V.pct(1 - p, 0)}</b><span class="js-o2 px">{V.american(1 - p)}</span></div>
+</div></div>
+<span class="bar js-bar"><i style="width:{100 * p:.0f}%"></i></span>
+<div class="mc-foot"><span class="js-sw"></span>
+<span class="dim">pre-match {V.pct(p, 0)} · move <span class="js-move num dim">&mdash;</span></span></div>
+<noscript><p class="note">{V.esc(_score_text(m))}</p></noscript>
+</article>"""
+
+
 def page_live(live, theme=None, event=None):
     """Matches on court now, priced from where they stand.
 
@@ -619,20 +791,20 @@ def page_live(live, theme=None, event=None):
         return V.page("Live", "In-match win probability, from the same model",
                       "\n".join(body), "live.html", theme=theme, event=event)
 
-    rows = []
-    for m in sorted(live, key=lambda x: (x["tour"], x["tourney"])):
-        rows.append(f"""<tr id="m-{V.esc(m["id"])}">
-<td><div class="js-sb sb"><div class="sb-r"><span class="sb-n">{V.esc(m["p1"])}</span></div>
-<div class="sb-r"><span class="sb-n">{V.esc(m["p2"])}</span>
-<span class="dim">&nbsp;{V.esc(_score_text(m))}</span></div></div></td>
-<td class="num"><span class="js-p">{V.pct(m["p_pre"], 0)}</span><br>
-<span class="js-p2 dim">{V.pct(1 - m["p_pre"], 0)}</span></td>
-<td><span class="bar js-bar" style="width:52px"><i style="width:{100*m["p_pre"]:.0f}%"></i></span></td>
-<td class="num">{V.pct(m["p_pre"], 0)}</td>
-<td class="num"><span class="js-move num dim">&mdash;</span></td>
-<td><span class="chip">{V.esc(m["tour"].upper())}</span>
-<span class="chip">{V.esc(m["surface"])}</span>
-<span class="dim">{V.esc(m["round"])}</span></td></tr>""")
+    # On court first, then by start time.
+    live = sorted(live, key=lambda m: (m.get("state") != "in",
+                                       m.get("start") or ""))
+    for m in live:
+        # Drawn once, here, and shipped as markup: the scorebug is redrawn on
+        # every poll, and a second avatar renderer in JavaScript would be a
+        # second thing to keep in step with this one.
+        m["avs"] = [V.avatar(w, 30) for w in
+                    (m.get("who") or [{"name": m["p1"]}, {"name": m["p2"]}])]
+    sections = []
+    for head, ms in event_groups(
+            live, lambda m: (m["tourney"], m["tour"], m["surface"])):
+        sections.append(f'<h2 class="evt">{head}</h2><div class="cards">'
+                        + "".join(_live_card(m) for m in ms) + "</div>")
 
     payload = {
         "built": datetime.now(timezone.utc).isoformat(),
@@ -642,26 +814,24 @@ def page_live(live, theme=None, event=None):
         "ptStates": [f"{a}-{b}" for a, b in model.point_states()],
         "matches": live,
     }
+    # The payload now carries markup, so a "</" anywhere in it -- a name, a
+    # URL -- must not be able to close the script element it sits in.
+    blob = json.dumps(payload, separators=(",", ":")).replace("</", "<\\/")
     body = [
         '<div class="livebar"><span class="pill" id="live-pill">'
         '<span class="dot"></span>connecting</span>'
         '<span id="live-clock">checking the scoreboard…</span></div>',
-        '<div class="scroll"><table><thead><tr>'
-        '<th>Match</th><th class="num">Win %</th><th></th>'
-        '<th class="num">Pre-match</th><th class="num">Move</th>'
-        '<th>Context</th></tr></thead><tbody>'
-        + "".join(rows) + "</tbody></table></div>",
+        "".join(sections),
         '<p class="note">A live probability here is the same propagation that '
         'produces the pre-match number, entered at the current score instead '
         'of at the first point — at 0-0 it returns exactly the figure on '
-        'the matches page. The resolution is a game, not a point: the '
-        'scoreboard moves when a game ends, so that is as fine as the state '
-        'can honestly be. Who is serving matters more than it looks — at '
-        '5-4 in a deciding set the same scoreline is a 93% win for the server '
-        'and 66% for the receiver — so when the scoreboard does not say, '
-        'the two are averaged and the number is correspondingly blunter.</p>',
-        '<script>window.__LIVE__=' + json.dumps(payload, separators=(",", ":"))
-        + ';</script>',
+        'the matches page. Beside each chance is its fair American price: '
+        'break-even, not a recommendation. Under each match, when the server is '
+        'known, is what the game in play is worth — the server\'s chance of '
+        'winning the match if they hold, and if they are broken. The '
+        'resolution is a game, not a point, because no free feed publishes '
+        'the score inside a game.</p>',
+        '<script>window.__LIVE__=' + blob + ';</script>',
         f"<script>{LIVE_JS}</script>",
     ]
     return V.page("Live", f"{len(live)} matches on court or about to be",

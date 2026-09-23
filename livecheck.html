@@ -155,7 +155,8 @@ function crawl(node, path, hits, depth) {
 // Everything the page would need to read, gathered without assuming where it
 // lives -- the point is to find out where it lives.
 function inspect(doc, tour) {
-  var live = [], keys = {competition: {}, situation: {}, competitor: {}};
+  var live = [], keys = {competition: {}, situation: {}, competitor: {},
+                        athlete: {}};
   var counts = {pre: 0, "in": 0, post: 0, other: 0};
   (doc.events || []).forEach(function (ev) {
     (ev.groupings || []).forEach(function (g) {
@@ -176,6 +177,11 @@ function inspect(doc, tour) {
         var comps = c.competitors || [];
         comps.forEach(function (x) {
           Object.keys(x).forEach(function (k) { keys.competitor[k] = 1; });
+          // What the live page's pictures depend on: whether ESPN sends a
+          // headshot and a flag, or the page is relying on a guessed path.
+          Object.keys(x.athlete || {}).forEach(function (k) {
+            keys.athlete[k] = 1;
+          });
         });
         var hits = [];
         crawl(c, "competition", hits, 0);

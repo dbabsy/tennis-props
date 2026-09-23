@@ -458,6 +458,7 @@ def test_pipeline():
     print("pipeline")
     import build
     import project as P
+    import render as V
 
     obs = _synthetic_obs()
     rt = R.Ratings("atp", obs, date(2026, 1, 1), k_serve=50, k_return=50)
@@ -501,6 +502,22 @@ def test_pipeline():
               for v in live))
 
     theme, event = build.slate_theme(rows)
+    mhtml = build.page_matches(rows, theme, event)
+    check("the matches page has a header per tournament",
+          mhtml.count('class="evh"') == 2, str(mhtml.count('class="evh"')))
+    check("and names each one", "Wimbledon" in mhtml and "Cincinnati" in mhtml)
+    check("fair prices are American",
+          all(V.american(r["p_a"]) in mhtml for r in rows))
+    check("the bettor's caveats come before the numbers",
+          0 <= mhtml.find("Before betting") < mhtml.find("<table"))
+    lhtml = build.page_live(live, theme, event)
+    check("the live page groups its cards under their tournament",
+          lhtml.count('class="evt"') == 2 and lhtml.count('class="mc"') == 2)
+    # The payload now carries markup, so the one thing it must never do is
+    # close the script element it is shipped in.
+    hostile = dict(live[0], id="h", p1="</script><b>x")
+    check("a name cannot close the script element the live payload sits in",
+          "</script><b>x" not in build.page_live([hostile], theme, event))
     check("live.html renders with matches",
           build.page_live(live, "usopen", "US Open").strip().endswith("</html>"))
     check("live.html renders with nothing on court",
@@ -544,9 +561,16 @@ LIVE_JS
 function snap() {
   const out = {rows: {}, pill: "", clock: ""};
   for (const id of Object.keys(PAINTED)) {
+    const cellOf = function (s, f) {
+      return PAINTED[id][s] ? PAINTED[id][s][f] : null;
+    };
     out.rows[id] = {
-      p: PAINTED[id][".js-p"] ? PAINTED[id][".js-p"].textContent : null,
-      sb: PAINTED[id][".js-sb"] ? PAINTED[id][".js-sb"].innerHTML : null
+      p: cellOf(".js-p", "textContent"),
+      sb: cellOf(".js-sb", "innerHTML"),
+      o: cellOf(".js-o", "textContent"),
+      o2: cellOf(".js-o2", "textContent"),
+      sw: cellOf(".js-sw", "innerHTML"),
+      hi: cellOf(".js-p", "className")
     };
   }
   out.pill = CHROME["live-pill"] ? CHROME["live-pill"].innerHTML : "";
@@ -626,7 +650,8 @@ def test_live_js():
              P.project(rt, res, match("m4", 3, "Cincinnati")),
              P.project(rt, res, match("m5", 3, "Cincinnati")),
              P.project(rt, res, match("m6", 3, "Cincinnati")),
-             P.project(rt, res, match("m7", 3, "Cincinnati"))]
+             P.project(rt, res, match("m7", 3, "Cincinnati")),
+             P.project(rt, res, match("m8", 3, "Cincinnati"))]
     live = [P.live_view(r) for r in rows_]
 
     board = {"events": [{"groupings": [{"competitions": [
@@ -647,6 +672,9 @@ def test_live_js():
         # becomes 5-4, which is the scoreline where the server is worth the
         # most -- and by then ESPN has stopped saying who it is.
         _espn_stub("m7", ["A", "B"], [[6, 3, 4], [3, 6, 4]], possession_id=0),
+        # One set all and 6-6 in the decider: whoever wins the tiebreak wins
+        # the match, so the swing is 100% or 0% and must say so in words.
+        _espn_stub("m8", ["A", "B"], [[6, 3, 6], [3, 6, 6]], possession_id=1),
         # Over, and the first set went to a tiebreak.
         _espn_stub("m4", ["A", "B"], [[7, 6], [6, 3]],
                    tiebreaks=[[5, None], [7, None]]),
@@ -767,6 +795,56 @@ def test_live_js():
           f' vs average {pct((hold + recv) / 2)}')
     check("which is the whole point -- serving here is worth a great deal",
           hold - recv > 0.15, f"{hold:.3f} serving vs {recv:.3f} receiving")
+
+    # The fair price the page prints must be the one the build would print
+    # for the same probability, or a reader comparing two pages sees two
+    # prices. "The same probability" is the one the page actually holds --
+    # decoded from two base-36 characters, so quantised to 1/1295 -- and near
+    # -930 one step of that moves the American price by four. Comparing
+    # against the unquantised model would be testing the encoding, not the
+    # arithmetic.
+    import render as V
+
+    def shipped(k, sa, sb, ga, gb, srv_a):
+        v, bo = live[k], live[k]["best_of"]
+        games, sets_ = model.game_states(), model.set_states(bo)
+        i = ((sets_.index((sa, sb)) * len(games) + games.index((ga, gb))) * 2
+             + (0 if srv_a else 1))
+        return int(v["table"][2 * i:2 * i + 2], 36) / 1295
+
+    first = got["rows"]["m-m1"]
+    p1 = shipped(0, 1, 0, 3, 1, True)
+    check("the live fair price is the American price of the live chance",
+          first["o"] == V.american(p1) and first["o2"] == V.american(1 - p1),
+          f'{first["o"]} / {first["o2"]} vs {V.american(p1)} / '
+          f'{V.american(1 - p1)}')
+    check("the leader's chance is the emphasised one",
+          ("hi" in (first["hi"] or "")) == (p1 >= 0.5), first["hi"])
+
+    # What the game in play is worth. A serves at 4-4 in the decider: holding
+    # makes it 5-4 with B to serve, being broken makes it 4-5 with B to serve.
+    # Both are the model's numbers, from the table, not a second calculation.
+    sw = got["rows"]["m-m7"]["sw"] or ""
+    h_ = want(rows_[6], 1, 1, 5, 4, False)
+    b_ = want(rows_[6], 1, 1, 4, 5, False)
+    check("the next game is priced for a hold and for a break",
+          f"<b>{pct(h_)}</b>" in sw and f"<b>{pct(b_)}</b>" in sw,
+          f"want hold {pct(h_)} break {pct(b_)}")
+    hs, bs = shipped(6, 1, 1, 5, 4, False), shipped(6, 1, 1, 4, 5, False)
+    check("and each outcome carries its fair price",
+          f'<span class="px">{V.american(hs)}</span>' in sw
+          and f'<span class="px">{V.american(bs)}</span>' in sw,
+          f"want {V.american(hs)} and {V.american(bs)}")
+    check("holding is worth more than being broken",
+          h_ > b_, f"{h_:.3f} vs {b_:.3f}")
+    check("the server is named, so the swing says whose it is",
+          "A to serve" in sw, sw[:80])
+    decider = got["rows"]["m-m8"]["sw"] or ""
+    check("a deciding tiebreak says the winner takes the match",
+          "winner takes the match" in decider and "100%" not in decider,
+          decider[:120])
+    check("an unknown server gets no swing rather than a guessed one",
+          not (got["rows"]["m-m3"]["sw"] or ""))
     check("a tiebreak margin is raised beside the set it belongs to",
           '<span class="sb-tb">5</span>' in rows["m-m4"]["sb"]
           and '<span class="sb-tb">7</span>' in rows["m-m4"]["sb"])
@@ -823,6 +901,82 @@ def test_render():
         text = probe.read_text(encoding="utf-8")
         check("the live feed check is self-contained",
               "src=" not in text and text.count("<script") == 1)
+
+
+def test_layout():
+    """Tournaments, faces and prices: what a reader sees first, and so what
+    can look entirely right while being wrong."""
+    print("layout")
+    import build
+    import fetch
+    import render as V
+
+    check("an even chance is +100", V.american(0.5) == "+100")
+    check("a favourite is negative, an underdog positive, and they mirror",
+          V.american(0.6) == "-150" and V.american(0.4) == "+150")
+    check("a certainty has no price rather than an infinite one",
+          V.american(1.0) == "—" and V.american(0.0) == "—"
+          and V.american(None) == "—")
+    check("the decimal is on hover for anyone who prices that way",
+          'title="decimal 1.67"' in V.fair(0.6))
+
+    items = [("US Open", "atp", "Hard"), ("Seoul", "wta", "Hard"),
+             ("US Open", "wta", "Hard"), ("US Open", "atp", "Hard"),
+             ("Paris Masters", "atp", "Hard")]
+    groups = build.event_groups(items, lambda x: x)
+    heads = [h for h, _ in groups]
+    check("the busiest tournament comes first",
+          "US Open" in heads[0] and "US Open" in heads[1])
+    check("men and women at one event are separate groups",
+          len(groups) == 4, str(len(groups)))
+    check("every match lands in exactly one group",
+          sum(len(g) for _, g in groups) == len(items))
+    check("a header counts its own matches",
+          "2 matches<" in heads[0] and "1 match<" in heads[1])
+    check("an event under a roof says so",
+          any("Paris" in h and ">indoor<" in h for h in heads)
+          and not any("Seoul" in h and ">indoor<" in h for h in heads))
+
+    a = V.avatar({"name": "Coco Gauff", "aid": "12345", "country": "USA"})
+    check("a player with an ESPN id gets that id's headshot",
+          V.HEADSHOT.format("12345") in a)
+    check("with initials underneath for when it does not load",
+          "<b>CG</b>" in a and 'onerror="this.remove()"' in a)
+    check("and without telling ESPN which page asked",
+          'referrerpolicy="no-referrer"' in a)
+    check("an id that is not a number is not guessed at",
+          "<img" not in V.avatar({"name": "X Y", "aid": "x1"}))
+    own = V.avatar({"name": "X Y", "aid": "1", "photo": "https://h/1.png"})
+    check("the feed's own headshot link wins over the guessed path",
+          "https://h/1.png" in own and V.HEADSHOT.format("1") not in own)
+    check("a name is escaped in a picture as it is everywhere else",
+          "<script>" not in V.avatar({"name": "<script>x"}))
+    saved = V.PHOTOS
+    V.PHOTOS = False
+    try:
+        off = V.avatar({"name": "Coco Gauff", "aid": "12345"})
+    finally:
+        V.PHOTOS = saved
+    check("switching photographs off keeps the initials and drops the image",
+          "<img" not in off and "<b>CG</b>" in off)
+
+    comp = {"id": "9", "status": {"type": {"state": "pre"}},
+            "date": "2026-09-09T15:00Z", "competitors": [
+                {"id": "101", "linescores": [], "athlete": {
+                    "id": "555", "displayName": "Coco Gauff",
+                    "headshot": {"href": "https://x/h.png"},
+                    "flag": {"href": "https://x/usa.png", "alt": "USA"}}},
+                {"id": "102", "linescores": [],
+                 "athlete": {"displayName": "Mirra Andreeva"}}]}
+    mm = fetch._espn_match(comp, "US Open", "w", {"id": "e"})
+    check("the athlete's id, headshot and flag are read from the feed",
+          mm and mm["p1"]["aid"] == "555"
+          and mm["p1"]["photo"] == "https://x/h.png"
+          and mm["p1"]["flag"] == "https://x/usa.png"
+          and mm["p1"]["country"] == "USA")
+    check("and each is absent, not invented, when the feed leaves it out",
+          mm and mm["p2"]["photo"] is None and mm["p2"]["flag"] is None
+          and mm["p2"]["aid"] == "102")
 
 
 def test_livecheck_js():
@@ -940,7 +1094,7 @@ if __name__ == "__main__":
     for fn in (test_distributions, test_serve_rotation, test_live,
                test_tiebreak_entry, test_markov,
                test_monotonicity, test_ratings, test_resolver, test_ledger,
-               test_pipeline, test_live_js, test_render,
+               test_pipeline, test_live_js, test_render, test_layout,
                test_livecheck_js):
         fn()
     print()

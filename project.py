@@ -290,6 +290,11 @@ def wants_live(m, now=None):
     return timedelta(0) <= (start - now) <= timedelta(hours=LIVE_HORIZON_HOURS)
 
 
+def person(side):
+    """What the page needs to draw a player, and nothing it does not."""
+    return {k: side.get(k) for k in ("name", "aid", "photo", "flag", "country")}
+
+
 def live_view(r):
     """The lookup table a live match needs, and where it currently stands.
 
@@ -307,6 +312,8 @@ def live_view(r):
     return {
         "id": m["id"], "tour": m["tour"], "best_of": r["best_of"],
         "p1": m["p1"]["name"], "p2": m["p2"]["name"],
+        "who": [person(m["p1"]), person(m["p2"])],
+        "start": m["start"].isoformat() if m.get("start") else None,
         "tourney": m["tourney"], "round": m["round"],
         "surface": r["surface"],
         "p_pre": r["p_a"],

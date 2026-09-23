@@ -192,8 +192,19 @@ def _espn_match(c, tname, sex, ev):
     side = []
     for x in comps:
         ath = x.get("athlete") or {}
+        # For the page's pictures. Each may be missing: the feed's shape for
+        # these was never observed, only its keys, so every one degrades to
+        # None and the page falls back to initials.
+        flag = ath.get("flag") if isinstance(ath.get("flag"), dict) else {}
+        shot = ath.get("headshot")
+        if isinstance(shot, dict):
+            shot = shot.get("href")
         side.append({
             "id": x.get("id"),
+            "aid": ath.get("id") or x.get("id"),
+            "photo": shot if isinstance(shot, str) and shot else None,
+            "flag": flag.get("href") or None,
+            "country": flag.get("alt") or None,
             "name": ath.get("displayName") or x.get("name") or "",
             "short": ath.get("shortName") or "",
             "won": bool(x.get("winner")),

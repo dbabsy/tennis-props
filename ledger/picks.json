@@ -7196,6 +7196,25 @@
    "tour": "wta",
    "tourney": "Korea Open"
   },
+  "wta:184055": {
+   "best_of": 3,
+   "exp_aces_p1": 1.9080654111917101,
+   "exp_aces_p2": 2.847824444389506,
+   "exp_games": 22.96108111180291,
+   "id": "184055",
+   "p1": "Kimberly Birrell",
+   "p2": "Katie Volynets",
+   "p_over": 0.4583964746816193,
+   "p_p1": 0.5580396307784576,
+   "recorded": "2026-09-24T04:56:07.164583+00:00",
+   "result": null,
+   "round": "Quarterfinal",
+   "start": "2026-09-25T04:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 22.5,
+   "tour": "wta",
+   "tourney": "Korea Open"
+  },
   "wta:184077": {
    "best_of": 3,
    "exp_aces_p1": 3.152877171236621,

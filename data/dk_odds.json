@@ -2,62 +2,44 @@
  "events": [
   "tennis_wta_singapore_open"
  ],
- "fetched_at": "2026-09-24T04:56:06Z",
+ "fetched_at": "2026-09-24T17:14:18Z",
  "matches": [
   {
-   "a": "Talia Gibson",
-   "at": "2026-09-24T04:55:40Z",
-   "b": "Vikt\u00f3ria Morvayov\u00e1",
-   "event": "WTA Singapore Open",
-   "pa": -1140,
-   "pb": 680,
-   "start": "2026-09-24T05:00:00Z"
-  },
-  {
-   "a": "Joanna Garland",
-   "at": "2026-09-24T04:55:40Z",
-   "b": "Xinyu Wang",
-   "event": "WTA Singapore Open",
-   "pa": 260,
-   "pb": -336,
-   "start": "2026-09-24T06:30:00Z"
-  },
-  {
-   "a": "Alexandra Eala",
-   "at": "2026-09-24T04:55:40Z",
-   "b": "Tatiana Prozorova",
-   "event": "WTA Singapore Open",
-   "pa": -466,
-   "pb": 345,
-   "start": "2026-09-24T10:30:00Z"
-  },
-  {
-   "a": "Maria Sakkari",
-   "at": "2026-09-24T04:55:40Z",
-   "b": "Nao Hibino",
-   "event": "WTA Singapore Open",
-   "pa": -560,
-   "pb": 402,
-   "start": "2026-09-24T12:00:00Z"
-  },
-  {
-   "a": "Leylah Fernandez",
-   "at": "2026-09-24T04:55:40Z",
-   "b": "Mirra Andreeva",
-   "event": "WTA Singapore Open",
-   "pa": 277,
-   "pb": -361,
-   "start": "2026-09-25T03:00:00Z"
-  },
-  {
    "a": "Elise Mertens",
-   "at": "2026-09-24T04:55:40Z",
+   "at": "2026-09-24T17:13:26Z",
    "b": "Maja Chwalinska",
    "event": "WTA Singapore Open",
    "pa": -219,
    "pb": 176,
-   "start": "2026-09-25T04:00:00Z"
+   "start": "2026-09-25T05:00:00Z"
+  },
+  {
+   "a": "Tatiana Prozorova",
+   "at": "2026-09-24T17:13:26Z",
+   "b": "Xinyu Wang",
+   "event": "WTA Singapore Open",
+   "pa": 148,
+   "pb": -182,
+   "start": "2026-09-25T06:30:00Z"
+  },
+  {
+   "a": "Leylah Fernandez",
+   "at": "2026-09-24T17:13:26Z",
+   "b": "Mirra Andreeva",
+   "event": "WTA Singapore Open",
+   "pa": 277,
+   "pb": -361,
+   "start": "2026-09-25T10:30:00Z"
+  },
+  {
+   "a": "Maria Sakkari",
+   "at": "2026-09-24T17:13:26Z",
+   "b": "Talia Gibson",
+   "event": "WTA Singapore Open",
+   "pa": -270,
+   "pb": 214,
+   "start": "2026-09-25T12:00:00Z"
   }
  ],
- "remaining": 495
+ "remaining": 494
 }

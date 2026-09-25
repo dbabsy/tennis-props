@@ -7426,6 +7426,25 @@
    "tour": "wta",
    "tourney": "SP Open"
   },
+  "wta:183902": {
+   "best_of": 3,
+   "exp_aces_p1": 1.8487687250000013,
+   "exp_aces_p2": 2.2181690047522697,
+   "exp_games": 22.55565975317461,
+   "id": "183902",
+   "p1": "Oksana Selekhmeteva",
+   "p2": "Julia Grabher",
+   "p_over": 0.42997608577983704,
+   "p_p1": 0.6803336634680879,
+   "recorded": "2026-09-25T21:20:21.014923+00:00",
+   "result": null,
+   "round": "Semifinal",
+   "start": "2026-09-26T15:30:00+00:00",
+   "surface": "Hard",
+   "total_line": 22.5,
+   "tour": "wta",
+   "tourney": "Delta Motors Tolentino Open"
+  },
   "wta:184033": {
    "best_of": 3,
    "exp_aces_p1": 1.3288445329796792,

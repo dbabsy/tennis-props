@@ -2,44 +2,17 @@
  "events": [
   "tennis_wta_singapore_open"
  ],
- "fetched_at": "2026-09-25T05:20:28Z",
+ "fetched_at": "2026-09-25T17:20:28Z",
  "matches": [
   {
-   "a": "Elise Mertens",
-   "at": "2026-09-25T05:19:36Z",
+   "a": "Leylah Fernandez",
+   "at": "2026-09-25T17:19:31Z",
    "b": "Maja Chwalinska",
    "event": "WTA Singapore Open",
-   "pa": -161,
-   "pb": 127,
-   "start": "2026-09-25T05:03:48Z"
-  },
-  {
-   "a": "Tatiana Prozorova",
-   "at": "2026-09-25T05:19:36Z",
-   "b": "Xinyu Wang",
-   "event": "WTA Singapore Open",
-   "pa": 186,
-   "pb": -232,
-   "start": "2026-09-25T06:30:00Z"
-  },
-  {
-   "a": "Leylah Fernandez",
-   "at": "2026-09-25T05:19:36Z",
-   "b": "Mirra Andreeva",
-   "event": "WTA Singapore Open",
-   "pa": 277,
-   "pb": -361,
-   "start": "2026-09-25T10:30:00Z"
-  },
-  {
-   "a": "Maria Sakkari",
-   "at": "2026-09-25T05:19:36Z",
-   "b": "Talia Gibson",
-   "event": "WTA Singapore Open",
-   "pa": -241,
-   "pb": 192,
-   "start": "2026-09-25T12:00:00Z"
+   "pa": -160,
+   "pb": 130,
+   "start": "2026-09-26T10:00:00Z"
   }
  ],
- "remaining": 493
+ "remaining": 492
 }

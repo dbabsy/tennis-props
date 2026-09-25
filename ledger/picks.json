@@ -2886,7 +2886,13 @@
    "p_over": 0.3399094614731102,
    "p_p1": 0.8562040841722212,
    "recorded": "2026-09-24T09:20:28.770612+00:00",
-   "result": null,
+   "result": {
+    "clean": false,
+    "detail": "Final",
+    "games": 18.0,
+    "p1_won": true,
+    "score": "6.0-3.0 6.0-3.0"
+   },
    "round": "Round 2",
    "start": "2026-09-25T08:30:00+00:00",
    "surface": "Hard",
@@ -8040,6 +8046,25 @@
    "tour": "wta",
    "tourney": "Singapore Tennis Open presented by BNP Paribas"
   },
+  "wta:184102": {
+   "best_of": 3,
+   "exp_aces_p1": 2.7095154000120805,
+   "exp_aces_p2": 2.601493880922932,
+   "exp_games": 23.043538917829874,
+   "id": "184102",
+   "p1": "Maja Chwalinska",
+   "p2": "Leylah Fernandez",
+   "p_over": 0.45456097580105587,
+   "p_p1": 0.3676788969087634,
+   "recorded": "2026-09-25T13:20:30.657071+00:00",
+   "result": null,
+   "round": "Semifinal",
+   "start": "2026-09-26T04:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 22.5,
+   "tour": "wta",
+   "tourney": "Singapore Tennis Open presented by BNP Paribas"
+  },
   "wta:184103": {
    "best_of": 3,
    "dk": {
@@ -8113,7 +8138,13 @@
    "p_over": 0.426176214603489,
    "p_p1": 0.2909996378244969,
    "recorded": "2026-09-23T15:20:31.690077+00:00",
-   "result": null,
+   "result": {
+    "clean": true,
+    "detail": "Final",
+    "games": 20.0,
+    "p1_won": true,
+    "score": "6.0-2.0 7.0-5.0"
+   },
    "round": "Quarterfinal",
    "start": "2026-09-25T04:00:00+00:00",
    "surface": "Hard",

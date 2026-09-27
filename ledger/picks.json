@@ -2935,7 +2935,13 @@
    "p_over": 0.30490593043371633,
    "p_p1": 0.8811249139285126,
    "recorded": "2026-09-25T15:20:26.376538+00:00",
-   "result": null,
+   "result": {
+    "clean": false,
+    "detail": "Final",
+    "games": 33.0,
+    "p1_won": true,
+    "score": "6.0-7.0 7.0-6.0 6.0-1.0"
+   },
    "round": "Quarterfinal",
    "start": "2026-09-27T04:00:00+00:00",
    "surface": "Hard",
@@ -2982,6 +2988,25 @@
    "result": null,
    "round": "Quarterfinal",
    "start": "2026-09-27T04:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 38.5,
+   "tour": "atp",
+   "tourney": "AITO Hangzhou Open"
+  },
+  "atp:183374": {
+   "best_of": 5,
+   "exp_aces_p1": 13.2515611684897,
+   "exp_aces_p2": 12.24787277522305,
+   "exp_games": 38.17501363480536,
+   "id": "183374",
+   "p1": "Andrey Rublev",
+   "p2": "Kyrian Jacquet",
+   "p_over": 0.46435701377533284,
+   "p_p1": 0.7444723594952044,
+   "recorded": "2026-09-27T11:20:23.999252+00:00",
+   "result": null,
+   "round": "Semifinal",
+   "start": "2026-09-28T09:30:00+00:00",
    "surface": "Hard",
    "total_line": 38.5,
    "tour": "atp",
@@ -3392,7 +3417,13 @@
    "p_over": 0.4708499962108132,
    "p_p1": 0.6681543114208264,
    "recorded": "2026-09-25T09:20:28.202498+00:00",
-   "result": null,
+   "result": {
+    "clean": false,
+    "detail": "Final",
+    "games": 30.0,
+    "p1_won": true,
+    "score": "6.0-7.0 6.0-3.0 6.0-2.0"
+   },
    "round": "Quarterfinal",
    "start": "2026-09-27T04:00:00+00:00",
    "surface": "Hard",
@@ -8466,7 +8497,13 @@
    "p_over": 0.48127060006815875,
    "p_p1": 0.4136288785772673,
    "recorded": "2026-09-26T13:20:24.728769+00:00",
-   "result": null,
+   "result": {
+    "clean": true,
+    "detail": "Final",
+    "games": 18.0,
+    "p1_won": false,
+    "score": "5.0-7.0 0.0-6.0"
+   },
    "round": "Final",
    "start": "2026-09-27T04:00:00+00:00",
    "surface": "Hard",
@@ -8523,6 +8560,25 @@
    "total_line": 22.5,
    "tour": "wta",
    "tourney": "Singapore Tennis Open presented by BNP Paribas"
+  },
+  "wta:186229": {
+   "best_of": 3,
+   "exp_aces_p1": 4.463219370689147,
+   "exp_aces_p2": 3.7643716385368875,
+   "exp_games": 23.206153930460523,
+   "id": "186229",
+   "p1": "Jodie Burrage",
+   "p2": "Rebecca Sramkova",
+   "p_over": 0.46845653253748837,
+   "p_p1": 0.4530012138566514,
+   "recorded": "2026-09-27T11:20:23.999252+00:00",
+   "result": null,
+   "round": "Qualifying 1st Round",
+   "start": "2026-09-28T07:30:00+00:00",
+   "surface": "Hard",
+   "total_line": 22.5,
+   "tour": "wta",
+   "tourney": "China Open"
   }
  }
 }

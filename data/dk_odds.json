@@ -1,18 +1,6 @@
 {
- "events": [
-  "tennis_wta_singapore_open"
- ],
- "fetched_at": "2026-09-27T05:20:29Z",
- "matches": [
-  {
-   "a": "Leylah Fernandez",
-   "at": "2026-09-27T05:18:31Z",
-   "b": "Talia Gibson",
-   "event": "WTA Singapore Open",
-   "pa": -198,
-   "pb": 160,
-   "start": "2026-09-27T09:00:00Z"
-  }
- ],
+ "events": [],
+ "fetched_at": "2026-09-27T17:20:23Z",
+ "matches": [],
  "remaining": 489
 }

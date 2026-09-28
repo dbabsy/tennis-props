@@ -4144,6 +4144,25 @@
    "tour": "atp",
    "tourney": "Kinoshita Group Japan Open Tennis Championships"
   },
+  "atp:186241": {
+   "best_of": 5,
+   "exp_aces_p1": 12.189481157856882,
+   "exp_aces_p2": 11.768463693990133,
+   "exp_games": 39.139146928704584,
+   "id": "186241",
+   "p1": "Aleksandar Kovacevic",
+   "p2": "Jaume Munar",
+   "p_over": 0.4951743188237946,
+   "p_p1": 0.30173110694657235,
+   "recorded": "2026-09-28T09:20:28.189517+00:00",
+   "result": null,
+   "round": "Qualifying Final",
+   "start": "2026-09-29T03:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 38.5,
+   "tour": "atp",
+   "tourney": "Kinoshita Group Japan Open Tennis Championships"
+  },
   "atp:186242": {
    "best_of": 5,
    "exp_aces_p1": 7.059376246088496,
@@ -4224,7 +4243,13 @@
    "p_over": 0.4905471146618657,
    "p_p1": 0.412001991532047,
    "recorded": "2026-09-27T13:20:24.081291+00:00",
-   "result": null,
+   "result": {
+    "clean": false,
+    "detail": "Final",
+    "games": 29.0,
+    "p1_won": false,
+    "score": "7.0-5.0 1.0-6.0 4.0-6.0"
+   },
    "round": "Qualifying 1st Round",
    "start": "2026-09-28T03:30:00+00:00",
    "surface": "Hard",
@@ -4243,7 +4268,13 @@
    "p_over": 0.45442655925053116,
    "p_p1": 0.6720622580748162,
    "recorded": "2026-09-27T13:20:24.081291+00:00",
-   "result": null,
+   "result": {
+    "clean": false,
+    "detail": "Final",
+    "games": 18.0,
+    "p1_won": true,
+    "score": "6.0-2.0 6.0-4.0"
+   },
    "round": "Qualifying 1st Round",
    "start": "2026-09-28T06:30:00+00:00",
    "surface": "Hard",

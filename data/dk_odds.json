@@ -1,6 +1,99 @@
 {
- "events": [],
- "fetched_at": "2026-09-28T05:20:30Z",
- "matches": [],
- "remaining": 489
+ "events": [
+  "tennis_wta_china_open"
+ ],
+ "fetched_at": "2026-09-28T17:20:26Z",
+ "matches": [
+  {
+   "a": "Alina Korneeva",
+   "at": "2026-09-28T17:19:31Z",
+   "b": "Viktorija Golubic",
+   "event": "WTA China Open",
+   "pa": -199,
+   "pb": 161,
+   "start": "2026-09-30T02:00:00Z"
+  },
+  {
+   "a": "Anhelina Kalinina",
+   "at": "2026-09-28T17:19:31Z",
+   "b": "Janice Tjen",
+   "event": "WTA China Open",
+   "pa": -104,
+   "pb": -117,
+   "start": "2026-09-30T02:00:00Z"
+  },
+  {
+   "a": "Anna Bond\u00e1r",
+   "at": "2026-09-28T17:19:31Z",
+   "b": "Renata Zarazua",
+   "event": "WTA China Open",
+   "pa": -227,
+   "pb": 182,
+   "start": "2026-09-30T02:00:00Z"
+  },
+  {
+   "a": "Darja Vidmanova",
+   "at": "2026-09-28T17:19:31Z",
+   "b": "Maria Timofeeva",
+   "event": "WTA China Open",
+   "pa": 131,
+   "pb": -160,
+   "start": "2026-09-30T02:00:00Z"
+  },
+  {
+   "a": "Elena Gabriela Ruse",
+   "at": "2026-09-28T17:19:31Z",
+   "b": "Lilli Tagger",
+   "event": "WTA China Open",
+   "pa": -108,
+   "pb": -113,
+   "start": "2026-09-30T02:00:00Z"
+  },
+  {
+   "a": "Magdalena Frech",
+   "at": "2026-09-28T17:19:31Z",
+   "b": "Petra Marcinko",
+   "event": "WTA China Open",
+   "pa": -219,
+   "pb": 176,
+   "start": "2026-09-30T02:00:00Z"
+  },
+  {
+   "a": "Maya Joint",
+   "at": "2026-09-28T17:19:31Z",
+   "b": "Sinja Kraus",
+   "event": "WTA China Open",
+   "pa": -332,
+   "pb": 258,
+   "start": "2026-09-30T02:00:00Z"
+  },
+  {
+   "a": "Mayar Sherif",
+   "at": "2026-09-28T17:19:31Z",
+   "b": "Polina Kudermetova",
+   "event": "WTA China Open",
+   "pa": 156,
+   "pb": -192,
+   "start": "2026-09-30T02:00:00Z"
+  },
+  {
+   "a": "Oleksandra Oliynykova",
+   "at": "2026-09-28T17:19:31Z",
+   "b": "Yue Yuan",
+   "event": "WTA China Open",
+   "pa": 150,
+   "pb": -185,
+   "start": "2026-09-30T02:00:00Z"
+  },
+  {
+   "a": "Tamara Korpatsch",
+   "at": "2026-09-28T17:19:31Z",
+   "b": "Taylah Preston",
+   "event": "WTA China Open",
+   "pa": 197,
+   "pb": -247,
+   "start": "2026-09-30T02:00:00Z"
+  }
+ ],
+ "remaining": 488
 }

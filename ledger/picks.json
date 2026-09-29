@@ -4683,7 +4683,13 @@
    "p_over": 0.5075770420070678,
    "p_p1": 0.5534117432965275,
    "recorded": "2026-09-28T11:20:27.398700+00:00",
-   "result": null,
+   "result": {
+    "clean": false,
+    "detail": "Final",
+    "games": 22.0,
+    "p1_won": true,
+    "score": "6.0-4.0 7.0-5.0"
+   },
    "round": "Qualifying Final",
    "start": "2026-09-29T04:00:00+00:00",
    "surface": "Hard",
@@ -10171,7 +10177,13 @@
    "p_over": 0.4683158008056645,
    "p_p1": 0.45644069295868706,
    "recorded": "2026-09-28T11:20:27.398700+00:00",
-   "result": null,
+   "result": {
+    "clean": true,
+    "detail": "Final",
+    "games": 17.0,
+    "p1_won": false,
+    "score": "4.0-6.0 1.0-6.0"
+   },
    "round": "Qualifying Final",
    "start": "2026-09-29T04:30:00+00:00",
    "surface": "Hard",

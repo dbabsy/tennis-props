@@ -10146,6 +10146,25 @@
    "tour": "wta",
    "tourney": "Adana Open"
   },
+  "wta:184147": {
+   "best_of": 3,
+   "exp_aces_p1": 1.955102314281372,
+   "exp_aces_p2": 2.398718251678398,
+   "exp_games": 22.579897992167023,
+   "id": "184147",
+   "p1": "Lucrezia Stefanini",
+   "p2": "Leolia Jeanjean",
+   "p_over": 0.4317931088689417,
+   "p_p1": 0.6748165437606766,
+   "recorded": "2026-09-30T22:18:38.783834+00:00",
+   "result": null,
+   "round": "Quarterfinal",
+   "start": "2026-10-02T04:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 22.5,
+   "tour": "wta",
+   "tourney": "Adana Open"
+  },
   "wta:184150": {
    "best_of": 3,
    "exp_aces_p1": 1.4251670328773522,

@@ -4,101 +4,47 @@
   "tennis_atp_japan_open",
   "tennis_wta_china_open"
  ],
- "fetched_at": "2026-10-03T05:20:29Z",
+ "fetched_at": "2026-10-03T17:20:23Z",
  "matches": [
   {
-   "a": "Alex de Minaur",
-   "at": "2026-10-03T05:19:58Z",
-   "b": "Quentin Halys",
+   "a": "Hubert Hurkacz",
+   "at": "2026-10-03T17:19:20Z",
+   "b": "Karen Khachanov",
    "event": "ATP China Open",
-   "pa": -159,
-   "pb": 125,
-   "start": "2026-10-03T03:05:43Z"
+   "pa": 118,
+   "pb": -144,
+   "start": "2026-10-04T05:00:00Z"
   },
   {
-   "a": "Andrey Rublev",
-   "at": "2026-10-03T05:19:58Z",
-   "b": "Roman Safiullin",
+   "a": "Alex de Minaur",
+   "at": "2026-10-03T17:19:20Z",
+   "b": "Andrey Rublev",
    "event": "ATP China Open",
-   "pa": -136,
-   "pb": 112,
-   "start": "2026-10-03T05:30:00Z"
+   "pa": -119,
+   "pb": -103,
+   "start": "2026-10-04T06:10:00Z"
   },
   {
    "a": "Daniil Medvedev",
-   "at": "2026-10-03T05:19:58Z",
-   "b": "Jan-Lennard Struff",
+   "at": "2026-10-03T17:19:20Z",
+   "b": "Francisco Cerundolo",
    "event": "ATP China Open",
-   "pa": -650,
-   "pb": 452,
-   "start": "2026-10-03T09:00:00Z"
-  },
-  {
-   "a": "Francisco Cerundolo",
-   "at": "2026-10-03T05:19:58Z",
-   "b": "Jakub Mensik",
-   "event": "ATP China Open",
-   "pa": 171,
-   "pb": -212,
-   "start": "2026-10-03T09:00:00Z"
+   "pa": -241,
+   "pb": 193,
+   "start": "2026-10-04T08:30:00Z"
   },
   {
    "a": "Alexander Zverev",
-   "at": "2026-10-03T05:19:58Z",
-   "b": "Juncheng Shang",
+   "at": "2026-10-03T17:19:20Z",
+   "b": "Novak Djokovic",
    "event": "ATP China Open",
-   "pa": -1380,
-   "pb": 770,
-   "start": "2026-10-03T11:00:00Z"
-  },
-  {
-   "a": "Hubert Hurkacz",
-   "at": "2026-10-03T05:19:58Z",
-   "b": "Karen Khachanov",
-   "event": "ATP China Open",
-   "pa": 114,
-   "pb": -139,
-   "start": "2026-10-04T03:00:00Z"
-  },
-  {
-   "a": "Carlos Alcaraz",
-   "at": "2026-10-03T05:20:13Z",
-   "b": "Matteo Arnaldi",
-   "event": "ATP Japan Open",
-   "pa": -840,
-   "pb": 581,
-   "start": "2026-10-03T04:35:00Z"
-  },
-  {
-   "a": "Adolfo Daniel Vallejo",
-   "at": "2026-10-03T05:20:13Z",
-   "b": "Matteo Berrettini",
-   "event": "ATP Japan Open",
-   "pa": 136,
-   "pb": -167,
-   "start": "2026-10-03T07:00:00Z"
-  },
-  {
-   "a": "Jiri Lehecka",
-   "at": "2026-10-03T05:20:13Z",
-   "b": "Ugo Humbert",
-   "event": "ATP Japan Open",
-   "pa": -173,
-   "pb": 141,
-   "start": "2026-10-03T08:10:00Z"
-  },
-  {
-   "a": "Arthur Fils",
-   "at": "2026-10-03T05:20:13Z",
-   "b": "Valentin Vacherot",
-   "event": "ATP Japan Open",
-   "pa": -407,
-   "pb": 308,
-   "start": "2026-10-04T02:00:00Z"
+   "pa": -331,
+   "pb": 257,
+   "start": "2026-10-04T11:00:00Z"
   },
   {
    "a": "Jaume Munar",
-   "at": "2026-10-03T05:20:13Z",
+   "at": "2026-10-03T17:20:21Z",
    "b": "Kyrian Jacquet",
    "event": "ATP Japan Open",
    "pa": -149,
@@ -106,203 +52,176 @@
    "start": "2026-10-04T02:00:00Z"
   },
   {
-   "a": "Elise Mertens",
-   "at": "2026-10-03T05:18:56Z",
-   "b": "Katie Volynets",
-   "event": "WTA China Open",
-   "pa": -169,
-   "pb": 132,
-   "start": "2026-10-03T03:03:30Z"
+   "a": "Carlos Alcaraz",
+   "at": "2026-10-03T17:20:21Z",
+   "b": "Denis Shapovalov",
+   "event": "ATP Japan Open",
+   "pa": -1000,
+   "pb": 630,
+   "start": "2026-10-04T04:00:00Z"
   },
   {
-   "a": "Coco Gauff",
-   "at": "2026-10-03T05:18:56Z",
-   "b": "Maria Camila Osorio Serrano",
-   "event": "WTA China Open",
-   "pa": -3200,
-   "pb": 1620,
-   "start": "2026-10-03T03:08:00Z"
+   "a": "Arthur Fils",
+   "at": "2026-10-03T17:20:21Z",
+   "b": "Valentin Vacherot",
+   "event": "ATP Japan Open",
+   "pa": -407,
+   "pb": 308,
+   "start": "2026-10-04T07:00:00Z"
   },
   {
-   "a": "Maria Sakkari",
-   "at": "2026-10-03T05:18:56Z",
-   "b": "Storm Hunter",
-   "event": "WTA China Open",
-   "pa": -1120,
-   "pb": 720,
-   "start": "2026-10-03T04:36:41Z"
-  },
-  {
-   "a": "Jelena Ostapenko",
-   "at": "2026-10-03T05:18:56Z",
-   "b": "Paula Badosa",
-   "event": "WTA China Open",
-   "pa": 148,
-   "pb": -190,
-   "start": "2026-10-03T05:19:28Z"
-  },
-  {
-   "a": "Elina Svitolina",
-   "at": "2026-10-03T05:18:56Z",
-   "b": "Katerina Siniakova",
-   "event": "WTA China Open",
-   "pa": -357,
-   "pb": 274,
-   "start": "2026-10-03T05:30:00Z"
-  },
-  {
-   "a": "Iga Swiatek",
-   "at": "2026-10-03T05:18:56Z",
-   "b": "Xinyu Gao",
-   "event": "WTA China Open",
-   "pa": -20000,
-   "pb": 1840,
-   "start": "2026-10-03T05:30:00Z"
-  },
-  {
-   "a": "Anastasia Zakharova",
-   "at": "2026-10-03T05:18:56Z",
-   "b": "Belinda Bencic",
-   "event": "WTA China Open",
-   "pa": 345,
-   "pb": -466,
-   "start": "2026-10-03T06:40:00Z"
-  },
-  {
-   "a": "Anna Kalinskaya",
-   "at": "2026-10-03T05:18:56Z",
-   "b": "Qinwen Zheng",
-   "event": "WTA China Open",
-   "pa": 145,
-   "pb": -178,
-   "start": "2026-10-03T06:40:00Z"
-  },
-  {
-   "a": "Harriet Dart",
-   "at": "2026-10-03T05:18:56Z",
-   "b": "Iva Jovi\u0107",
-   "event": "WTA China Open",
-   "pa": 770,
-   "pb": -1380,
-   "start": "2026-10-03T06:40:00Z"
-  },
-  {
-   "a": "Kamilla Rakhimova",
-   "at": "2026-10-03T05:18:56Z",
-   "b": "Leylah Fernandez",
-   "event": "WTA China Open",
-   "pa": 274,
-   "pb": -356,
-   "start": "2026-10-03T06:45:00Z"
-  },
-  {
-   "a": "Kimberly Birrell",
-   "at": "2026-10-03T05:18:56Z",
-   "b": "Marie Bouzkova",
-   "event": "WTA China Open",
-   "pa": 184,
-   "pb": -229,
-   "start": "2026-10-03T07:50:00Z"
-  },
-  {
-   "a": "Cristina Bucsa",
-   "at": "2026-10-03T05:18:56Z",
-   "b": "Sun Xinran",
-   "event": "WTA China Open",
-   "pa": -242,
-   "pb": 194,
-   "start": "2026-10-03T08:15:00Z"
-  },
-  {
-   "a": "Sonay Kartal",
-   "at": "2026-10-03T05:18:56Z",
-   "b": "Xinyu Wang",
-   "event": "WTA China Open",
-   "pa": -109,
-   "pb": -112,
-   "start": "2026-10-03T11:00:00Z"
-  },
-  {
-   "a": "Alina Charaeva",
-   "at": "2026-10-03T05:18:56Z",
-   "b": "Elena Rybakina",
-   "event": "WTA China Open",
-   "pa": 1180,
-   "pb": -3100,
-   "start": "2026-10-03T12:30:00Z"
+   "a": "Adolfo Daniel Vallejo",
+   "at": "2026-10-03T17:20:21Z",
+   "b": "Jiri Lehecka",
+   "event": "ATP Japan Open",
+   "pa": 219,
+   "pb": -277,
+   "start": "2026-10-04T08:10:00Z"
   },
   {
    "a": "Aryna Sabalenka",
-   "at": "2026-10-03T05:18:56Z",
+   "at": "2026-10-03T17:19:20Z",
    "b": "Nikola Bartunkova",
    "event": "WTA China Open",
-   "pa": -620,
-   "pb": 436,
+   "pa": -780,
+   "pb": 522,
    "start": "2026-10-04T03:00:00Z"
   },
   {
-   "a": "Daria Snigur",
-   "at": "2026-10-03T05:18:56Z",
-   "b": "Taylah Preston",
-   "event": "WTA China Open",
-   "pa": -179,
-   "pb": 146,
-   "start": "2026-10-04T03:00:00Z"
-  },
-  {
-   "a": "Diana Shnaider",
-   "at": "2026-10-03T05:18:56Z",
-   "b": "Ekaterina Alexandrova",
-   "event": "WTA China Open",
-   "pa": -245,
-   "pb": 195,
-   "start": "2026-10-04T03:00:00Z"
-  },
-  {
-   "a": "Karolina Muchova",
-   "at": "2026-10-03T05:18:56Z",
-   "b": "Liudmila Samsonova",
-   "event": "WTA China Open",
-   "pa": -357,
-   "pb": 275,
-   "start": "2026-10-04T03:00:00Z"
-  },
-  {
-   "a": "Mirra Andreeva",
-   "at": "2026-10-03T05:18:56Z",
-   "b": "Polina Kudermetova",
-   "event": "WTA China Open",
-   "pa": -1580,
-   "pb": 840,
-   "start": "2026-10-04T03:00:00Z"
-  },
-  {
-   "a": "Naomi Osaka",
-   "at": "2026-10-03T05:18:56Z",
-   "b": "Sara Bejlek",
+   "a": "Dayana Yastremska",
+   "at": "2026-10-03T17:19:20Z",
+   "b": "Sinja Kraus",
    "event": "WTA China Open",
    "pa": -306,
    "pb": 239,
    "start": "2026-10-04T03:00:00Z"
   },
   {
-   "a": "Dayana Yastremska",
-   "at": "2026-10-03T05:18:56Z",
-   "b": "Sinja Kraus",
+   "a": "Diana Shnaider",
+   "at": "2026-10-03T17:19:20Z",
+   "b": "Ekaterina Alexandrova",
    "event": "WTA China Open",
-   "pa": -257,
-   "pb": 205,
-   "start": "2026-10-04T04:00:00Z"
+   "pa": -227,
+   "pb": 182,
+   "start": "2026-10-04T04:10:00Z"
+  },
+  {
+   "a": "Mirra Andreeva",
+   "at": "2026-10-03T17:19:20Z",
+   "b": "Polina Kudermetova",
+   "event": "WTA China Open",
+   "pa": -1660,
+   "pb": 860,
+   "start": "2026-10-04T05:00:00Z"
+  },
+  {
+   "a": "Daria Snigur",
+   "at": "2026-10-03T17:19:20Z",
+   "b": "Taylah Preston",
+   "event": "WTA China Open",
+   "pa": -179,
+   "pb": 146,
+   "start": "2026-10-04T05:20:00Z"
   },
   {
    "a": "Linda Noskova",
-   "at": "2026-10-03T05:18:56Z",
+   "at": "2026-10-03T17:19:20Z",
    "b": "Viktorija Golubic",
    "event": "WTA China Open",
-   "pa": -660,
-   "pb": 459,
-   "start": "2026-10-04T04:00:00Z"
+   "pa": -750,
+   "pb": 503,
+   "start": "2026-10-04T06:30:00Z"
+  },
+  {
+   "a": "Naomi Osaka",
+   "at": "2026-10-03T17:19:20Z",
+   "b": "Sara Bejlek",
+   "event": "WTA China Open",
+   "pa": -294,
+   "pb": 231,
+   "start": "2026-10-04T11:00:00Z"
+  },
+  {
+   "a": "Karolina Muchova",
+   "at": "2026-10-03T17:19:20Z",
+   "b": "Liudmila Samsonova",
+   "event": "WTA China Open",
+   "pa": -375,
+   "pb": 287,
+   "start": "2026-10-04T12:30:00Z"
+  },
+  {
+   "a": "Alina Charaeva",
+   "at": "2026-10-03T17:19:20Z",
+   "b": "Sonay Kartal",
+   "event": "WTA China Open",
+   "pa": 136,
+   "pb": -166,
+   "start": "2026-10-05T04:00:00Z"
+  },
+  {
+   "a": "Ann Li",
+   "at": "2026-10-03T17:19:20Z",
+   "b": "Belinda Bencic",
+   "event": "WTA China Open",
+   "pa": 176,
+   "pb": -218,
+   "start": "2026-10-05T04:00:00Z"
+  },
+  {
+   "a": "Coco Gauff",
+   "at": "2026-10-03T17:19:20Z",
+   "b": "Sun Xinran",
+   "event": "WTA China Open",
+   "pa": -1580,
+   "pb": 840,
+   "start": "2026-10-05T04:00:00Z"
+  },
+  {
+   "a": "Donna Vekic",
+   "at": "2026-10-03T17:19:20Z",
+   "b": "Iga Swiatek",
+   "event": "WTA China Open",
+   "pa": 730,
+   "pb": -1260,
+   "start": "2026-10-05T04:00:00Z"
+  },
+  {
+   "a": "Elina Svitolina",
+   "at": "2026-10-03T17:19:20Z",
+   "b": "Maria Sakkari",
+   "event": "WTA China Open",
+   "pa": -280,
+   "pb": 221,
+   "start": "2026-10-05T04:00:00Z"
+  },
+  {
+   "a": "Elise Mertens",
+   "at": "2026-10-03T17:19:20Z",
+   "b": "Jelena Ostapenko",
+   "event": "WTA China Open",
+   "pa": -172,
+   "pb": 141,
+   "start": "2026-10-05T04:00:00Z"
+  },
+  {
+   "a": "Iva Jovi\u0107",
+   "at": "2026-10-03T17:19:20Z",
+   "b": "Kamilla Rakhimova",
+   "event": "WTA China Open",
+   "pa": -456,
+   "pb": 339,
+   "start": "2026-10-05T04:00:00Z"
+  },
+  {
+   "a": "Marie Bouzkova",
+   "at": "2026-10-03T17:19:20Z",
+   "b": "Qinwen Zheng",
+   "event": "WTA China Open",
+   "pa": 109,
+   "pb": -132,
+   "start": "2026-10-05T04:00:00Z"
   }
  ],
- "remaining": 485
+ "remaining": 482
 }

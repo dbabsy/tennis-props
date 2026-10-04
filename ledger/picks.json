@@ -13039,6 +13039,25 @@
    "tour": "wta",
    "tourney": "China Open"
   },
+  "wta:185229": {
+   "best_of": 3,
+   "exp_aces_p1": 2.367098972647031,
+   "exp_aces_p2": 3.8811924921285974,
+   "exp_games": 23.462544897106092,
+   "id": "185229",
+   "p1": "Julia Grabher",
+   "p2": "Dalma Galfi",
+   "p_over": 0.47563864379901355,
+   "p_p1": 0.397185910976109,
+   "recorded": "2026-10-04T12:25:24.794343+00:00",
+   "result": null,
+   "round": "Round 1",
+   "start": "2026-10-05T04:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 22.5,
+   "tour": "wta",
+   "tourney": "Samsun Open"
+  },
   "wta:185270": {
    "best_of": 3,
    "exp_aces_p1": 3.0251516364457216,

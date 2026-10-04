@@ -4430,7 +4430,13 @@
    "p_over": 0.5769380852451453,
    "p_p1": 0.5310716472406237,
    "recorded": "2026-10-02T15:20:29.482172+00:00",
-   "result": null,
+   "result": {
+    "clean": false,
+    "detail": "Final",
+    "games": 21.0,
+    "p1_won": false,
+    "score": "6.0-7.0 2.0-6.0"
+   },
    "round": "Quarterfinal",
    "start": "2026-10-04T04:00:00+00:00",
    "surface": "Hard",
@@ -12695,7 +12701,13 @@
    "p_over": 0.4767455446610609,
    "p_p1": 0.47310017931366266,
    "recorded": "2026-10-02T09:20:22.530791+00:00",
-   "result": null,
+   "result": {
+    "clean": true,
+    "detail": "Final",
+    "games": 28.0,
+    "p1_won": false,
+    "score": "6.0-3.0 4.0-6.0 3.0-6.0"
+   },
    "round": "Round 3",
    "start": "2026-10-04T04:00:00+00:00",
    "surface": "Hard",
@@ -12770,7 +12782,13 @@
    "p_over": 0.3204546700743051,
    "p_p1": 0.8464684147058409,
    "recorded": "2026-10-02T11:20:29.596196+00:00",
-   "result": null,
+   "result": {
+    "clean": true,
+    "detail": "Final",
+    "games": 17.0,
+    "p1_won": true,
+    "score": "6.0-4.0 6.0-1.0"
+   },
    "round": "Round 3",
    "start": "2026-10-04T04:00:00+00:00",
    "surface": "Hard",

@@ -11171,7 +11171,13 @@
    "p_over": 0.4029994578276005,
    "p_p1": 0.7737234408524292,
    "recorded": "2026-10-03T17:20:23.431331+00:00",
-   "result": null,
+   "result": {
+    "clean": true,
+    "detail": "Final",
+    "games": 33.0,
+    "p1_won": false,
+    "score": "6.0-7.0 6.0-4.0 4.0-6.0"
+   },
    "round": "Final",
    "start": "2026-10-04T04:00:00+00:00",
    "surface": "Hard",

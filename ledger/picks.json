@@ -14049,6 +14049,25 @@
    "tour": "wta",
    "tourney": "Suzhou Open"
   },
+  "wta:185278": {
+   "best_of": 3,
+   "exp_aces_p1": 2.1724922659466803,
+   "exp_aces_p2": 3.81457376847697,
+   "exp_games": 23.02296500690612,
+   "id": "185278",
+   "p1": "Aliaksandra Sasnovich",
+   "p2": "Linda Fruhvirtova",
+   "p_over": 0.46198743018219024,
+   "p_p1": 0.493787179215798,
+   "recorded": "2026-10-06T03:20:25.408348+00:00",
+   "result": null,
+   "round": "Round 2",
+   "start": "2026-10-07T04:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 22.5,
+   "tour": "wta",
+   "tourney": "Suzhou Open"
+  },
   "wta:185285": {
    "best_of": 3,
    "exp_aces_p1": 3.6749196930822956,

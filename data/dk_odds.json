@@ -1,273 +1,334 @@
 {
  "events": [
-  "tennis_atp_china_open",
-  "tennis_atp_japan_open",
   "tennis_atp_shanghai_masters",
   "tennis_wta_china_open"
  ],
- "fetched_at": "2026-10-06T05:20:30Z",
+ "fetched_at": "2026-10-06T16:50:01Z",
  "matches": [
   {
-   "a": "Alex de Minaur",
-   "at": "2026-10-06T05:19:58Z",
-   "b": "Novak Djokovic",
-   "event": "ATP China Open",
-   "pa": 162,
-   "pb": -201,
-   "start": "2026-10-06T11:00:00Z"
-  },
-  {
-   "a": "Carlos Alcaraz",
-   "at": "2026-10-06T05:20:25Z",
-   "b": "Jiri Lehecka",
-   "event": "ATP Japan Open",
-   "pa": -386,
-   "pb": 294,
-   "start": "2026-10-06T09:00:00Z"
-  },
-  {
-   "a": "Adolfo Daniel Vallejo",
-   "at": "2026-10-06T05:19:47Z",
-   "b": "Valentin Royer",
-   "event": "ATP Shanghai Masters",
-   "pa": -130,
-   "pb": 107,
-   "start": "2026-10-07T04:00:00Z"
-  },
-  {
    "a": "Aleksandar Kovacevic",
-   "at": "2026-10-06T05:19:47Z",
+   "at": "2026-10-06T16:49:01Z",
    "b": "Matteo Berrettini",
    "event": "ATP Shanghai Masters",
-   "pa": 185,
-   "pb": -231,
-   "start": "2026-10-07T04:00:00Z"
-  },
-  {
-   "a": "Arthur Fery",
-   "at": "2026-10-06T05:19:47Z",
-   "b": "Marin Cilic",
-   "event": "ATP Shanghai Masters",
-   "pa": -139,
-   "pb": 114,
+   "pa": 169,
+   "pb": -209,
    "start": "2026-10-07T04:00:00Z"
   },
   {
    "a": "Arthur Gea",
-   "at": "2026-10-06T05:19:47Z",
+   "at": "2026-10-06T16:49:01Z",
    "b": "Jaime Faria",
    "event": "ATP Shanghai Masters",
-   "pa": -184,
-   "pb": 150,
-   "start": "2026-10-07T04:00:00Z"
-  },
-  {
-   "a": "Botic van de Zandschulp",
-   "at": "2026-10-06T05:19:47Z",
-   "b": "Daniel Merida Aguilar",
-   "event": "ATP Shanghai Masters",
-   "pa": -106,
-   "pb": -115,
-   "start": "2026-10-07T04:00:00Z"
-  },
-  {
-   "a": "Bu Yunchaokete",
-   "at": "2026-10-06T05:19:47Z",
-   "b": "Luca Van Assche",
-   "event": "ATP Shanghai Masters",
-   "pa": -201,
-   "pb": 163,
-   "start": "2026-10-07T04:00:00Z"
-  },
-  {
-   "a": "Cameron Norrie",
-   "at": "2026-10-06T05:19:47Z",
-   "b": "Denis Shapovalov",
-   "event": "ATP Shanghai Masters",
-   "pa": -110,
-   "pb": -111,
-   "start": "2026-10-07T04:00:00Z"
-  },
-  {
-   "a": "Daniel Altmaier",
-   "at": "2026-10-06T05:19:47Z",
-   "b": "Holger Rune",
-   "event": "ATP Shanghai Masters",
-   "pa": 213,
-   "pb": -269,
-   "start": "2026-10-07T04:00:00Z"
-  },
-  {
-   "a": "Fabian Marozsan",
-   "at": "2026-10-06T05:19:47Z",
-   "b": "Zachary Svajda",
-   "event": "ATP Shanghai Masters",
-   "pa": -125,
-   "pb": 103,
-   "start": "2026-10-07T04:00:00Z"
-  },
-  {
-   "a": "Facundo Diaz Acosta",
-   "at": "2026-10-06T05:19:47Z",
-   "b": "Nuno Borges",
-   "event": "ATP Shanghai Masters",
-   "pa": 315,
-   "pb": -419,
-   "start": "2026-10-07T04:00:00Z"
-  },
-  {
-   "a": "Hamad Medjedovic",
-   "at": "2026-10-06T05:19:47Z",
-   "b": "Thiago Agustin Tirante",
-   "event": "ATP Shanghai Masters",
-   "pa": 121,
-   "pb": -147,
-   "start": "2026-10-07T04:00:00Z"
-  },
-  {
-   "a": "Hubert Hurkacz",
-   "at": "2026-10-06T05:19:47Z",
-   "b": "James Duckworth",
-   "event": "ATP Shanghai Masters",
-   "pa": -337,
-   "pb": 261,
-   "start": "2026-10-07T04:00:00Z"
-  },
-  {
-   "a": "Jan-Lennard Struff",
-   "at": "2026-10-06T05:19:47Z",
-   "b": "Martin Landaluce",
-   "event": "ATP Shanghai Masters",
-   "pa": -102,
-   "pb": -119,
-   "start": "2026-10-07T04:00:00Z"
-  },
-  {
-   "a": "Jaume Munar",
-   "at": "2026-10-06T05:19:47Z",
-   "b": "Jenson Brooksby",
-   "event": "ATP Shanghai Masters",
-   "pa": -178,
-   "pb": 145,
-   "start": "2026-10-07T04:00:00Z"
-  },
-  {
-   "a": "Kamil Majchrzak",
-   "at": "2026-10-06T05:19:47Z",
-   "b": "Yannick Hanfmann",
-   "event": "ATP Shanghai Masters",
-   "pa": -158,
-   "pb": 130,
-   "start": "2026-10-07T04:00:00Z"
-  },
-  {
-   "a": "Marcos Giron",
-   "at": "2026-10-06T05:19:47Z",
-   "b": "Sebastian Baez",
-   "event": "ATP Shanghai Masters",
-   "pa": -101,
-   "pb": -120,
-   "start": "2026-10-07T04:00:00Z"
-  },
-  {
-   "a": "Mariano Navone",
-   "at": "2026-10-06T05:19:47Z",
-   "b": "Pablo Carreno Busta",
-   "event": "ATP Shanghai Masters",
-   "pa": -108,
-   "pb": -112,
+   "pa": -170,
+   "pb": 139,
    "start": "2026-10-07T04:00:00Z"
   },
   {
    "a": "Miomir Kecmanovic",
-   "at": "2026-10-06T05:19:47Z",
+   "at": "2026-10-06T16:49:01Z",
    "b": "Sho Shimabukuro",
    "event": "ATP Shanghai Masters",
-   "pa": -236,
-   "pb": 189,
+   "pa": -228,
+   "pb": 183,
    "start": "2026-10-07T04:00:00Z"
+  },
+  {
+   "a": "Adrian Mannarino",
+   "at": "2026-10-06T16:49:01Z",
+   "b": "Nikoloz Basilashvili",
+   "event": "ATP Shanghai Masters",
+   "pa": 108,
+   "pb": -131,
+   "start": "2026-10-07T05:10:00Z"
+  },
+  {
+   "a": "Kamil Majchrzak",
+   "at": "2026-10-06T16:49:01Z",
+   "b": "Yannick Hanfmann",
+   "event": "ATP Shanghai Masters",
+   "pa": -201,
+   "pb": 162,
+   "start": "2026-10-07T05:10:00Z"
   },
   {
    "a": "Tomas Machac",
-   "at": "2026-10-06T05:19:47Z",
+   "at": "2026-10-06T16:49:01Z",
    "b": "Zhizhen Zhang",
    "event": "ATP Shanghai Masters",
-   "pa": -257,
-   "pb": 205,
-   "start": "2026-10-07T04:00:00Z"
+   "pa": -250,
+   "pb": 200,
+   "start": "2026-10-07T05:10:00Z"
+  },
+  {
+   "a": "Alex Molcan",
+   "at": "2026-10-06T16:49:01Z",
+   "b": "Federico Cin\u00e0",
+   "event": "ATP Shanghai Masters",
+   "pa": -151,
+   "pb": 124,
+   "start": "2026-10-07T06:00:00Z"
+  },
+  {
+   "a": "Marco Trungelliti",
+   "at": "2026-10-06T16:49:01Z",
+   "b": "Rei Sakamoto",
+   "event": "ATP Shanghai Masters",
+   "pa": 159,
+   "pb": -196,
+   "start": "2026-10-07T06:20:00Z"
+  },
+  {
+   "a": "Mattia Bellucci",
+   "at": "2026-10-06T16:49:01Z",
+   "b": "Yi Zhou",
+   "event": "ATP Shanghai Masters",
+   "pa": -341,
+   "pb": 263,
+   "start": "2026-10-07T06:20:00Z"
+  },
+  {
+   "a": "Rinky Hijikata",
+   "at": "2026-10-06T16:49:01Z",
+   "b": "Roman Safiullin",
+   "event": "ATP Shanghai Masters",
+   "pa": 221,
+   "pb": -279,
+   "start": "2026-10-07T07:10:00Z"
+  },
+  {
+   "a": "Chak Lam Coleman Wong",
+   "at": "2026-10-06T16:49:01Z",
+   "b": "Quentin Halys",
+   "event": "ATP Shanghai Masters",
+   "pa": 120,
+   "pb": -146,
+   "start": "2026-10-07T07:30:00Z"
+  },
+  {
+   "a": "Daniel Altmaier",
+   "at": "2026-10-06T16:49:01Z",
+   "b": "Holger Rune",
+   "event": "ATP Shanghai Masters",
+   "pa": 201,
+   "pb": -253,
+   "start": "2026-10-07T07:30:00Z"
+  },
+  {
+   "a": "Michael Zheng",
+   "at": "2026-10-06T16:49:01Z",
+   "b": "Wu Yibing",
+   "event": "ATP Shanghai Masters",
+   "pa": -102,
+   "pb": -119,
+   "start": "2026-10-07T10:00:00Z"
+  },
+  {
+   "a": "Arthur Fery",
+   "at": "2026-10-06T16:49:01Z",
+   "b": "Marin Cilic",
+   "event": "ATP Shanghai Masters",
+   "pa": -164,
+   "pb": 134,
+   "start": "2026-10-07T11:10:00Z"
+  },
+  {
+   "a": "Adolfo Daniel Vallejo",
+   "at": "2026-10-06T16:49:01Z",
+   "b": "Valentin Royer",
+   "event": "ATP Shanghai Masters",
+   "pa": -133,
+   "pb": 109,
+   "start": "2026-10-08T04:00:00Z"
+  },
+  {
+   "a": "Bernard Tomic",
+   "at": "2026-10-06T16:49:01Z",
+   "b": "Matteo Arnaldi",
+   "event": "ATP Shanghai Masters",
+   "pa": 163,
+   "pb": -201,
+   "start": "2026-10-08T04:00:00Z"
+  },
+  {
+   "a": "Botic van de Zandschulp",
+   "at": "2026-10-06T16:49:01Z",
+   "b": "Daniel Merida Aguilar",
+   "event": "ATP Shanghai Masters",
+   "pa": -107,
+   "pb": -114,
+   "start": "2026-10-08T04:00:00Z"
+  },
+  {
+   "a": "Bu Yunchaokete",
+   "at": "2026-10-06T16:49:01Z",
+   "b": "Luca Van Assche",
+   "event": "ATP Shanghai Masters",
+   "pa": -174,
+   "pb": 141,
+   "start": "2026-10-08T04:00:00Z"
+  },
+  {
+   "a": "Fabian Marozsan",
+   "at": "2026-10-06T16:49:01Z",
+   "b": "Zachary Svajda",
+   "event": "ATP Shanghai Masters",
+   "pa": -124,
+   "pb": 102,
+   "start": "2026-10-08T04:00:00Z"
+  },
+  {
+   "a": "Facundo Diaz Acosta",
+   "at": "2026-10-06T16:49:01Z",
+   "b": "Nuno Borges",
+   "event": "ATP Shanghai Masters",
+   "pa": 285,
+   "pb": -373,
+   "start": "2026-10-08T04:00:00Z"
+  },
+  {
+   "a": "Hamad Medjedovic",
+   "at": "2026-10-06T16:49:01Z",
+   "b": "Thiago Agustin Tirante",
+   "event": "ATP Shanghai Masters",
+   "pa": 121,
+   "pb": -148,
+   "start": "2026-10-08T04:00:00Z"
+  },
+  {
+   "a": "Hubert Hurkacz",
+   "at": "2026-10-06T16:49:01Z",
+   "b": "James Duckworth",
+   "event": "ATP Shanghai Masters",
+   "pa": -268,
+   "pb": 212,
+   "start": "2026-10-08T04:00:00Z"
+  },
+  {
+   "a": "Jan-Lennard Struff",
+   "at": "2026-10-06T16:49:01Z",
+   "b": "Martin Landaluce",
+   "event": "ATP Shanghai Masters",
+   "pa": -102,
+   "pb": -119,
+   "start": "2026-10-08T04:00:00Z"
+  },
+  {
+   "a": "Jaume Munar",
+   "at": "2026-10-06T16:49:01Z",
+   "b": "Jenson Brooksby",
+   "event": "ATP Shanghai Masters",
+   "pa": -196,
+   "pb": 159,
+   "start": "2026-10-08T04:00:00Z"
+  },
+  {
+   "a": "Juan Manuel Cerundolo",
+   "at": "2026-10-06T16:49:01Z",
+   "b": "Nicolas Mejia",
+   "event": "ATP Shanghai Masters",
+   "pa": -221,
+   "pb": 178,
+   "start": "2026-10-08T04:00:00Z"
+  },
+  {
+   "a": "Kimmer Coppejans",
+   "at": "2026-10-06T16:49:01Z",
+   "b": "Stefanos Tsitsipas",
+   "event": "ATP Shanghai Masters",
+   "pa": 650,
+   "pb": -1060,
+   "start": "2026-10-08T04:00:00Z"
+  },
+  {
+   "a": "Marcos Giron",
+   "at": "2026-10-06T16:49:01Z",
+   "b": "Sebastian Baez",
+   "event": "ATP Shanghai Masters",
+   "pa": 105,
+   "pb": -128,
+   "start": "2026-10-08T04:00:00Z"
+  },
+  {
+   "a": "Mariano Navone",
+   "at": "2026-10-06T16:49:01Z",
+   "b": "Pablo Carreno Busta",
+   "event": "ATP Shanghai Masters",
+   "pa": -117,
+   "pb": -104,
+   "start": "2026-10-08T04:00:00Z"
+  },
+  {
+   "a": "Pavel Kotov",
+   "at": "2026-10-06T16:49:01Z",
+   "b": "Tallon Griekspoor",
+   "event": "ATP Shanghai Masters",
+   "pa": 192,
+   "pb": -241,
+   "start": "2026-10-08T04:00:00Z"
   },
   {
    "a": "Vit Kopriva",
-   "at": "2026-10-06T05:19:47Z",
+   "at": "2026-10-06T16:49:01Z",
    "b": "Zizou Bergs",
    "event": "ATP Shanghai Masters",
-   "pa": 227,
-   "pb": -288,
-   "start": "2026-10-07T04:00:00Z"
-  },
-  {
-   "a": "Ekaterina Alexandrova",
-   "at": "2026-10-06T05:20:26Z",
-   "b": "Linda Noskova",
-   "event": "WTA China Open",
-   "pa": -175,
-   "pb": 137,
-   "start": "2026-10-06T04:27:06Z"
-  },
-  {
-   "a": "Karolina Muchova",
-   "at": "2026-10-06T05:20:26Z",
-   "b": "Naomi Osaka",
-   "event": "WTA China Open",
-   "pa": -140,
-   "pb": 115,
-   "start": "2026-10-06T07:00:00Z"
-  },
-  {
-   "a": "Nikola Bartunkova",
-   "at": "2026-10-06T05:20:26Z",
-   "b": "Sinja Kraus",
-   "event": "WTA China Open",
-   "pa": -482,
-   "pb": 355,
-   "start": "2026-10-06T08:30:00Z"
-  },
-  {
-   "a": "Coco Gauff",
-   "at": "2026-10-06T05:20:26Z",
-   "b": "Elise Mertens",
-   "event": "WTA China Open",
-   "pa": -425,
-   "pb": 319,
-   "start": "2026-10-07T03:00:00Z"
-  },
-  {
-   "a": "Alina Charaeva",
-   "at": "2026-10-06T05:20:26Z",
-   "b": "Qinwen Zheng",
-   "event": "WTA China Open",
-   "pa": 307,
-   "pb": -406,
-   "start": "2026-10-07T04:00:00Z"
-  },
-  {
-   "a": "Ann Li",
-   "at": "2026-10-06T05:20:26Z",
-   "b": "Elina Svitolina",
-   "event": "WTA China Open",
-   "pa": 280,
-   "pb": -365,
-   "start": "2026-10-07T04:00:00Z"
+   "pa": 210,
+   "pb": -264,
+   "start": "2026-10-08T04:00:00Z"
   },
   {
    "a": "Iga Swiatek",
-   "at": "2026-10-06T05:20:26Z",
+   "at": "2026-10-06T16:48:57Z",
    "b": "Iva Jovi\u0107",
    "event": "WTA China Open",
    "pa": -213,
    "pb": 171,
-   "start": "2026-10-07T04:00:00Z"
+   "start": "2026-10-07T05:00:00Z"
+  },
+  {
+   "a": "Coco Gauff",
+   "at": "2026-10-06T16:48:57Z",
+   "b": "Elise Mertens",
+   "event": "WTA China Open",
+   "pa": -425,
+   "pb": 319,
+   "start": "2026-10-07T06:15:00Z"
+  },
+  {
+   "a": "Alina Charaeva",
+   "at": "2026-10-06T16:48:57Z",
+   "b": "Qinwen Zheng",
+   "event": "WTA China Open",
+   "pa": 273,
+   "pb": -354,
+   "start": "2026-10-07T11:00:00Z"
+  },
+  {
+   "a": "Ann Li",
+   "at": "2026-10-06T16:48:57Z",
+   "b": "Elina Svitolina",
+   "event": "WTA China Open",
+   "pa": 280,
+   "pb": -365,
+   "start": "2026-10-07T12:30:00Z"
+  },
+  {
+   "a": "Ekaterina Alexandrova",
+   "at": "2026-10-06T16:48:57Z",
+   "b": "Mirra Andreeva",
+   "event": "WTA China Open",
+   "pa": 262,
+   "pb": -338,
+   "start": "2026-10-08T03:00:00Z"
+  },
+  {
+   "a": "Karolina Muchova",
+   "at": "2026-10-06T16:48:57Z",
+   "b": "Nikola Bartunkova",
+   "event": "WTA China Open",
+   "pa": -267,
+   "pb": 212,
+   "start": "2026-10-08T03:00:00Z"
   }
  ],
- "remaining": 465
+ "remaining": 463
 }

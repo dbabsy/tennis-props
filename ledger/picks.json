@@ -6766,7 +6766,13 @@
    "p_over": 0.47225932393183817,
    "p_p1": 0.5421526029903935,
    "recorded": "2026-10-05T13:20:26.048058+00:00",
-   "result": null,
+   "result": {
+    "clean": false,
+    "detail": "Retired",
+    "games": 7.0,
+    "p1_won": true,
+    "score": "5.0-2.0"
+   },
    "round": "Qualifying Final",
    "start": "2026-10-06T05:30:00+00:00",
    "surface": "Hard",

@@ -15153,6 +15153,25 @@
    "tour": "wta",
    "tourney": "China Open"
   },
+  "wta:186593": {
+   "best_of": 3,
+   "exp_aces_p1": 1.366543215516667,
+   "exp_aces_p2": 4.163940035523114,
+   "exp_games": 23.248332090061723,
+   "id": "186593",
+   "p1": "Anastasia Zakharova",
+   "p2": "Magda Linette",
+   "p_over": 0.4707833479880161,
+   "p_p1": 0.466469017030596,
+   "recorded": "2026-11-06T20:20:20.020062+00:00",
+   "result": null,
+   "round": "Semifinal",
+   "start": "2026-11-07T14:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 22.5,
+   "tour": "wta",
+   "tourney": "Chennai Open"
+  },
   "wta:186594": {
    "best_of": 3,
    "exp_aces_p1": 4.7307395863913,
@@ -15183,7 +15202,13 @@
    "p_over": 0.45923585372627396,
    "p_p1": 0.5124453172423097,
    "recorded": "2026-11-06T11:20:42.426704+00:00",
-   "result": null,
+   "result": {
+    "clean": false,
+    "detail": "Retired",
+    "games": 15.0,
+    "p1_won": false,
+    "score": "2.0-6.0 2.0-5.0"
+   },
    "round": "Quarterfinal",
    "start": "2026-11-06T14:00:00+00:00",
    "surface": "Hard",

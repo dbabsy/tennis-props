@@ -7498,6 +7498,25 @@
    "tour": "atp",
    "tourney": "Rolex Paris Masters"
   },
+  "atp:187452": {
+   "best_of": 5,
+   "exp_aces_p1": 15.006344418498468,
+   "exp_aces_p2": 11.88906174493989,
+   "exp_games": 39.47085189336891,
+   "id": "187452",
+   "p1": "Francesco Passaro",
+   "p2": "Nikoloz Basilashvili",
+   "p_over": 0.5203817057570186,
+   "p_p1": 0.5523641833423686,
+   "recorded": "2026-11-07T06:20:21.991364+00:00",
+   "result": null,
+   "round": "Qualifying 1st Round",
+   "start": "2026-11-07T10:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 38.5,
+   "tour": "atp",
+   "tourney": "Bybit Stockholm Open"
+  },
   "wta:182527": {
    "best_of": 3,
    "exp_aces_p1": 7.394362478472591,

@@ -7643,6 +7643,25 @@
    "tour": "atp",
    "tourney": "Bybit Stockholm Open"
   },
+  "atp:187456": {
+   "best_of": 5,
+   "exp_aces_p1": 17.718653583305336,
+   "exp_aces_p2": 12.078488431638393,
+   "exp_games": 39.304513489110796,
+   "id": "187456",
+   "p1": "Borna Gojo",
+   "p2": "Nikoloz Basilashvili",
+   "p_over": 0.5117949516485694,
+   "p_p1": 0.6393408405611999,
+   "recorded": "2026-11-07T14:20:20.926522+00:00",
+   "result": null,
+   "round": "Qualifying Final",
+   "start": "2026-11-08T11:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 38.5,
+   "tour": "atp",
+   "tourney": "Bybit Stockholm Open"
+  },
   "wta:182527": {
    "best_of": 3,
    "exp_aces_p1": 7.394362478472591,
@@ -15365,7 +15384,13 @@
    "p_over": 0.4782609489046379,
    "p_p1": 0.4006169962853184,
    "recorded": "2026-11-06T14:20:28.546294+00:00",
-   "result": null,
+   "result": {
+    "clean": true,
+    "detail": "Final",
+    "games": 19.0,
+    "p1_won": false,
+    "score": "3.0-6.0 4.0-6.0"
+   },
    "round": "Semifinal",
    "start": "2026-11-07T05:00:00+00:00",
    "surface": "Hard",

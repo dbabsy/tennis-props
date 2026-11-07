@@ -7378,7 +7378,13 @@
    "p_over": 0.513304710690829,
    "p_p1": 0.35354912363251056,
    "recorded": "2026-11-06T11:20:42.426704+00:00",
-   "result": null,
+   "result": {
+    "clean": false,
+    "detail": "Final",
+    "games": 23.0,
+    "p1_won": false,
+    "score": "6.0-7.0 4.0-6.0"
+   },
    "round": "Quarterfinal",
    "start": "2026-11-06T19:30:00+00:00",
    "surface": "Hard",
@@ -7450,6 +7456,12 @@
   },
   "atp:186504": {
    "best_of": 5,
+   "dk": {
+    "at": "2026-11-07T00:20:11Z",
+    "p1": -358,
+    "p2": 275,
+    "seen": "2026-11-07T00:20:23.249137+00:00"
+   },
    "exp_aces_p1": 16.550655448429612,
    "exp_aces_p2": 6.671916892250016,
    "exp_games": 39.68395691646694,
@@ -7462,6 +7474,25 @@
    "result": null,
    "round": "Semifinal",
    "start": "2026-11-07T05:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 38.5,
+   "tour": "atp",
+   "tourney": "Rolex Paris Masters"
+  },
+  "atp:186505": {
+   "best_of": 5,
+   "exp_aces_p1": 8.67976578018925,
+   "exp_aces_p2": 6.343944420925118,
+   "exp_games": 35.6993140426792,
+   "id": "186505",
+   "p1": "Carlos Alcaraz",
+   "p2": "Casper Ruud",
+   "p_over": 0.36423063015218554,
+   "p_p1": 0.8493512598433605,
+   "recorded": "2026-11-07T00:20:23.249137+00:00",
+   "result": null,
+   "round": "Semifinal",
+   "start": "2026-11-07T16:00:00+00:00",
    "surface": "Hard",
    "total_line": 38.5,
    "tour": "atp",

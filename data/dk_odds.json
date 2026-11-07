@@ -2,44 +2,17 @@
  "events": [
   "tennis_atp_paris_masters"
  ],
- "fetched_at": "2026-11-06T11:20:42Z",
+ "fetched_at": "2026-11-07T00:20:23Z",
  "matches": [
   {
    "a": "Ben Shelton",
-   "at": "2026-11-06T11:20:19Z",
-   "b": "Tommy Paul",
+   "at": "2026-11-07T00:20:11Z",
+   "b": "Luca Van Assche",
    "event": "ATP Paris Masters",
-   "pa": 109,
-   "pb": -133,
-   "start": "2026-11-06T13:00:00Z"
-  },
-  {
-   "a": "Luca Van Assche",
-   "at": "2026-11-06T11:20:19Z",
-   "b": "Rinky Hijikata",
-   "event": "ATP Paris Masters",
-   "pa": -165,
-   "pb": 134,
-   "start": "2026-11-06T14:10:00Z"
-  },
-  {
-   "a": "Carlos Alcaraz",
-   "at": "2026-11-06T11:20:19Z",
-   "b": "Taylor Fritz",
-   "event": "ATP Paris Masters",
-   "pa": -304,
-   "pb": 238,
-   "start": "2026-11-06T18:00:00Z"
-  },
-  {
-   "a": "Casper Ruud",
-   "at": "2026-11-06T11:20:19Z",
-   "b": "Nuno Borges",
-   "event": "ATP Paris Masters",
-   "pa": -233,
-   "pb": 187,
-   "start": "2026-11-06T19:30:00Z"
+   "pa": -358,
+   "pb": 275,
+   "start": "2026-11-07T13:30:00Z"
   }
  ],
- "remaining": 499
+ "remaining": 498
 }

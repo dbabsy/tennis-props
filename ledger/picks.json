@@ -7710,7 +7710,13 @@
    "p_over": 0.5117949516485694,
    "p_p1": 0.6393408405611999,
    "recorded": "2026-11-07T14:20:20.926522+00:00",
-   "result": null,
+   "result": {
+    "clean": false,
+    "detail": "Final",
+    "games": 22.0,
+    "p1_won": true,
+    "score": "6.0-3.0 7.0-6.0"
+   },
    "round": "Qualifying Final",
    "start": "2026-11-08T11:00:00+00:00",
    "surface": "Hard",

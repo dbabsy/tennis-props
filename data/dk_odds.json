@@ -1,18 +1,6 @@
 {
- "events": [
-  "tennis_atp_paris_masters"
- ],
- "fetched_at": "2026-11-08T12:20:28Z",
- "matches": [
-  {
-   "a": "Ben Shelton",
-   "at": "2026-11-08T12:19:32Z",
-   "b": "Carlos Alcaraz",
-   "event": "ATP Paris Masters",
-   "pa": 305,
-   "pb": -403,
-   "start": "2026-11-08T14:00:00Z"
-  }
- ],
+ "events": [],
+ "fetched_at": "2026-11-09T00:20:17Z",
+ "matches": [],
  "remaining": 495
 }

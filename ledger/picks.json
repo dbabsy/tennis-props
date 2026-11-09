@@ -7748,6 +7748,25 @@
    "tour": "atp",
    "tourney": "Bybit Stockholm Open"
   },
+  "atp:186539": {
+   "best_of": 5,
+   "exp_aces_p1": 15.369455958329942,
+   "exp_aces_p2": 12.600063566525103,
+   "exp_games": 40.21396524967399,
+   "id": "186539",
+   "p1": "Thiago Agustin Tirante",
+   "p2": "Tomas Martin Etcheverry",
+   "p_over": 0.5447913782890075,
+   "p_p1": 0.507977988905605,
+   "recorded": "2026-11-09T20:20:20.733400+00:00",
+   "result": null,
+   "round": "Round 2",
+   "start": "2026-11-10T13:30:00+00:00",
+   "surface": "Hard",
+   "total_line": 38.5,
+   "tour": "atp",
+   "tourney": "Bybit Stockholm Open"
+  },
   "atp:186541": {
    "best_of": 5,
    "exp_aces_p1": 10.162647691954396,
@@ -15821,7 +15840,13 @@
    "p_over": 0.4597245138717802,
    "p_p1": 0.4508221882252121,
    "recorded": "2026-11-08T20:20:20.376733+00:00",
-   "result": null,
+   "result": {
+    "clean": true,
+    "detail": "Final",
+    "games": 27.0,
+    "p1_won": false,
+    "score": "3.0-6.0 6.0-4.0 2.0-6.0"
+   },
    "round": "Round 1",
    "start": "2026-11-09T16:30:00+00:00",
    "surface": "Hard",

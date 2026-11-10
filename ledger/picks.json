@@ -7748,6 +7748,25 @@
    "tour": "atp",
    "tourney": "Bybit Stockholm Open"
   },
+  "atp:186538": {
+   "best_of": 5,
+   "exp_aces_p1": 9.941958331369237,
+   "exp_aces_p2": 10.017181127031497,
+   "exp_games": 37.4780016163673,
+   "id": "186538",
+   "p1": "Casper Ruud",
+   "p2": "Aleksandr Shevchenko",
+   "p_over": 0.43694729391913106,
+   "p_p1": 0.7747703234855691,
+   "recorded": "2026-11-10T14:20:28.703521+00:00",
+   "result": null,
+   "round": "Round 2",
+   "start": "2026-11-11T05:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 38.5,
+   "tour": "atp",
+   "tourney": "Bybit Stockholm Open"
+  },
   "atp:186539": {
    "best_of": 5,
    "exp_aces_p1": 15.369455958329942,
@@ -7778,7 +7797,13 @@
    "p_over": 0.45657360880612624,
    "p_p1": 0.30362449768909267,
    "recorded": "2026-11-09T14:20:23.978697+00:00",
-   "result": null,
+   "result": {
+    "clean": false,
+    "detail": "Final",
+    "games": 17.0,
+    "p1_won": false,
+    "score": "3.0-6.0 2.0-6.0"
+   },
    "round": "Round 2",
    "start": "2026-11-10T12:00:00+00:00",
    "surface": "Hard",

@@ -1,6 +1,27 @@
 {
- "events": [],
- "fetched_at": "2026-11-10T12:20:29Z",
- "matches": [],
- "remaining": 495
+ "events": [
+  "tennis_wta_finals"
+ ],
+ "fetched_at": "2026-11-11T00:20:24Z",
+ "matches": [
+  {
+   "a": "Elina Svitolina",
+   "at": "2026-11-11T00:20:12Z",
+   "b": "Karolina Muchova",
+   "event": "WTA Finals",
+   "pa": 117,
+   "pb": -143,
+   "start": "2026-11-11T20:00:00Z"
+  },
+  {
+   "a": "Aryna Sabalenka",
+   "at": "2026-11-11T00:20:12Z",
+   "b": "Mirra Andreeva",
+   "event": "WTA Finals",
+   "pa": -108,
+   "pb": -113,
+   "start": "2026-11-11T21:10:00Z"
+  }
+ ],
+ "remaining": 494
 }

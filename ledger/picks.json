@@ -7954,6 +7954,25 @@
    "tour": "atp",
    "tourney": "Bybit Stockholm Open"
   },
+  "atp:186547": {
+   "best_of": 5,
+   "exp_aces_p1": 8.268828030564485,
+   "exp_aces_p2": 14.661859821959263,
+   "exp_games": 39.64902216987421,
+   "id": "186547",
+   "p1": "Lorenzo Musetti",
+   "p2": "Taylor Fritz",
+   "p_over": 0.5206229991695615,
+   "p_p1": 0.38233808752858606,
+   "recorded": "2026-11-12T22:20:23.527185+00:00",
+   "result": null,
+   "round": "Semifinal",
+   "start": "2026-11-13T16:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 38.5,
+   "tour": "atp",
+   "tourney": "Bybit Stockholm Open"
+  },
   "atp:186548": {
    "best_of": 5,
    "exp_aces_p1": 10.688787092835888,
@@ -8015,7 +8034,13 @@
    "p_over": 0.5244734086065076,
    "p_p1": 0.46789888281261155,
    "recorded": "2026-11-11T16:20:25.187754+00:00",
-   "result": null,
+   "result": {
+    "clean": false,
+    "detail": "Final",
+    "games": 32.0,
+    "p1_won": false,
+    "score": "6.0-7.0 6.0-3.0 4.0-6.0"
+   },
    "round": "Quarterfinal",
    "start": "2026-11-12T19:00:00+00:00",
    "surface": "Hard",
@@ -16189,7 +16214,13 @@
    "p_over": 0.4462974620984311,
    "p_p1": 0.6283410261952945,
    "recorded": "2026-11-08T06:20:22.688251+00:00",
-   "result": null,
+   "result": {
+    "clean": true,
+    "detail": "Final",
+    "games": 22.0,
+    "p1_won": true,
+    "score": "6.0-4.0 7.0-5.0"
+   },
    "round": "Group Stage",
    "start": "2026-11-10T05:00:00+00:00",
    "surface": "Hard",

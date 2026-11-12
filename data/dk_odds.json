@@ -2,26 +2,44 @@
  "events": [
   "tennis_wta_finals"
  ],
- "fetched_at": "2026-11-12T00:20:23Z",
+ "fetched_at": "2026-11-12T12:20:26Z",
  "matches": [
   {
    "a": "Coco Gauff",
-   "at": "2026-11-12T00:17:48Z",
+   "at": "2026-11-12T12:20:18Z",
    "b": "Marta Kostyuk",
    "event": "WTA Finals",
-   "pa": -249,
-   "pb": 199,
+   "pa": -296,
+   "pb": 233,
    "start": "2026-11-12T20:00:00Z"
   },
   {
    "a": "Jessica Pegula",
-   "at": "2026-11-12T00:17:48Z",
+   "at": "2026-11-12T12:20:18Z",
    "b": "Linda Noskova",
    "event": "WTA Finals",
    "pa": -101,
    "pb": -120,
    "start": "2026-11-12T21:30:00Z"
+  },
+  {
+   "a": "Karolina Muchova",
+   "at": "2026-11-12T12:20:18Z",
+   "b": "Mirra Andreeva",
+   "event": "WTA Finals",
+   "pa": 207,
+   "pb": -261,
+   "start": "2026-11-13T20:00:00Z"
+  },
+  {
+   "a": "Aryna Sabalenka",
+   "at": "2026-11-12T12:20:18Z",
+   "b": "Elina Svitolina",
+   "event": "WTA Finals",
+   "pa": -195,
+   "pb": 158,
+   "start": "2026-11-13T21:30:00Z"
   }
  ],
- "remaining": 492
+ "remaining": 491
 }

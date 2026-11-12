@@ -16289,7 +16289,13 @@
    "p_over": 0.4632555373223609,
    "p_p1": 0.37616413526752274,
    "recorded": "2026-11-08T06:20:22.688251+00:00",
-   "result": null,
+   "result": {
+    "clean": true,
+    "detail": "Final",
+    "games": 16.0,
+    "p1_won": true,
+    "score": "6.0-4.0 6.0-0.0"
+   },
    "round": "Group Stage",
    "start": "2026-11-10T05:00:00+00:00",
    "surface": "Hard",

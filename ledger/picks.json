@@ -16520,6 +16520,25 @@
    "total_line": 22.5,
    "tour": "wta",
    "tourney": "FAGE WTA Finals Indian Wells"
+  },
+  "wta:187441": {
+   "best_of": 3,
+   "exp_aces_p1": 4.021402402754446,
+   "exp_aces_p2": 2.5298248681544186,
+   "exp_games": 23.257217811929838,
+   "id": "187441",
+   "p1": "Mirra Andreeva",
+   "p2": "Jessica Pegula",
+   "p_over": 0.4712005006189709,
+   "p_p1": 0.46762925797160554,
+   "recorded": "2026-11-13T08:20:24.222546+00:00",
+   "result": null,
+   "round": "Semifinal",
+   "start": "2026-11-14T05:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 22.5,
+   "tour": "wta",
+   "tourney": "FAGE WTA Finals Indian Wells"
   }
  }
 }

@@ -16209,6 +16209,25 @@
    "tour": "wta",
    "tourney": "DIRECTV Open Presentado por Compesar"
   },
+  "wta:186772": {
+   "best_of": 3,
+   "exp_aces_p1": 2.205647238284008,
+   "exp_aces_p2": 3.08632450926729,
+   "exp_games": 23.14629486831529,
+   "id": "186772",
+   "p1": "Elizabeth Mandlik",
+   "p2": "Bianca Andreescu",
+   "p_over": 0.46611540018593384,
+   "p_p1": 0.4567645754252191,
+   "recorded": "2026-11-13T18:20:22.575068+00:00",
+   "result": null,
+   "round": "Final",
+   "start": "2026-11-14T05:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 22.5,
+   "tour": "wta",
+   "tourney": "DIRECTV Open Presentado por Compesar"
+  },
   "wta:186773": {
    "best_of": 3,
    "exp_aces_p1": 2.614419250657299,

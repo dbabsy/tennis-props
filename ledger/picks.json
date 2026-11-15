@@ -8265,7 +8265,13 @@
    "p_over": 0.5833815428038626,
    "p_p1": 0.48097418920547996,
    "recorded": "2026-11-15T06:20:26.794315+00:00",
-   "result": null,
+   "result": {
+    "clean": false,
+    "detail": "Final",
+    "games": 26.0,
+    "p1_won": false,
+    "score": "2.0-6.0 6.0-3.0 3.0-6.0"
+   },
    "round": "Group Stage",
    "start": "2026-11-15T19:30:00+00:00",
    "surface": "Hard",
@@ -16970,7 +16976,13 @@
    "p_over": 0.46237776087989496,
    "p_p1": 0.5877090428001183,
    "recorded": "2026-11-15T00:20:24.137466+00:00",
-   "result": null,
+   "result": {
+    "clean": true,
+    "detail": "Final",
+    "games": 21.0,
+    "p1_won": true,
+    "score": "7.0-5.0 6.0-3.0"
+   },
    "round": "Final",
    "start": "2026-11-15T05:00:00+00:00",
    "surface": "Hard",

@@ -1,13 +1,12 @@
 {
  "events": [
-  "tennis_atp_finals",
-  "tennis_wta_finals"
+  "tennis_atp_finals"
  ],
- "fetched_at": "2026-11-14T12:20:23Z",
+ "fetched_at": "2026-11-15T00:20:24Z",
  "matches": [
   {
    "a": "Alexander Zverev",
-   "at": "2026-11-14T12:19:42Z",
+   "at": "2026-11-15T00:18:06Z",
    "b": "Rafael Jodar",
    "event": "ATP Finals",
    "pa": -249,
@@ -16,7 +15,7 @@
   },
   {
    "a": "Arthur Fils",
-   "at": "2026-11-14T12:19:42Z",
+   "at": "2026-11-15T00:18:06Z",
    "b": "Ben Shelton",
    "event": "ATP Finals",
    "pa": 155,
@@ -25,7 +24,7 @@
   },
   {
    "a": "Carlos Alcaraz",
-   "at": "2026-11-14T12:19:42Z",
+   "at": "2026-11-15T00:18:06Z",
    "b": "Frances Tiafoe",
    "event": "ATP Finals",
    "pa": -1020,
@@ -34,31 +33,13 @@
   },
   {
    "a": "Daniil Medvedev",
-   "at": "2026-11-14T12:19:42Z",
+   "at": "2026-11-15T00:18:06Z",
    "b": "Flavio Cobolli",
    "event": "ATP Finals",
    "pa": -376,
    "pb": 288,
    "start": "2026-11-16T19:30:00Z"
-  },
-  {
-   "a": "Jessica Pegula",
-   "at": "2026-11-14T12:19:42Z",
-   "b": "Mirra Andreeva",
-   "event": "WTA Finals",
-   "pa": 229,
-   "pb": -292,
-   "start": "2026-11-14T20:00:00Z"
-  },
-  {
-   "a": "Elina Svitolina",
-   "at": "2026-11-14T12:19:42Z",
-   "b": "Linda Noskova",
-   "event": "WTA Finals",
-   "pa": 147,
-   "pb": -180,
-   "start": "2026-11-14T21:30:00Z"
   }
  ],
- "remaining": 484
+ "remaining": 483
 }

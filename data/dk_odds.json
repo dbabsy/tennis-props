@@ -2,20 +2,20 @@
  "events": [
   "tennis_atp_finals"
  ],
- "fetched_at": "2026-11-17T00:20:24Z",
+ "fetched_at": "2026-11-17T12:20:30Z",
  "matches": [
   {
    "a": "Arthur Fils",
-   "at": "2026-11-17T00:17:24Z",
+   "at": "2026-11-17T12:20:17Z",
    "b": "Rafael Jodar",
    "event": "ATP Finals",
-   "pa": -105,
-   "pb": -116,
+   "pa": -109,
+   "pb": -112,
    "start": "2026-11-17T13:00:00Z"
   },
   {
    "a": "Alexander Zverev",
-   "at": "2026-11-17T00:17:24Z",
+   "at": "2026-11-17T12:20:17Z",
    "b": "Ben Shelton",
    "event": "ATP Finals",
    "pa": -201,
@@ -24,7 +24,7 @@
   },
   {
    "a": "Carlos Alcaraz",
-   "at": "2026-11-17T00:17:24Z",
+   "at": "2026-11-17T12:20:17Z",
    "b": "Daniil Medvedev",
    "event": "ATP Finals",
    "pa": -420,
@@ -33,13 +33,13 @@
   },
   {
    "a": "Flavio Cobolli",
-   "at": "2026-11-17T00:17:24Z",
+   "at": "2026-11-17T12:20:17Z",
    "b": "Frances Tiafoe",
    "event": "ATP Finals",
-   "pa": -104,
-   "pb": -117,
+   "pa": 109,
+   "pb": -133,
    "start": "2026-11-18T19:30:00Z"
   }
  ],
- "remaining": 478
+ "remaining": 477
 }

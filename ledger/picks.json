@@ -16663,6 +16663,25 @@
    "tour": "wta",
    "tourney": "LP Open by IND"
   },
+  "wta:186798": {
+   "best_of": 3,
+   "exp_aces_p1": 2.2610813312218543,
+   "exp_aces_p2": 4.391502236503492,
+   "exp_games": 23.212362633607643,
+   "id": "186798",
+   "p1": "Laura Samson",
+   "p2": "Rebeka Masarova",
+   "p_over": 0.46764992138743283,
+   "p_p1": 0.5866881101560822,
+   "recorded": "2026-11-19T02:20:23.910563+00:00",
+   "result": null,
+   "round": "Quarterfinal",
+   "start": "2026-11-20T05:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 22.5,
+   "tour": "wta",
+   "tourney": "LP Open by IND"
+  },
   "wta:187371": {
    "best_of": 3,
    "dk": {

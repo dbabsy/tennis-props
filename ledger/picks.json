@@ -16841,7 +16841,13 @@
    "p_over": 0.46185908464454317,
    "p_p1": 0.5406476224005812,
    "recorded": "2026-11-22T16:20:24.252373+00:00",
-   "result": null,
+   "result": {
+    "clean": false,
+    "detail": "Retired",
+    "games": 22.0,
+    "p1_won": false,
+    "score": "6.0-1.0 6.0-7.0 0.0-2.0"
+   },
    "round": "Round 1",
    "start": "2026-11-23T05:00:00+00:00",
    "surface": "Hard",

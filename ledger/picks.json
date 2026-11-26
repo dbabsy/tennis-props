@@ -16855,6 +16855,25 @@
    "tour": "wta",
    "tourney": "IEB+ Argentina Open"
   },
+  "wta:186829": {
+   "best_of": 3,
+   "exp_aces_p1": 3.0143030471806087,
+   "exp_aces_p2": 2.9763528854776062,
+   "exp_games": 22.935771432309277,
+   "id": "186829",
+   "p1": "Laura Samson",
+   "p2": "Varvara Lepchenko",
+   "p_over": 0.4531452193823842,
+   "p_p1": 0.6209840653565505,
+   "recorded": "2026-11-26T22:20:21.846247+00:00",
+   "result": null,
+   "round": "Quarterfinal",
+   "start": "2026-11-27T18:00:00+00:00",
+   "surface": "Hard",
+   "total_line": 22.5,
+   "tour": "wta",
+   "tourney": "IEB+ Argentina Open"
+  },
   "wta:186835": {
    "best_of": 3,
    "exp_aces_p1": 1.9126710372459548,

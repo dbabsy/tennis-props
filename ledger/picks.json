@@ -16866,7 +16866,13 @@
    "p_over": 0.4531452193823842,
    "p_p1": 0.6209840653565505,
    "recorded": "2026-11-26T22:20:21.846247+00:00",
-   "result": null,
+   "result": {
+    "clean": true,
+    "detail": "Final",
+    "games": 32.0,
+    "p1_won": false,
+    "score": "3.0-6.0 7.0-6.0 4.0-6.0"
+   },
    "round": "Quarterfinal",
    "start": "2026-11-27T18:00:00+00:00",
    "surface": "Hard",
